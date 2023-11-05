@@ -1,26 +1,10 @@
 # SuteraVR
-分散型 VRSNS - あなたの大事なワールドやアバターを特定のサービスに依存しない、新しい VRSNS 。
+Decentralized VRSNS - A new VRSNS that makes your precious worlds and avatars independent of any specific service.
 
-# プロジェクトの進行方法
+# Design
 
-順不同のリストを記載。
-- 仕様などを検討、決定する
-- ローカルでデスクトップモードで動くクライアントを作成する。
-- VR モードでも動くようにクライアントを改良する。
-- サーバーと連携して動かせるようにクライアントを改良する。
-- P2P (Peer to Peer) でクライアント間の通信をできるようにする。
-
-# 設計
-
-順不同のリストを記載。
-- ワールド・アバター・クライアントの形式など。
-- API を作る
-    例えば、カメラ等の機能に上乗せしたり、外部の機能とワールドを連携させたりする。
-- データはサンドボックス環境内で処理を完結させる。
-　ウイルスや悪意のあるスクリプトを実行させない、外部に影響を与えられないようにする。
-- ユーザーに対して、アップロードなどの権限の設定を可能とする。
-　ワールドの限定公開など
-
-以下、Mermaid にて図を書きたいが、私にはその能力がないために保留とする。
-```mermaid
-```
+List in no particular order.
+- World, avatar, client format, etc.
+- Create an API . For example, add on to functions such as cameras, etc., or link worlds to external functions.
+- Complete data processing within the sandbox environment. Prevent viruses and malicious scripts from executing and influencing the outside world.
+- Allow users to set permissions for uploading, etc. Limited publication of worlds, etc.
