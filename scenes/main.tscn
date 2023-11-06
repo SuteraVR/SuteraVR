@@ -1,0 +1,47 @@
+[gd_scene load_steps=4 format=3 uid="uid://ce61dcahc8n1t"]
+
+[ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_6f5eg"]
+
+[sub_resource type="GDScript" id="GDScript_qak7f"]
+script/source = "extends Node3D
+
+var xr_interface: XRInterface
+
+func _ready():
+	xr_interface = XRServer.find_interface(\"OpenXR\")
+	if xr_interface and xr_interface.is_initialized():
+		print(\"OpenXR initialised successfully\")
+
+		# Turn off v-sync!
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+
+		# Change our main viewport to output to the HMD
+		get_viewport().use_xr = true
+	else:
+		print(\"OpenXR not initialized, please check if your headset is connected\")
+"
+
+[sub_resource type="Environment" id="Environment_jscir"]
+
+[node name="Node3D" type="Node3D"]
+script = SubResource("GDScript_qak7f")
+
+[node name="XROrigin3D" type="XROrigin3D" parent="."]
+
+[node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+
+[node name="VRCommonShaderCache" parent="XROrigin3D/XRCamera3D" instance=ExtResource("1_6f5eg")]
+
+[node name="LeftHand" type="XRController3D" parent="XROrigin3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5)
+tracker = &"left_hand"
+
+[node name="RightHand" type="XRController3D" parent="XROrigin3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1, -0.5)
+tracker = &"right_hand"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_jscir")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
