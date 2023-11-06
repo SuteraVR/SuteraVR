@@ -29,3 +29,4 @@ enabled=PackedStringArray("res://addons/godot-xr-tools/plugin.cfg")
 [xr]
 
 openxr/enabled=true
+shaders/enabled=true
