@@ -14,6 +14,18 @@ config/name="SuteraVR"
 config/features=PackedStringArray("4.1", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+XRToolsUserSettings="*res://addons/godot-xr-tools/user_settings/user_settings.gd"
+
 [dotnet]
 
 project/assembly_name="SuteraVR"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot-xr-tools/plugin.cfg")
+
+[xr]
+
+openxr/enabled=true
