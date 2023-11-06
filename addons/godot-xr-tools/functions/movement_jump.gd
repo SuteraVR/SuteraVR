@@ -17,7 +17,7 @@ extends XRToolsMovementProvider
 @export var order : int = 20
 
 ## Button to trigger jump
-@export var jump_button_action : String = "trigger_click"
+@export var jump_button_action : String = "ax_button"
 
 
 # Node references
