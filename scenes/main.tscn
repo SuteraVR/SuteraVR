@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=22 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_6f5eg"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://b6bk2pj8vbj28" path="res://addons/godot-xr-tools/functions/movement_turn.tscn" id="4_35vsx"]
 [ext_resource type="PackedScene" uid="uid://diyu06cw06syv" path="res://addons/godot-xr-tools/player/player_body.tscn" id="5_qr1t1"]
 [ext_resource type="PackedScene" uid="uid://raeeicvvindd" path="res://addons/godot-xr-tools/hands/scenes/highpoly/right_hand.tscn" id="5_vd56b"]
+[ext_resource type="PackedScene" uid="uid://bm6yri2k540dt" path="res://shapell.tscn" id="8_icga1"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
@@ -82,7 +83,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5)
 tracker = &"left_hand"
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="XROrigin3D/LeftHand"]
-transform = Transform3D(0.16146, 0, 0, 0, 0.16146, 0, 0, 0, 0.16146, 0.0946334, 0.054749, -0.0226448)
+transform = Transform3D(0.16146, 0, 0, 0, 0.16146, 0, 0, 0, 0.16146, 0.148207, 0.054749, -0.0200708)
 mesh = SubResource("QuadMesh_qh65e")
 skeleton = NodePath("../../../MeshInstance3D")
 surface_material_override/0 = SubResource("StandardMaterial3D_verhv")
@@ -104,6 +105,9 @@ turn_mode = 2
 [node name="MovementJump" parent="XROrigin3D/RightHand" instance=ExtResource("4_6akak")]
 
 [node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("5_qr1t1")]
+
+[node name="shapell" parent="XROrigin3D/PlayerBody" instance=ExtResource("8_icga1")]
+transform = Transform3D(-1, 0, -8.74228e-08, 6.7937e-09, 0.996976, -0.0777109, 8.71584e-08, -0.0777109, -0.996976, 0, 0, 0)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jscir")

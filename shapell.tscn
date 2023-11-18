@@ -1,0 +1,35 @@
+[gd_scene load_steps=4 format=3 uid="uid://bm6yri2k540dt"]
+
+[ext_resource type="PackedScene" uid="uid://cgdn6uudh6bjr" path="res://shapell.glb" id="1_ttycw"]
+[ext_resource type="Script" path="res://HandIK.gd" id="2_r1fxv"]
+[ext_resource type="Script" path="res://RightHandAnchor.gd" id="3_4nfa1"]
+
+[node name="shapell" instance=ExtResource("1_ttycw")]
+
+[node name="Armature" parent="." index="0"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
+
+[node name="RightHand" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="1"]
+process_priority = 1
+root_bone = &"UpperArm.R"
+tip_bone = &"Hand.R"
+use_magnet = true
+target_node = NodePath("../../RightMarker3D")
+script = ExtResource("2_r1fxv")
+
+[node name="LeftHand" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="2"]
+process_priority = 1
+root_bone = &"UpperArm.L"
+tip_bone = &"Hand.L"
+use_magnet = true
+target_node = NodePath("../../LeftMarker3D")
+script = ExtResource("2_r1fxv")
+
+[node name="RightMarker3D" type="Marker3D" parent="Armature" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.458487, 1.03683, 0.0335046)
+top_level = true
+script = ExtResource("3_4nfa1")
+
+[node name="LeftMarker3D" type="Marker3D" parent="Armature" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.463125, 1.04518, 0.0386075)
+top_level = true
