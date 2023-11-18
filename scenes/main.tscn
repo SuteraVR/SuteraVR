@@ -107,7 +107,6 @@ turn_mode = 2
 [node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("5_qr1t1")]
 
 [node name="shapell" parent="XROrigin3D/PlayerBody" instance=ExtResource("8_icga1")]
-transform = Transform3D(-1, 0, -8.74228e-08, 6.7937e-09, 0.996976, -0.0777109, 8.71584e-08, -0.0777109, -0.996976, 0, 0, 0)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jscir")

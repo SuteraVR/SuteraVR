@@ -26,10 +26,10 @@ target_node = NodePath("../../LeftMarker3D")
 script = ExtResource("2_r1fxv")
 
 [node name="RightMarker3D" type="Marker3D" parent="Armature" index="1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.458487, 1.03683, 0.0335046)
+transform = Transform3D(4.37114e-08, 1, 8.74228e-08, 1, -4.37114e-08, 0, 3.82137e-15, 8.74228e-08, -1, 0.458487, 1.03683, 0.0335046)
 top_level = true
 script = ExtResource("3_4nfa1")
 
 [node name="LeftMarker3D" type="Marker3D" parent="Armature" index="2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.463125, 1.04518, 0.0386075)
+transform = Transform3D(4.37114e-08, -1, -8.74228e-08, -1, -4.37114e-08, 0, -3.82137e-15, 8.74228e-08, -1, -0.463125, 1.04518, 0.0386075)
 top_level = true
