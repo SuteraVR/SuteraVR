@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://d1koqmxdxxng2"
-path="res://.godot/imported/shapell.fbx-d3f37ddbaab5c2994d4a301e49420a32.scn"
+uid="uid://cgdn6uudh6bjr"
+path="res://.godot/imported/shapell.glb-0aa0c8307069f3031f9e249623d6602e.scn"
 
 [deps]
 
-source_file="res://shapell.fbx"
-dest_files=["res://.godot/imported/shapell.fbx-d3f37ddbaab5c2994d4a301e49420a32.scn"]
+source_file="res://scenes/3dmodels/shapell.glb"
+dest_files=["res://.godot/imported/shapell.glb-0aa0c8307069f3031f9e249623d6602e.scn"]
 
 [params]
 

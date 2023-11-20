@@ -1,10 +1,23 @@
 [gd_scene load_steps=4 format=3 uid="uid://bm6yri2k540dt"]
 
-[ext_resource type="PackedScene" uid="uid://cgdn6uudh6bjr" path="res://shapell.glb" id="1_ttycw"]
-[ext_resource type="Script" path="res://HandIK.gd" id="2_r1fxv"]
-[ext_resource type="Script" path="res://RightHandAnchor.gd" id="3_4nfa1"]
+[ext_resource type="PackedScene" uid="uid://cgdn6uudh6bjr" path="res://scenes/3dmodels/shapell.glb" id="1_2ns3s"]
+[ext_resource type="Script" path="res://HandIK.gd" id="2_0rlpv"]
 
-[node name="shapell" instance=ExtResource("1_ttycw")]
+[sub_resource type="GDScript" id="GDScript_icr5d"]
+script/source = "extends Marker3D
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	pass
+"
+
+[node name="shapell" instance=ExtResource("1_2ns3s")]
 
 [node name="Armature" parent="." index="0"]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
@@ -15,7 +28,7 @@ root_bone = &"UpperArm.R"
 tip_bone = &"Hand.R"
 use_magnet = true
 target_node = NodePath("../../RightMarker3D")
-script = ExtResource("2_r1fxv")
+script = ExtResource("2_0rlpv")
 
 [node name="LeftHand" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="2"]
 process_priority = 1
@@ -23,12 +36,12 @@ root_bone = &"UpperArm.L"
 tip_bone = &"Hand.L"
 use_magnet = true
 target_node = NodePath("../../LeftMarker3D")
-script = ExtResource("2_r1fxv")
+script = ExtResource("2_0rlpv")
 
 [node name="RightMarker3D" type="Marker3D" parent="Armature" index="1"]
 transform = Transform3D(4.37114e-08, 1, 8.74228e-08, 1, -4.37114e-08, 0, 3.82137e-15, 8.74228e-08, -1, 0.458487, 1.03683, 0.0335046)
 top_level = true
-script = ExtResource("3_4nfa1")
+script = SubResource("GDScript_icr5d")
 
 [node name="LeftMarker3D" type="Marker3D" parent="Armature" index="2"]
 transform = Transform3D(4.37114e-08, -1, -8.74228e-08, -1, -4.37114e-08, 0, -3.82137e-15, 8.74228e-08, -1, -0.463125, 1.04518, 0.0386075)
