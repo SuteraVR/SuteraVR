@@ -1,0 +1,15 @@
+inputs:
+  directory:
+    description: A directory where you want to check
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install rust-toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy, rustfmt
+    - name: Run rustfmt using cargo
+      working-directory: ${{ inputs.directory }}
+      run: cargo fmt --all -- --check
