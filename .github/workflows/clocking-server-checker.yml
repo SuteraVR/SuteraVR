@@ -6,7 +6,7 @@ on:
 permissions: {}
 
 jobs:
-  rust-checker:
+  cargo-fmt:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -15,10 +15,22 @@ jobs:
         uses: ./.github/actions/cargo-fmt
         with:
           directory: "clocking-server"
+
+  cargo-clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: cargo-clippy
         uses: ./.github/actions/cargo-clippy
         with:
           directory: "clocking-server"
+
+  cargo-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: cargo-test
         uses: ./.github/actions/cargo-test
         with:
