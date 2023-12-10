@@ -6,9 +6,8 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install rust-toolchain
+    - name: Setup rust-toolchain
       uses: dtolnay/rust-toolchain@master
-      shell: bash
       with:
         toolchain: stable
         components: clippy, rustfmt
