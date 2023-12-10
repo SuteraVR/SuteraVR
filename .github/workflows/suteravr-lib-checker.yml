@@ -6,44 +6,10 @@ on:
 permissions: {}
 
 jobs:
-  run-rustfmt:
+  rust-checker:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install rust-toolchain
-        uses: dtolnay/rust-toolchain@master
+      - name: rust-checker-actions
+        uses: ./.github/actions/rust-checker
         with:
-          toolchain: stable
-          components: clippy, rustfmt
-      - name: Run rustfmt using cargo
-        working-directory: suteravr-lib
-        run: cargo fmt --all -- --check
-
-  run-cargo-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install rust-toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-          components: clippy, rustfmt
-      - name: Run cargo-test
-        working-directory: suteravr-lib
-        run: cargo test
-
-  run-cargo-clippy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install rust-toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-          components: clippy, rustfmt
-      - name: Run cargo-clippy -Dwarning
-        working-directory: suteravr-lib
-        run: cargo clippy -- -Dwarnings
+          directory: "suteravr-lib"
