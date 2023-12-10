@@ -7,10 +7,12 @@ runs:
   using: "composite"
   steps:
     - name: Install rust-toolchain
+      shell: bash
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: stable
         components: clippy, rustfmt
     - name: Run cargo-test
+      shell: bash
       working-directory: ${{ inputs.directory }}
       run: cargo test
