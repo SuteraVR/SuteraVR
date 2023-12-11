@@ -1,0 +1,17 @@
+inputs:
+  directory:
+    description: A directory where you want to check
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup rust-toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: stable
+        components: clippy, rustfmt
+    - name: Run cargo-clippy -Dwarning
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: cargo clippy -- -Dwarnings
