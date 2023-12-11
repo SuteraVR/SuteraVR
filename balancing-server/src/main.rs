@@ -1,5 +1,5 @@
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use actix_web::middleware::Logger;
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use serde::Serialize;
 
 use std::env;
@@ -30,12 +30,8 @@ async fn main() -> std::io::Result<()> {
     log::info!("Run on port :{}", port);
 
     // Run server
-    HttpServer::new(|| {
-        App::new()
-            .wrap(Logger::default())
-            .service(hello)
-    })
-    .bind(("0.0.0.0", port))?
-    .run()
-    .await
+    HttpServer::new(|| App::new().wrap(Logger::default()).service(hello))
+        .bind(("0.0.0.0", port))?
+        .run()
+        .await
 }
