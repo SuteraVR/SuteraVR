@@ -1,0 +1,14 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[patch."https://github.com/godot-rust/godot4-prebuilt"] 
+godot4-prebuilt = { git = "https://github.com//godot-rust/godot4-prebuilt", branch = "4.1.2"}
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
