@@ -1,5 +1,5 @@
 [package]
-name = "suteravr-server"
+name = "clocking-server"
 version = "0.1.0"
 edition = "2021"
 
