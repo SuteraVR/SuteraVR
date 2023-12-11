@@ -1,5 +1,5 @@
 use actix_web::middleware::Logger;
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use serde::Serialize;
 
 use std::env;
