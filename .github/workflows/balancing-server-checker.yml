@@ -1,7 +1,6 @@
 name: balancing-server-checker
 
 on:
-  push:
   pull_request:
 
 permissions: {}

@@ -1,4 +1,4 @@
-name: client-rust-checker
+name: social-server-checker
 
 on:
   pull_request:
@@ -14,7 +14,7 @@ jobs:
       - name: cargo-fmt
         uses: ./.github/actions/cargo-fmt
         with:
-          directory: "client/rust"
+          directory: "social-server"
 
   cargo-clippy:
     runs-on: ubuntu-latest
@@ -24,7 +24,7 @@ jobs:
       - name: cargo-clippy
         uses: ./.github/actions/cargo-clippy
         with:
-          directory: "client/rust"
+          directory: "social-server"
 
   cargo-test:
     runs-on: ubuntu-latest
@@ -34,4 +34,4 @@ jobs:
       - name: cargo-test
         uses: ./.github/actions/cargo-test
         with:
-          directory: "client/rust"
+          directory: "social-server"
