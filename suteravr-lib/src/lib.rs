@@ -1,2 +1,1 @@
-pub struct Foo {
-}
+pub struct Foo {}
