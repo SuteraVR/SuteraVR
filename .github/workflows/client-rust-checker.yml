@@ -1,4 +1,4 @@
-name: balancing-server-checker
+name: client-rust-checker
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
       - name: cargo-fmt
         uses: ./.github/actions/cargo-fmt
         with:
-          directory: "balancing-server"
+          directory: "client/rust"
 
   cargo-clippy:
     runs-on: ubuntu-latest
@@ -25,7 +25,7 @@ jobs:
       - name: cargo-clippy
         uses: ./.github/actions/cargo-clippy
         with:
-          directory: "balancing-server"
+          directory: "client/rust"
 
   cargo-test:
     runs-on: ubuntu-latest
@@ -35,4 +35,4 @@ jobs:
       - name: cargo-test
         uses: ./.github/actions/cargo-test
         with:
-          directory: "balancing-server"
+          directory: "client/rust"
