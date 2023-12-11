@@ -1,7 +1,6 @@
 name: clocking-server-checker
 
 on:
-  push:
   pull_request:
 
 permissions: {}

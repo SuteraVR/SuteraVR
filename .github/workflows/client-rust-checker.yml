@@ -1,7 +1,6 @@
 name: client-rust-checker
 
 on:
-  push:
   pull_request:
 
 permissions: {}

@@ -1,7 +1,6 @@
 name: suteravr-lib-checker
 
 on:
-  push:
   pull_request:
 
 permissions: {}
