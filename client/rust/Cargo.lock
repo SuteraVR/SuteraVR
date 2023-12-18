@@ -121,7 +121,7 @@ dependencies = [
 [[package]]
 name = "godot4-prebuilt"
 version = "0.0.0"
-source = "git+https://github.com//godot-rust/godot4-prebuilt?branch=4.1.2#ad2a7a4495070528ddaa4970aa6ef64c6433e48b"
+source = "git+https://github.com//godot-rust/godot4-prebuilt?branch=4.2#9e60296be502e294dde3f245971f2868ce553677"
 
 [[package]]
 name = "heck"

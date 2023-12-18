@@ -5,7 +5,7 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [patch."https://github.com/godot-rust/godot4-prebuilt"] 
-godot4-prebuilt = { git = "https://github.com//godot-rust/godot4-prebuilt", branch = "4.1.2"}
+godot4-prebuilt = { git = "https://github.com//godot-rust/godot4-prebuilt", branch = "4.2"}
 
 [lib]
 crate-type = ["cdylib"]
