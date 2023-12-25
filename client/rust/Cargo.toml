@@ -12,3 +12,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
+suteravr-lib = { path = "../../suteravr-lib" }
