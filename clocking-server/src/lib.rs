@@ -1,14 +1,10 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use suteravr_lib::Foo;
 
+    /// whether clocking-server can load the suteravr-lib crate or not
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn test_loading_suteravrlib() {
+        let _foo: Foo = Foo::default();
     }
 }
