@@ -214,7 +214,12 @@ name = "rust"
 version = "0.1.0"
 dependencies = [
  "godot",
+ "suteravr-lib",
 ]
+
+[[package]]
+name = "suteravr-lib"
+version = "0.1.0"
 
 [[package]]
 name = "syn"

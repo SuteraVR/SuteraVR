@@ -262,6 +262,7 @@ dependencies = [
  "env_logger",
  "log",
  "serde",
+ "suteravr-lib",
 ]
 
 [[package]]
@@ -1029,6 +1030,10 @@ dependencies = [
  "libc",
  "windows-sys 0.48.0",
 ]
+
+[[package]]
+name = "suteravr-lib"
+version = "0.1.0"
 
 [[package]]
 name = "syn"
