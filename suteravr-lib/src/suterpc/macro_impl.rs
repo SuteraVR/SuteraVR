@@ -29,7 +29,7 @@ macro_rules! suterpc_oneshot_schema {
         $crate::suterpc_oneshot_schema!( @safe $variant, enum $req, enum $res);
     };
     (
-        @safe $variant:ident, $req_struct_or_enum:ident $req: tt, $res_struct_or_enum:ident $res: tt
+        @safe $variant:ident, $req_type:ident $req: tt, $res_type:ident $res: tt
     ) => {
         pub struct $variant {}
         ::paste::paste! {
@@ -39,9 +39,9 @@ macro_rules! suterpc_oneshot_schema {
             }
 
             #[::alkahest::alkahest(Formula, SerializeRef, Deserialize)]
-            pub(crate) $req_struct_or_enum [<$variant Request>] $req
+            pub(crate) $req_type [<$variant Request>] $req
             #[::alkahest::alkahest(Formula, SerializeRef, Deserialize)]
-            pub(crate) $res_struct_or_enum [<$variant Response>] $res
+            pub(crate) $res_type [<$variant Response>] $res
 
             #[::async_trait::async_trait]
             impl $crate::suterpc::OneshotRequest<[<$variant Response>]> for [<$variant Request>] {
