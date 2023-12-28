@@ -35,14 +35,3 @@ async fn main() -> std::io::Result<()> {
         .run()
         .await
 }
-
-#[cfg(test)]
-mod test {
-    use suteravr_lib::Foo;
-
-    /// whether balancing-server can load the local suteravr-lib crate
-    #[test]
-    fn test_loading_suteravrlib() {
-        let _foo: Foo = Foo::default();
-    }
-}
