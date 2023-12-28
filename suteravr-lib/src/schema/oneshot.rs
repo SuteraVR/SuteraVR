@@ -1,15 +1,16 @@
-use crate::suterpc_oneshot_schema;
+//! ワンショットリクエストのスキーマを定義します。 ([`schema::oneshot`][crate::schema::oneshot])  
+//! ワンショットリクエストとは、リクエストとレスポンスが1対1で対応するリクエストのことです。
+//!
+//! クライアントからサーバーへ送信するenumまたはstruct (**リクエストスキーマ**)を、[`Request`]に指定します。  
+//! サーバーからクライアントへ送信するenumまたはstruct (**レスポンススキーマ**)を、[`Response`]に指定します。
+//!
+//! [`Request`]: crate::suterpc::Oneshot::Request
+//! [`Response`]: crate::suterpc::Oneshot::Response
 
-pub(crate) enum OneshotVariants {
-    GetVersion = 0,
-}
+pub mod schema_version;
 
-suterpc_oneshot_schema! {
-    variant: GetVersion,
-    enum Request {
-        ClockingServer,
-    },
-    struct Response {
-        version: String,
-    },
+pub(crate) use crate::suterpc_oneshot_variants;
+
+suterpc_oneshot_variants! {
+    [schema_version] GetVersion = 0,
 }

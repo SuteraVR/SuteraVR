@@ -1,47 +1,168 @@
+/// SuteRPCのワンショットリクエストのスキーマを定義するマクロです。
+///
+/// (ワンショットリクエストとは、リクエストとレスポンスが1対1で対応するリクエストのことです。)
+///
+/// - `variant` には、このワンショットリクエストの種類を表す[`OneshotVariants`]のバリアントを指定します。
+/// - `Request` には、リクエストのスキーマを表すenumまたはstructを指定します。
+/// - `Response` には、レスポンスのスキーマを表すenumまたはstructを指定します。
+///
+/// [`OneshotVariants`]: crate::schema::oneshot::OneshotVariants
+/// [`Formula`]: alkahest::Formula
+/// [`SerializeRef`]: alkahest::SerializeRef
+/// [`Deserialize`]: alkahest::Deserialize
+/// [`Oneshot`]: crate::suterpc::Oneshot
+///
+/// # 例
+/// ```no_run
+/// use suteravr_lib::suterpc_oneshot_schema;
+/// suterpc_oneshot_schema! {
+///     /// サーバーのバージョンを要求するワンショット。
+///     variant: GetVersion,
+///     enum Request {
+///         SocialServer,
+///         ClockingServer,
+///     },
+///     struct Response {
+///         pub version: String,
+///     },
+/// }
+/// ```
+/// このマクロは、`suteravr_lib::schema::oneshot`に、  
+/// `GetVersion`, `GetVersionRequest`, `GetVersionResponse`を公開します。
+///
+/// # 実装上の注意
+/// #### トレイト境界について
+/// Request, Responseの型は、[`Formula`], [`SerializeRef`], [`Deserialize`], [`Send`] トレイト境界を要求します。  
+/// (この要求は、このマクロが[`Oneshot`]トレイトを実装する型を生成するためです。)
+///
+/// [`Send`]トレイトはほとんどの型に実装されていますが、  
+/// [`Formula`], [`SerializeRef`], [`Deserialize`] トレイトは[`alkahest`]クレートによって導出されるものです。
+///
+/// このマクロは、`Request`, `Response`として与えられたenum, structに対して自動でこれらを導出しますが、  
+/// 外部のenum, structが含まれる場合は、既にこれらのトレイトが導出されている必要があります。
+///
+/// **以下のコードはコンパイルエラーになります:**
+/// ```compile_fail
+/// use suteravr_lib::suterpc_oneshot_schema;
+///
+/// struct MyStruct {
+///   pub clocking_server: String,
+///   pub social_server: String,
+/// }
+///
+/// suterpc_oneshot_schema! {
+///   /// サーバーのバージョンを要求するワンショット。
+///   variant: GetVersion,
+///   struct Request {},
+///   struct Response {
+///     pub version: MyStruct,
+///     // -> MyStructはFormulaを実装しておらず、
+///     //    バイナリにシリアライズ/デシリアライズできない
+///   },
+/// }
+///
+/// ```
+///
+/// この場合、`MyStruct`に対して、[`alkahest::alkahest`]マクロを使って、トレイトを導出すれば問題ありません。
+/// ```no_run
+/// use alkahest::{alkahest, Formula, SerializeRef, Deserialize};
+/// use suteravr_lib::suterpc_oneshot_schema;
+///
+/// //↓ これで`MyStruct`をバイナリにシリアライズ/デシリアライズできるようになる
+/// #[alkahest(Formula, SerializeRef, Deserialize)]
+/// struct MyStruct {
+///   pub clocking_server: String,
+///   pub social_server: String,
+/// }
+///
+/// suterpc_oneshot_schema! {
+///   /// サーバーのバージョンを要求するワンショット。
+///   variant: GetVersion,
+///   struct Request {},
+///   struct Response {
+///     pub version: MyStruct,
+///   },
+/// }
+/// ```
+///
 #[macro_export]
 macro_rules! suterpc_oneshot_schema {
     (
+        $(#[doc = $doc:expr])+
         variant: $variant:ident,
+        $(#[doc = $req_doc:expr])*
         struct Request $req: tt,
+        $(#[doc = $res_doc:expr])*
         struct Response $res: tt,
     ) => {
-        $crate::suterpc_oneshot_schema!( @safe $variant, struct $req, struct $res);
+        $crate::suterpc_oneshot_schema!( @safe [$($doc)+], $variant, struct [$($req_doc)*] $req, struct [$($res_doc)*] $res);
     };
     (
+        $(#[doc = $doc:expr])+
         variant: $variant:ident,
+        $(#[doc = $req_doc:expr])*
         enum Request $req: tt,
+        $(#[doc = $res_doc:expr])*
         struct Response $res: tt,
     ) => {
-        $crate::suterpc_oneshot_schema!( @safe $variant, enum $req, struct $res);
+        $crate::suterpc_oneshot_schema!( @safe [$($doc)+], $variant, enum [$($req_doc)*] $req, struct [$($res_doc)*] $res);
     };
     (
+        $(#[doc = $doc:expr])+
         variant: $variant:ident,
+        $(#[doc = $req_doc:expr])*
         struct Request $req: tt,
+        $(#[doc = $res_doc:expr])*
         enum Response $res: tt,
     ) => {
-        $crate::suterpc_oneshot_schema!( @safe $variant, struct $req, enum $res);
+        $crate::suterpc_oneshot_schema!( @safe [$($doc)+], $variant, struct [$($req_doc)*] $req, enum [$($res_doc)*] $res);
     };
     (
+        $(#[doc = $doc:expr])+
         variant: $variant:ident,
+        $(#[doc = $req_doc:expr])*
         enum Request $req: tt,
+        $(#[doc = $res_doc:expr])*
         enum Response $res: tt,
     ) => {
-        $crate::suterpc_oneshot_schema!( @safe $variant, enum $req, enum $res);
+        $crate::suterpc_oneshot_schema!( @safe [$($doc)+], $variant, enum [$($req_doc)*] $req, enum [$($res_doc)*] $res);
     };
     (
-        @safe $variant:ident, $req_type:ident $req: tt, $res_type:ident $res: tt
+        @safe [$($doc:expr)+], $variant:ident,
+        $req_type:ident [$($req_doc:expr)*] $req:tt,
+        $res_type:ident [$($res_doc:expr)*] $res:tt
     ) => {
-        pub struct $variant {}
         ::paste::paste! {
+            $(#[doc = $doc])+
+            #[doc = ""]
+            #[doc = "# Schema"]
+            #[doc = concat!(
+                "リクエストスキーマ: **[`", ::std::stringify!($variant), "Request`]",
+                "[crate::schema_oneshot::requests::", ::std::stringify!($variant), "`]**  ",
+            )]
+            #[doc = concat!(
+                "レスポンススキーマ: **[`", ::std::stringify!($variant), "Response`]",
+                "[crate::schema_oneshot::responses::", ::std::stringify!($variant), "`]**  ",
+            )]
+            pub struct $variant {}
             impl $crate::suterpc::Oneshot<'_> for $variant {
                 type Request = [<$variant Request>];
                 type Response = [<$variant Response>];
             }
 
+            #[doc(hidden)]
+            #[doc = concat!("[`", ::std::stringify!($variant), "`]のリクエスト用スキーマ。  ")]
+            #[doc = ""]
+            $(#[doc = $req_doc])*
             #[::alkahest::alkahest(Formula, SerializeRef, Deserialize)]
-            pub(crate) $req_type [<$variant Request>] $req
+            pub $req_type [<$variant Request>] $req
+
+            #[doc(hidden)]
+            #[doc = concat!("[`", ::std::stringify!($variant), "`]のレスポンス用スキーマ。  ")]
+            #[doc = ""]
+            $(#[doc = $res_doc])*
             #[::alkahest::alkahest(Formula, SerializeRef, Deserialize)]
-            pub(crate) $res_type [<$variant Response>] $res
+            pub $res_type [<$variant Response>] $res
 
             #[::async_trait::async_trait]
             impl $crate::suterpc::OneshotRequest<[<$variant Response>]> for [<$variant Request>] {
@@ -51,6 +172,57 @@ macro_rules! suterpc_oneshot_schema {
                         .send_oneshot::<$variant>($crate::schema::oneshot::OneshotVariants::$variant, self)
                         .await
                 }
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! suterpc_oneshot_variants {
+    (
+        $([$locate:path]$name:ident = $value:expr),* $(,)?
+    ) => {
+        #[doc = "ワンショットリクエストの種類を定義します。  "]
+        #[doc = "[`suterpc_oneshot_schema!`][crate::suterpc_oneshot_schema!]マクロを使って、このトレイトを実装する型を定義します。"]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        pub enum OneshotVariants {
+            $(
+                #[doc = concat!("[`", ::std::stringify!($name), "`]")]
+                $name = $value
+            ),*
+        }
+
+        $(
+            ::paste::paste!{
+                #[doc(inline)]
+                #[doc = concat!(
+                  "ID: `", ::std::stringify!($value), "`,  ",
+                  "バリアント:[`OneshotVariants::", ::std::stringify!($name), "`]  ",
+                  "(in [`", ::std::stringify!($locate) ,"`])  "
+                )]
+                pub use $locate::{$name};
+                #[doc(hidden)]
+                pub use $locate::{[<$name Request>], [<$name Response>]};
+            }
+        )*
+
+        /// **リクエストスキーマを全て列挙したモジュール**
+        pub mod requests {
+            ::paste::paste! {
+                $(
+                    #[doc(inline)]
+                    pub use super::[<$name Request>] as $name;
+                )*
+            }
+        }
+
+        /// **レスポンススキーマを全て列挙したモジュール**
+        pub mod responses {
+            ::paste::paste! {
+                $(
+                    #[doc(inline)]
+                    pub use super::[<$name Response>] as $name;
+                )*
             }
         }
     };
