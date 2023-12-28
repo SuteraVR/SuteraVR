@@ -6,3 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+alkahest = { version = "0.3.0", features = ["derive"] }
+async-trait = "0.1.75"
+tokio = { version = "1.35.1", features = ["full"] }
