@@ -5,3 +5,4 @@
 //! use suteravr_lib::Foo;
 //! ```
 //!
+mod serde;
