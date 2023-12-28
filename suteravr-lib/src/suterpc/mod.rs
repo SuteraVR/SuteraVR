@@ -1,3 +1,5 @@
+//! `clocking-server`と`client`の間でやり取りされるデータのスキーマを構成するモジュール
+
 pub(crate) mod macro_impl;
 
 use alkahest::{advanced::BareFormula, Deserialize, Formula, SerializeRef};
@@ -8,6 +10,9 @@ use crate::schema::oneshot::OneshotVariants;
 // TODO: OneshotError type is need.
 pub type OneshotResult<Response> = Result<Response, ()>;
 
+/// SuteRPCで扱う全てのリクエストを送信するトレイト
+///
+/// [`OneshotRequest`]トレイトの[`send`][OneshotRequest::send]メソッドなどから利用されます。
 #[async_trait]
 pub trait Sender {
     async fn send_oneshot<'de, T: Oneshot<'de>>(
@@ -17,17 +22,55 @@ pub trait Sender {
     ) -> OneshotResult<T::Response>;
 }
 
+/// ワンショットリクエストを、リクエストスキーマから直接送信するためのトレイト
+///
+/// このトレイトを実装していると、[`send`][OneshotRequest::send]メソッドを呼び出すだけでリクエストを送信できます。
+/// ```no_run
+/// use suteravr_lib::schema_oneshot::{requests, responses, OneshotVariants};
+/// use suteravr_lib::suterpc::{Oneshot, OneshotRequest, OneshotResult, Sender};
+/// use async_trait::async_trait;
+///
+/// struct MockSender {}
+///
+/// #[async_trait]
+/// impl Sender for MockSender {
+///   async fn send_oneshot<'de, T: Oneshot<'de>>(
+///     &self,
+///     variant: OneshotVariants,
+///     payload: T::Request,
+///   ) -> OneshotResult<T::Response> {
+///     unimplemented!()
+///   }
+/// }
+///
+/// // Senderトレイトを持った構造体をsendメゾットに渡すだけで送信できる
+/// #[tokio::main]
+/// async fn main() {
+///   let response = requests::GetVersion::ClockingServer
+///     .send(MockSender {})
+///     .await
+///     .unwrap();
+///   assert_eq!(response.version, "v0.1.0");
+/// }
+/// ```
+///
+/// [`Sender`]トレイトは、Oneshotのペイロードを[`Sender::send_oneshot`]メソッドで送信できることを示すトレイトです。
+///
+/// `Sender`はふつう`server.sender()`のようにして得られますが、  
+/// この例では、テスト用Senderを作成しています。
 #[async_trait]
 pub trait OneshotRequest<Response> {
     async fn send<T: Sender + Send>(self, server: T) -> OneshotResult<Response>;
 }
 
-/// SuteRPCのワンショットリクエストの、リクエストとレスポンスの型を扱うトレイトです。
+/// SuteRPCのワンショットリクエストの、リクエストとレスポンスの型を扱うトレイト
 ///
 /// (ワンショットリクエストとは、リクエストとレスポンスが1対1で対応するリクエストのことです。)
 ///
 /// **ほとんどの場合、[`suterpc_oneshot_schema!`]マクロを使って、このトレイトを実装する型を定義します。**  
 /// **`impl Oneshot<'_> for ...`のような実装を書く必要はありません。**
+///
+/// ライフタイムパラメータ-`'de`は、[`Deserialize`]トレイトの実装に必要なものです。
 ///
 /// [`Request`]: Self::Request
 /// [`Response`]: Self::Response

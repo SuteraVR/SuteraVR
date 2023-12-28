@@ -1,4 +1,4 @@
-/// SuteRPCのワンショットリクエストのスキーマを定義するマクロです。
+/// SuteRPCのワンショットリクエストのスキーマを定義するマクロ
 ///
 /// (ワンショットリクエストとは、リクエストとレスポンスが1対1で対応するリクエストのことです。)
 ///
@@ -6,6 +6,7 @@
 /// - `Request` には、リクエストのスキーマを表すenumまたはstructを指定します。
 /// - `Response` には、レスポンスのスキーマを表すenumまたはstructを指定します。
 ///
+/// [`suterpc_oneshot_variants!`]: crate::suterpc_oneshot_variants!
 /// [`OneshotVariants`]: crate::schema::oneshot::OneshotVariants
 /// [`Formula`]: alkahest::Formula
 /// [`SerializeRef`]: alkahest::SerializeRef
@@ -31,6 +32,76 @@
 /// `GetVersion`, `GetVersionRequest`, `GetVersionResponse`を公開します。
 ///
 /// # 実装上の注意
+/// #### Variantの定義
+/// `variant`には、[`OneshotVariants`]のバリアントを指定します。  
+/// このバリアントはマクロによって定義されます。詳しくは[`suterpc_oneshot_variants!`]を参照してください。
+///
+/// #### 可視性について
+/// スキーマを利用するのは`clocking-server`, `client`などの外部クレートなので、
+/// 可視性に注意しなけばなりません。
+///
+/// 以下のコードはコンパイルエラーにはなりませんが、
+/// `clocking-server`や`client`など実際に利用するコードから`version`にアクセスできません。
+/// ```no_run
+/// use suteravr_lib::suterpc_oneshot_schema;
+/// suterpc_oneshot_schema! {
+///   /// サーバーのバージョンを要求するワンショット。
+///   variant: GetVersion,
+///   struct Request {},
+///   struct Response {
+///     // pub version: String, とすべき
+///     version: String,
+///   },
+/// }
+/// ```
+/// スキーマ内のフィールドを非公開にする意味は基本的にないので、
+/// `pub`を付けておきましょう。
+///
+/// #### ドキュメンテーションについて
+/// 各スキーマは、**必ず** `variant`に対してドキュメンテーションを与える必要があります。  
+/// これが欠如しているとコンパイルエラーになります。
+/// ```compile_fail
+/// use suteravr_lib::suterpc_oneshot_schema;
+/// suterpc_oneshot_schema! {
+///    // ただのコメントはドキュメンテーションにならない
+///    variant: GetVersion,
+///    struct Request {},
+///    struct Response {},
+/// }
+/// ```
+/// ドキュメンテーションとして認識されるには、Rustdocの形式で書く必要があります。  
+/// 手軽なのはスラッシュ3つ`///`から始め, Markdownに従って書くことです。
+/// ```no_run
+/// use suteravr_lib::suterpc_oneshot_schema;
+/// suterpc_oneshot_schema! {
+///    /// サーバーのバージョンを要求するワンショット。
+///    variant: GetVersion,
+///    struct Request {},
+///    struct Response {},
+/// }
+/// ```
+/// 必須ではありませんが、リクエストとレスポンスそれぞれに対してドキュメンテーションを与えることができます。
+/// ```no_run
+/// use suteravr_lib::suterpc_oneshot_schema;
+/// suterpc_oneshot_schema! {
+///     /// サーバーのバージョンを要求するワンショット。(ここは必須)
+///     variant: GetVersion,
+///     /// どのサーバーのバージョンを要求するか指定する。(ここのドキュメンテーションは任意)
+///     enum Request {
+///         SocialServer,
+///         ClockingServer,
+///     },
+///     /// サーバーのバージョンを返す。(ここのドキュメンテーションは任意)
+///     struct Response {
+///         /// 指定されたサーバーのバージョン (ここのドキュメンテーションは任意)
+///         pub version: String,
+///     },
+/// }
+/// ```
+/// しかし、この例のドキュメンテーションは過剰であり、フィールド名から明らかなものに日本語で注釈をつける必要性はありません。
+///
+///
+///
 /// #### トレイト境界について
 /// Request, Responseの型は、[`Formula`], [`SerializeRef`], [`Deserialize`], [`Send`] トレイト境界を要求します。  
 /// (この要求は、このマクロが[`Oneshot`]トレイトを実装する型を生成するためです。)
@@ -45,7 +116,7 @@
 /// ```compile_fail
 /// use suteravr_lib::suterpc_oneshot_schema;
 ///
-/// struct MyStruct {
+/// pub struct MyStruct {
 ///   pub clocking_server: String,
 ///   pub social_server: String,
 /// }
@@ -93,7 +164,7 @@ macro_rules! suterpc_oneshot_schema {
         $(#[doc = $req_doc:expr])*
         struct Request $req: tt,
         $(#[doc = $res_doc:expr])*
-        struct Response $res: tt,
+        struct Response $res: tt$(,)?
     ) => {
         $crate::suterpc_oneshot_schema!( @safe [$($doc)+], $variant, struct [$($req_doc)*] $req, struct [$($res_doc)*] $res);
     };
@@ -103,7 +174,7 @@ macro_rules! suterpc_oneshot_schema {
         $(#[doc = $req_doc:expr])*
         enum Request $req: tt,
         $(#[doc = $res_doc:expr])*
-        struct Response $res: tt,
+        struct Response $res: tt$(,)?
     ) => {
         $crate::suterpc_oneshot_schema!( @safe [$($doc)+], $variant, enum [$($req_doc)*] $req, struct [$($res_doc)*] $res);
     };
@@ -113,7 +184,7 @@ macro_rules! suterpc_oneshot_schema {
         $(#[doc = $req_doc:expr])*
         struct Request $req: tt,
         $(#[doc = $res_doc:expr])*
-        enum Response $res: tt,
+        enum Response $res: tt$(,)?
     ) => {
         $crate::suterpc_oneshot_schema!( @safe [$($doc)+], $variant, struct [$($req_doc)*] $req, enum [$($res_doc)*] $res);
     };
@@ -123,7 +194,7 @@ macro_rules! suterpc_oneshot_schema {
         $(#[doc = $req_doc:expr])*
         enum Request $req: tt,
         $(#[doc = $res_doc:expr])*
-        enum Response $res: tt,
+        enum Response $res: tt$(,)?
     ) => {
         $crate::suterpc_oneshot_schema!( @safe [$($doc)+], $variant, enum [$($req_doc)*] $req, enum [$($res_doc)*] $res);
     };
@@ -177,6 +248,39 @@ macro_rules! suterpc_oneshot_schema {
     };
 }
 
+/// SuteRPCのワンショットリクエストの種類を定義するマクロ
+///
+/// (ワンショットリクエストとは、リクエストとレスポンスが1対1で対応するリクエストのことです。)
+///
+/// ここで定義されたバリアントは、そのスキーマが定義されている必要があります。  
+/// **スキーマを定義したモジュールをここで公開しておく必要があります。**
+///
+/// # 例
+/// `GetVersion`というワンショットリクエストの種類を定義します。
+///
+/// `suteravr-lib/src/schema/oneshot.rs`
+/// ```ignore
+/// use suteravr_lib::suterpc_oneshot_variants;
+///
+/// pub mod schema_version;
+/// // <- 必ずpubが必要。
+/// //    mod schema_version; とすると、ドキュメンテーションが生成されない。
+///
+/// suterpc_oneshot_variants! {
+///     [schema_version] GetVersion = 0,
+/// }
+/// ```
+///
+/// `suteravr-lib/src/schema/oneshot/schema_version.rs`
+/// ```ignore
+/// use suteravr_lib::suterpc_oneshot_schema;
+/// suterpc_oneshot_schema! {
+///   ...
+///   variant: GetVersion,
+///   ...
+/// }
+/// ``````
+///
 #[macro_export]
 macro_rules! suterpc_oneshot_variants {
     (

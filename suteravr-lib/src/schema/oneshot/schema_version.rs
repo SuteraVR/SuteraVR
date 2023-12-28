@@ -20,6 +20,7 @@ suterpc_oneshot_schema! {
     variant: GetVersion,
     /// どのサーバーのバージョンを要求するか指定する。
     enum Request {
+        SocialServer,
         ClockingServer,
     },
     struct Response {
