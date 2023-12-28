@@ -1,3 +1,4 @@
+mod macro_impl;
 mod oneshot_schema;
 
 use alkahest::{advanced::BareFormula, Deserialize, Formula, SerializeRef};
