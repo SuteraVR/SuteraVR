@@ -1,16 +1,15 @@
-mod macro_impl;
-mod oneshot_schema;
+pub(crate) mod macro_impl;
 
 use alkahest::{advanced::BareFormula, Deserialize, Formula, SerializeRef};
 use async_trait::async_trait;
 
-use self::oneshot_schema::OneshotVariants;
+use crate::schema::oneshot::OneshotVariants;
 
 // TODO: OneshotError type is need.
-type OneshotResult<Response> = Result<Response, ()>;
+pub(crate) type OneshotResult<Response> = Result<Response, ()>;
 
 #[async_trait]
-trait Sender {
+pub(crate) trait Sender {
     async fn send_oneshot<'de, T: Oneshot<'de>>(
         &self,
         variant: OneshotVariants,
@@ -19,11 +18,11 @@ trait Sender {
 }
 
 #[async_trait]
-trait OneshotRequest<Response> {
+pub(crate) trait OneshotRequest<Response> {
     async fn send<T: Sender + Send>(self, server: T) -> OneshotResult<Response>;
 }
 
-trait Oneshot<'de> {
+pub(crate) trait Oneshot<'de> {
     type Request: Send
         + Formula
         + BareFormula
