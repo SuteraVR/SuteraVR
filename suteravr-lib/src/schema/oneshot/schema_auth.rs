@@ -1,17 +1,17 @@
 //! 認証を行うリクエストのスキーマを定義するモジュール
 
-use crate::{suterpc_oneshot_schema, typing::player::PlayerIdentifier};
+use crate::{suterpc_oneshot_schema, typing::id::PlayerIdentifier};
 suterpc_oneshot_schema! {
     /// セッションをインスタンスのプレイヤーとして認証することを求めるワンショット
     ///
     /// # Examples
     /// ```no_run
     /// use suteravr_lib::schema_oneshot::{requests, responses};
-    /// use suteravr_lib::typing::player::PlayerIdentifier;
+    /// use suteravr_lib::typing::id::{PlayerIdentifier, InstanceIdentifier};
     ///
     /// // リクエスト
     /// let request = requests::RequestPlayerAuth {
-    ///   player: PlayerIdentifier(3),
+    ///   player: PlayerIdentifier(InstanceIdentifier(6), 3),
     ///   token: String::from("SUTERAVRTOKEN-1a2b3c..."),
     /// };
     ///

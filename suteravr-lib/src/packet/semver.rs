@@ -1,6 +1,6 @@
 //! `0.1.0` のようなセマンティックバージョンを表す構造体を提供するモジュール
 
-use thiserror::Error;
+use crate::typing::SizedForBinary;
 
 /// `0.1.0` のようなセマンティックバージョンを表す構造体
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -8,6 +8,10 @@ pub struct Semver {
     pub major: u8,
     pub minor: u8,
     pub patch: u8,
+}
+
+impl SizedForBinary for Semver {
+    const SIZE: usize = 3;
 }
 
 impl From<&str> for Semver {
@@ -59,23 +63,15 @@ impl From<Semver> for String {
     }
 }
 
-#[derive(Debug, Error, Eq, PartialEq)]
-pub enum SemverSerdeError {
-    #[error("Length of bytes must be 3, but got {0}")]
-    UnexpectedLength(usize),
-}
-
-impl TryFrom<&[u8]> for Semver {
-    type Error = SemverSerdeError;
-
+impl From<[u8; 3]> for Semver {
     /// バージョンを表す`u8; 3` のバイナリを[`Semver`]に変換します。
     ///
     /// ```
     /// use suteravr_lib::semver::Semver;
     ///
     /// let some_binary: Vec<u8> = vec![0, 0, 1, 2, 3, 0, 0];
-    /// let version: Semver = some_binary[2..5].try_into().unwrap();
-    ///
+    /// let version_binary: [u8; 3] = some_binary[2..5].try_into().unwrap();
+    /// let version: Semver = version_binary.into();
     /// assert_eq!(
     ///   version,
     ///   Semver {
@@ -85,31 +81,11 @@ impl TryFrom<&[u8]> for Semver {
     ///   }
     /// );
     /// ```
-    ///
-    /// # Errors
-    /// バイト列の長さが3でない場合は[`SemverSerdeError::UnexpectedLength`]が返されます。
-    /// ```
-    /// use suteravr_lib::semver::{Semver, SemverSerdeError};
-    ///
-    /// let some_binary: Vec<u8> = vec![0, 0, 1, 2, 3, 0, 0];
-    /// let version: Result<Semver, SemverSerdeError> = some_binary[2..6].try_into();
-    ///
-    /// assert_eq!(
-    ///   version,
-    ///   Err(SemverSerdeError::UnexpectedLength(4))
-    /// );
-    /// ```
-    ///
-    ///
-    fn try_from(val: &[u8]) -> Result<Self, Self::Error> {
-        if val.len() != 3 {
-            Err(SemverSerdeError::UnexpectedLength(val.len()))
-        } else {
-            Ok(Self {
-                major: val[0],
-                minor: val[1],
-                patch: val[2],
-            })
+    fn from(val: [u8; 3]) -> Self {
+        Self {
+            major: val[0],
+            minor: val[1],
+            patch: val[2],
         }
     }
 }
@@ -121,8 +97,9 @@ impl Semver {
     /// use suteravr_lib::semver::Semver;
     ///
     /// let mut buf = vec![0, 0, 0, 0, 0, 0];
-    /// let version: Semver = "1.12.2" .into();
-    /// version.try_write(&mut buf[1..4]).unwrap();
+    /// let version: Semver = "1.12.2".into();
+    /// let write_place: &mut [u8; 3] = (&mut buf[1..4]).try_into().unwrap();
+    /// version.write(write_place);
     ///
     /// assert_eq!(
     ///   buf,
@@ -130,29 +107,10 @@ impl Semver {
     /// );
     /// ```
     ///
-    /// # Errors
-    /// バイト列の長さが3でない場合は[`SemverSerdeError::UnexpectedLength`]が返されます。
-    /// ```
-    /// use suteravr_lib::semver::{Semver, SemverSerdeError};
     ///
-    /// let mut buf = vec![0, 0, 0, 0, 0, 0];
-    /// let version: Semver = "1.12.2" .into();
-    /// let result = version.try_write(&mut buf[1..5]);
-    /// assert_eq!(
-    ///  result,
-    ///  Err(SemverSerdeError::UnexpectedLength(4))
-    /// );
-    /// ```
-    ///
-    ///
-    pub fn try_write(&self, buf: &mut [u8]) -> Result<(), SemverSerdeError> {
-        if buf.len() != 3 {
-            Err(SemverSerdeError::UnexpectedLength(buf.len()))
-        } else {
-            buf[0] = self.major;
-            buf[1] = self.minor;
-            buf[2] = self.patch;
-            Ok(())
-        }
+    pub fn write(&self, buf: &mut [u8; 3]) {
+        buf[0] = self.major;
+        buf[1] = self.minor;
+        buf[2] = self.patch;
     }
 }

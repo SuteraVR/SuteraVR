@@ -3,25 +3,17 @@
 use num_traits::FromPrimitive;
 use thiserror::Error;
 
-use crate::schema_oneshot::OneshotVariants;
-
-#[derive(Debug, Error, Eq, PartialEq)]
-pub enum RequestTypeSerializeError {
-    #[error("Length of bytes must be 2, but got {0}")]
-    UnexpectedLength(usize),
-}
+use crate::{schema_oneshot::OneshotVariants, typing::SizedForBinary};
 
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum RequestTypeDeserializeError {
-    #[error("Length of bytes must be 2, but got {0}")]
-    UnexpectedLength(usize),
     #[error("Unknown request type: {0}")]
     UnknownRequestType(u8),
     #[error("Unknown variant of oneshot: {0}")]
     UnknownVariantOfOneshot(u8),
 }
 
-/// SuteRPC上のリクエストの種類を表すenum  
+/// SuteRPC上のリクエストの種類を表す列挙体  
 /// 形式とバリアントがセットで提供される
 ///
 /// 現在はワンショットリクエストのみが存在しています
@@ -29,6 +21,9 @@ pub enum RequestTypeDeserializeError {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum RequestType {
     Oneshot(OneshotVariants) = 0,
+}
+impl SizedForBinary for RequestType {
+    const SIZE: usize = 2;
 }
 
 ///
@@ -61,24 +56,21 @@ impl RequestType {
     /// assert_eq!(OneshotVariants::RequestPlayerAuth as u8, 2);
     ///
     /// let req_type: RequestType = OneshotVariants::RequestPlayerAuth.into();
-    /// req_type.try_write(&mut buf[1..3]).unwrap();
+    /// let write_place: &mut [u8; 2] = (&mut buf[1..3]).try_into().unwrap();
+    /// req_type.write(write_place);
     /// assert_eq!(buf, vec![0, 0, 2, 0]);
     /// ```
-    pub fn try_write(&self, buf: &mut [u8]) -> Result<(), RequestTypeSerializeError> {
-        if buf.len() != 2 {
-            return Err(RequestTypeSerializeError::UnexpectedLength(buf.len()));
-        }
+    pub fn write(&self, buf: &mut [u8; 2]) {
         match self {
             Self::Oneshot(v) => {
                 buf[0] = 0;
                 buf[1] = *v as u8;
             }
         }
-        Ok(())
     }
 }
 
-impl TryFrom<&[u8]> for RequestType {
+impl TryFrom<[u8; 2]> for RequestType {
     type Error = RequestTypeDeserializeError;
     ///
     /// `u8;2`のバイト列から[`RequestType`]を読み込みます。
@@ -89,13 +81,11 @@ impl TryFrom<&[u8]> for RequestType {
     /// use suteravr_lib::schema_oneshot::OneshotVariants;
     ///
     /// let buf = vec![0, 2];
-    /// let req_type = RequestType::try_from(&buf[..]).unwrap();
-    /// assert_eq!(req_type, RequestType::Oneshot(OneshotVariants::RequestPlayerAuth));
+    /// let req_type: [u8; 2] = buf[..].try_into().unwrap();
+    /// let result: RequestType = req_type.try_into().unwrap();
+    /// assert_eq!(result, RequestType::Oneshot(OneshotVariants::RequestPlayerAuth));
     /// ```
-    fn try_from(buf: &[u8]) -> Result<Self, Self::Error> {
-        if buf.len() != 2 {
-            return Err(RequestTypeDeserializeError::UnexpectedLength(buf.len()));
-        }
+    fn try_from(buf: [u8; 2]) -> Result<Self, Self::Error> {
         match buf[0] {
             0 => FromPrimitive::from_u8(buf[1])
                 .ok_or(RequestTypeDeserializeError::UnknownVariantOfOneshot(buf[1]))
