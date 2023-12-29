@@ -7,10 +7,12 @@
 //! [`Request`]: crate::suterpc::Oneshot::Request
 //! [`Response`]: crate::suterpc::Oneshot::Response
 
+pub mod schema_auth;
 pub mod schema_version;
 
 pub(crate) use crate::suterpc_oneshot_variants;
 
 suterpc_oneshot_variants! {
     [schema_version] GetVersion = 0,
+    [schema_auth]    RequestPlayerAuth = 2,
 }

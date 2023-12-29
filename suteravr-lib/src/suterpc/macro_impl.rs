@@ -221,6 +221,9 @@ macro_rules! suterpc_oneshot_schema {
                 type Response = [<$variant Response>];
             }
 
+            impl $crate::suterpc::OneshotRequestMarker for [<$variant Request>] {}
+            impl $crate::suterpc::OneshotResponseMarker for [<$variant Response>] {}
+
             #[doc(hidden)]
             #[doc = concat!("[`", ::std::stringify!($variant), "`]のリクエスト用スキーマ。  ")]
             #[doc = ""]
@@ -288,7 +291,7 @@ macro_rules! suterpc_oneshot_variants {
     ) => {
         #[doc = "ワンショットリクエストの種類を定義します。  "]
         #[doc = "[`suterpc_oneshot_schema!`][crate::suterpc_oneshot_schema!]マクロを使って、このトレイトを実装する型を定義します。"]
-        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, ::num_derive::FromPrimitive)]
         pub enum OneshotVariants {
             $(
                 #[doc = concat!("[`", ::std::stringify!($name), "`]")]

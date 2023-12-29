@@ -8,6 +8,8 @@ edition = "2021"
 [dependencies]
 alkahest = { version = "0.3.0", features = ["derive"] }
 async-trait = "0.1.75"
+num-derive = "0.4.1"
+num-traits = "0.2.17"
 paste = "1.0.14"
 thiserror = "1.0.52"
 tokio = { version = "1.35.1", features = ["full"] }
