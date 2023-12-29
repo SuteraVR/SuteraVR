@@ -5,5 +5,5 @@
 //! use suteravr_lib::Foo;
 //! ```
 //!
-mod serde;
+
 mod version;
