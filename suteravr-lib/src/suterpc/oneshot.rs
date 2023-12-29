@@ -52,7 +52,7 @@ pub trait OneshotResponseMarker {}
 ///     .send(MockSender {})
 ///     .await
 ///     .unwrap();
-///   assert_eq!(response.version, "v0.1.0");
+///   assert_eq!(response.version, "0.1.0".into());
 /// }
 /// ```
 ///

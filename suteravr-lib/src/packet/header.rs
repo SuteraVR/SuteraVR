@@ -11,6 +11,15 @@ use crate::{
     },
 };
 
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum RequestParseError {
+    /// リクエストが、ヘッダーデータのサイズよりも短い
+    #[error("Request is too short to include header.")]
+    TooShort,
+    #[error(transparent)]
+    BadRequestType(#[from] RequestTypeDeserializeError),
+}
+
 /// SuteRPCの全リクエストにつけられるヘッダー
 ///
 /// ([`sender`], [`request_id`])の順序列は、インスタンスに対して一意にならなければなりません。
@@ -33,25 +42,19 @@ pub struct RequestHeader {
     /// リクエストの種類と、そのバリアント
     pub request_type: RequestType,
 }
+
 impl SizedForBinary for RequestHeader {
     const SIZE: usize =
         Semver::SIZE + RequestIdentifier::SIZE + PlayerIdentifier::SIZE + RequestType::SIZE;
-}
-
-#[derive(Debug, Error, Eq, PartialEq)]
-pub enum RequestParseError {
-    /// リクエストが、ヘッダーデータのサイズよりも短い
-    #[error("Request is too short to include header.")]
-    TooShort,
-    #[error(transparent)]
-    BadRequestType(#[from] RequestTypeDeserializeError),
 }
 
 impl RequestHeader {
     const REQUEST_ID_OFFSET: usize = Semver::SIZE;
     const SENDER_OFFSET: usize = Self::REQUEST_ID_OFFSET + RequestIdentifier::SIZE;
     const REQUEST_TYPE_OFFSET: usize = Self::SENDER_OFFSET + PlayerIdentifier::SIZE;
+}
 
+impl RequestHeader {
     /// バイナリデータから [`RequestHeader`] をパースします。
     ///
     /// # Example
@@ -68,7 +71,7 @@ impl RequestHeader {
     ///   0, 0, 0, 0, 0, 0, 0, 1,   // request_id
     ///   4,                        // instance
     ///   1,                        // player
-    ///   0, 0,                     // request type (OneshotRequest, GetVersion)
+    ///   1, 0,                     // request type (OneshotRequest, GetVersion)
     ///   1, 2, 3, 4, 5, 6, 7, 8, 9 // payload
     /// ];
     ///
@@ -128,12 +131,23 @@ impl RequestHeader {
 ///
 #[derive(Debug)]
 pub struct ResponseHeader {
+    /// スキーマのバージョン
+    pub schema_version: Semver,
     /// リクエストのID
     /// [`request_type`] が [`RequestType::Oneshot`] の場合、これは [`RequestHeader::request_id`] と一致する必要があります。
     /// そうではない場合、クライアントはこの値を無視します。
     ///
     /// [`request_type`]: ResponseHeader::request_type
-    pub request_id: u64,
+    pub request_id: RequestIdentifier,
     /// リクエストの種類と、そのバリアント
     pub request_type: RequestType,
+}
+
+impl SizedForBinary for ResponseHeader {
+    const SIZE: usize = Semver::SIZE + RequestIdentifier::SIZE + RequestType::SIZE;
+}
+
+impl ResponseHeader {
+    pub const REQUEST_ID_OFFSET: usize = Semver::SIZE;
+    pub const REQUEST_TYPE_OFFSET: usize = Self::REQUEST_ID_OFFSET + RequestIdentifier::SIZE;
 }

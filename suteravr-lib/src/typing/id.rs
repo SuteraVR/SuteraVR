@@ -1,3 +1,5 @@
+//! 識別子に関する型定義を行うモジュール
+
 use alkahest::alkahest;
 
 use super::SizedForBinary;

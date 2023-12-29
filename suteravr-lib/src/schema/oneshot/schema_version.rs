@@ -1,6 +1,6 @@
 //! バージョン情報を共有するリクエストのスキーマを定義するモジュール
 
-use crate::suterpc_oneshot_schema;
+use crate::{semver::Semver, suterpc_oneshot_schema};
 
 suterpc_oneshot_schema! {
     /// サーバーのバージョンを要求するワンショット。
@@ -24,6 +24,6 @@ suterpc_oneshot_schema! {
         ClockingServer,
     },
     struct Response {
-        pub version: String,
+        pub version: Semver,
     },
 }

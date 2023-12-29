@@ -1,9 +1,12 @@
 //! `0.1.0` のようなセマンティックバージョンを表す構造体を提供するモジュール
 
+use alkahest::alkahest;
+
 use crate::typing::SizedForBinary;
 
 /// `0.1.0` のようなセマンティックバージョンを表す構造体
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[alkahest(Formula, SerializeRef, Deserialize)]
 pub struct Semver {
     pub major: u8,
     pub minor: u8,
