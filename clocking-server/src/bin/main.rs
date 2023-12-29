@@ -1,4 +1,6 @@
+use clocking_server::version::SERVER_VERSION;
+
 #[tokio::main]
 async fn main() {
-    println!("Hello, World");
+    dbg!(*SERVER_VERSION);
 }
