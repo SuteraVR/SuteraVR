@@ -371,6 +371,7 @@ dependencies = [
  "alkahest",
  "async-trait",
  "paste",
+ "thiserror",
  "tokio",
 ]
 

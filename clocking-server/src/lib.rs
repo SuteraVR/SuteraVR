@@ -6,3 +6,4 @@
 //! ```
 //!
 mod serde;
+mod version;
