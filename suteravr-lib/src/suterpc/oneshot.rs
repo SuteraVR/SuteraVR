@@ -3,9 +3,6 @@ use async_trait::async_trait;
 
 use crate::schema::oneshot::OneshotVariants;
 
-// TODO: OneshotError type is need.
-pub type OneshotResult<Response> = Result<Response, ()>;
-
 /// SuteRPCで扱う全てのリクエストを送信するトレイト
 ///
 /// [`OneshotRequest`]トレイトの[`send`][OneshotRequest::send]メソッドなどから利用されます。
@@ -15,7 +12,7 @@ pub trait Sender {
         &self,
         variant: OneshotVariants,
         payload: T::Request,
-    ) -> OneshotResult<T::Response>;
+    ) -> T::Response;
 }
 
 /// ワンショットリクエストのリクエストスキーマであることを示すマーカートレイト
@@ -29,7 +26,7 @@ pub trait OneshotResponseMarker {}
 /// このトレイトを実装していると、[`send`][OneshotRequest::send]メソッドを呼び出すだけでリクエストを送信できます。
 /// ```no_run
 /// use suteravr_lib::schema_oneshot::{requests, responses, OneshotVariants};
-/// use suteravr_lib::suterpc::{Oneshot, OneshotRequest, OneshotResult, Sender};
+/// use suteravr_lib::suterpc::{Oneshot, OneshotRequest, Sender};
 /// use async_trait::async_trait;
 ///
 /// struct MockSender {}
@@ -40,20 +37,19 @@ pub trait OneshotResponseMarker {}
 ///     &self,
 ///     variant: OneshotVariants,
 ///     payload: T::Request,
-///   ) -> OneshotResult<T::Response> {
+///   ) -> T::Response {
 ///     unimplemented!()
 ///   }
 /// }
 ///
 /// // Senderトレイトを持った構造体をsendメゾットに渡すだけで送信できる
-/// #[tokio::main]
-/// async fn main() {
-///   let response = requests::GetVersion::ClockingServer
-///     .send(MockSender {})
-///     .await
-///     .unwrap();
-///   assert_eq!(response.version, "0.1.0".into());
-/// }
+/// # #[tokio::main]
+/// # async fn main() {
+/// let response = requests::GetVersion::ClockingServer
+///   .send(MockSender {})
+///   .await;
+/// assert_eq!(response.version, "0.1.0".into());
+/// # }
 /// ```
 ///
 /// [`Sender`]トレイトは、Oneshotのペイロードを[`Sender::send_oneshot`]メソッドで送信できることを示すトレイトです。
@@ -62,7 +58,7 @@ pub trait OneshotResponseMarker {}
 /// この例では、テスト用Senderを作成しています。
 #[async_trait]
 pub trait OneshotRequest<Response> {
-    async fn send<T: Sender + Send>(self, server: T) -> OneshotResult<Response>;
+    async fn send<T: Sender + Send>(self, server: T) -> Response;
 }
 
 /// SuteRPCのワンショットリクエストの、リクエストとレスポンスの型を扱うトレイト

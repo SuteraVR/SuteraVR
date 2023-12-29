@@ -31,7 +31,7 @@ pub enum RequestParseError {
 ///
 /// [`sender`]: RequestHeader::sender
 /// [`request_id`]: RequestHeader::request_id
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub struct RequestHeader {
     /// スキーマのバージョン
     pub schema_version: Semver,

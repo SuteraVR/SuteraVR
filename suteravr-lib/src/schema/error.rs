@@ -29,4 +29,7 @@ pub enum ErrorVariants {
 
     /// クライアントとのセッションが認証されていない場合
     Unauthorized = 2,
+
+    /// 未実装のリクエストが送信された場合
+    Unimplemented = 3,
 }

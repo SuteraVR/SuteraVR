@@ -19,42 +19,36 @@ pub use request_type::RequestType;
 pub use semver::Semver;
 
 use crate::suterpc::Oneshot;
-use crate::suterpc::OneshotRequestMarker;
-use crate::suterpc::OneshotResponseMarker;
 use crate::typing::SizedForBinary;
 
 #[async_trait]
-pub trait OneshotImplementer<'de, T: Oneshot<'de>> {
-    type Error;
+pub trait OneshotImplementer<'de, T: Oneshot<'de>, Context> {
     async fn handle(
         &self,
-        req: OneshotRequestPayload<T::Request>,
-    ) -> Result<OneshotResponsePayload<T::Response>, Self::Error>;
+        ctx: Context,
+        req: SuterpcRequestPayload<T::Request>,
+    ) -> SuterpcResponsePayload<T::Response>;
 }
 
-pub struct OneshotRequestPayload<T: OneshotRequestMarker> {
+pub struct SuterpcRequestPayload<T: Formula + BareFormula + SerializeRef<T>> {
     pub header: RequestHeader,
     pub payload: T,
 }
 
-pub struct OneshotResponsePayload<
-    T: OneshotResponseMarker + Formula + BareFormula + SerializeRef<T>,
-> {
+pub struct SuterpcResponsePayload<T: Formula + BareFormula + SerializeRef<T>> {
     pub header: ResponseHeader,
     pub payload: T,
 }
 
-impl<T: OneshotResponseMarker + Formula + BareFormula + SerializeRef<T>>
-    From<OneshotResponsePayload<T>> for Vec<u8>
-{
-    /// [`OneshotRequestPayload`]をバイナリデータに変換します。
+impl<T: Formula + BareFormula + SerializeRef<T>> From<SuterpcResponsePayload<T>> for Vec<u8> {
+    /// [`SuterpcRequestPayload`]をバイナリデータに変換します。
     ///
     /// # Example
     /// ```
     /// use suteravr_lib::packet::{
     ///   RequestType,
     ///   ResponseHeader,
-    ///   OneshotResponsePayload,
+    ///   SuterpcResponsePayload,
     /// };
     /// use suteravr_lib::schema_oneshot::{
     ///   responses,
@@ -65,8 +59,8 @@ impl<T: OneshotResponseMarker + Formula + BareFormula + SerializeRef<T>>
     ///
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///
-    /// let payload: OneshotResponsePayload<responses::GetVersion>
-    ///   = OneshotResponsePayload {
+    /// let payload: SuterpcResponsePayload<responses::GetVersion>
+    ///   = SuterpcResponsePayload {
     ///     header: ResponseHeader {
     ///       schema_version: "0.1.0".into(),
     ///       request_id: RequestIdentifier(1),
@@ -90,7 +84,7 @@ impl<T: OneshotResponseMarker + Formula + BareFormula + SerializeRef<T>>
     /// # Ok(())
     /// # }
     ///
-    fn from(val: OneshotResponsePayload<T>) -> Self {
+    fn from(val: SuterpcResponsePayload<T>) -> Self {
         let mut buf = vec![0u8; ResponseHeader::SIZE];
 
         // Write ResponseHeader::schmea_version

@@ -8,7 +8,7 @@ use super::SizedForBinary;
 ///
 /// 0 - 255までの値を取ります。  
 /// 実質的にワールド内の最大人数を256人に制限しています。
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 #[alkahest(Formula, SerializeRef, Deserialize)]
 pub struct PlayerIdentifier(pub InstanceIdentifier, pub u8);
 impl SizedForBinary for PlayerIdentifier {
@@ -19,7 +19,7 @@ impl SizedForBinary for PlayerIdentifier {
 ///
 /// 0 - 255までの値を取ります。
 /// 実質的に1つのクロッキングサーバーがホストできる最大インスタンス数を256個に制限しています。
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 #[alkahest(Formula, SerializeRef, Deserialize)]
 pub struct InstanceIdentifier(pub u8);
 impl SizedForBinary for InstanceIdentifier {
@@ -29,7 +29,7 @@ impl SizedForBinary for InstanceIdentifier {
 /// リクエストを識別するための構造体
 ///
 /// u64, ビッグエンディアンにエンコードされます。
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 #[alkahest(Formula, SerializeRef, Deserialize)]
 pub struct RequestIdentifier(pub u64);
 impl SizedForBinary for RequestIdentifier {

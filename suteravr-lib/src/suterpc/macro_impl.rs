@@ -241,7 +241,7 @@ macro_rules! suterpc_oneshot_schema {
             #[::async_trait::async_trait]
             impl $crate::suterpc::OneshotRequest<[<$variant Response>]> for [<$variant Request>] {
                 async fn send<T: $crate::suterpc::Sender + Send>(self, server: T)
-                  -> $crate::suterpc::OneshotResult<[<$variant Response>]> {
+                  -> [<$variant Response>] {
                     server
                         .send_oneshot::<$variant>($crate::schema::oneshot::OneshotVariants::$variant, self)
                         .await

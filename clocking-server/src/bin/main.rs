@@ -1,6 +1,6 @@
-use clocking_server::version::SERVER_VERSION;
+use clocking_server::version::SCHEMA_SEMVER;
 
 #[tokio::main]
 async fn main() {
-    dbg!(*SERVER_VERSION);
+    dbg!(*SCHEMA_SEMVER);
 }
