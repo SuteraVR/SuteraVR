@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://b6bk2pj8vbj28" path="res://addons/godot-xr-tools/functions/movement_turn.tscn" id="4_35vsx"]
 [ext_resource type="PackedScene" uid="uid://diyu06cw06syv" path="res://addons/godot-xr-tools/player/player_body.tscn" id="5_qr1t1"]
 [ext_resource type="PackedScene" uid="uid://raeeicvvindd" path="res://addons/godot-xr-tools/hands/scenes/highpoly/right_hand.tscn" id="5_vd56b"]
-[ext_resource type="PackedScene" uid="uid://bm6yri2k540dt" path="res://scenes/3dmodels/shapell.tscn" id="8_icga1"]
+[ext_resource type="PackedScene" uid="uid://bm6yri2k540dt" path="res://scenes/3dmodels/Shapell.tscn" id="8_icga1"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
@@ -106,7 +106,8 @@ turn_mode = 2
 
 [node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("5_qr1t1")]
 
-[node name="shapell" parent="XROrigin3D/PlayerBody" instance=ExtResource("8_icga1")]
+[node name="Shapell" parent="XROrigin3D/PlayerBody" instance=ExtResource("8_icga1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.101566)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jscir")
