@@ -3,12 +3,5 @@
 version = 3
 
 [[package]]
-name = "clocking-server"
-version = "0.1.0"
-dependencies = [
- "suteravr-lib",
-]
-
-[[package]]
 name = "suteravr-lib"
 version = "0.1.0"
