@@ -1,0 +1,10 @@
+[workspace]
+
+resolver = "2"
+members = [
+    "suteravr-lib",
+    "balancing-server",
+    "clocking-server",
+    "social-server",
+    "client/rust"
+]
