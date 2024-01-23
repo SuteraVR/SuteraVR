@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=21 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_6f5eg"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
@@ -9,11 +9,14 @@
 [ext_resource type="PackedScene" uid="uid://diyu06cw06syv" path="res://addons/godot-xr-tools/player/player_body.tscn" id="5_qr1t1"]
 [ext_resource type="PackedScene" uid="uid://raeeicvvindd" path="res://addons/godot-xr-tools/hands/scenes/highpoly/right_hand.tscn" id="5_vd56b"]
 [ext_resource type="PackedScene" uid="uid://bm6yri2k540dt" path="res://scenes/3dmodels/shapell.tscn" id="8_icga1"]
+[ext_resource type="PackedScene" uid="uid://n4t14nnk65mq" path="res://scenes/3dmodels/house/house.tscn" id="10_gnly5"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
 
 var xr_interface: XRInterface
+
+var house_scene = preload(\"res://scenes/3dmodels/house/house.tscn\")
 
 func _ready():
 	xr_interface = XRServer.find_interface(\"OpenXR\")
@@ -27,7 +30,11 @@ func _ready():
 		get_viewport().use_xr = true
 	else:
 		print(\"OpenXR not initialized, please check if your headset is connected\")
-"
+
+	var house = house_scene.instantiate()
+	house.position = Vector3(2.253, 0, -4.199)
+	add_child(house)
+	"
 
 [sub_resource type="QuadMesh" id="QuadMesh_qh65e"]
 size = Vector2(1.6, 0.9)
@@ -40,10 +47,6 @@ resource_local_to_scene = true
 albedo_texture = SubResource("ViewportTexture_tqnxw")
 
 [sub_resource type="Environment" id="Environment_jscir"]
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_farqr"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_jgrjk"]
 
 [sub_resource type="Theme" id="Theme_dy827"]
 
@@ -112,16 +115,7 @@ turn_mode = 2
 environment = SubResource("Environment_jscir")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-
-[node name="StaticBody3D" type="StaticBody3D" parent="."]
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
-mesh = SubResource("PlaneMesh_farqr")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 6, 0, -0.5, 0)
-shape = SubResource("BoxShape3D_jgrjk")
+transform = Transform3D(1, 0, 0, 0, 0.848233, 0.529623, 0, -0.529623, 0.848233, -1.96099, 7.19777, 12.8556)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1.90346, 0, 0, 0, 1.90346, 0, 0, 0, 1.90346, 0.0279732, 1.31003, -1.98213)
@@ -190,3 +184,7 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("1_wjwcn")
 expand_mode = 1
+
+[node name="House" parent="." instance=ExtResource("10_gnly5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2526, 0, -4.19909)
+visible = false
