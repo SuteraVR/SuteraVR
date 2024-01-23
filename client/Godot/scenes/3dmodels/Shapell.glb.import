@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://cgdn6uudh6bjr"
-path="res://.godot/imported/shapell.glb-0aa0c8307069f3031f9e249623d6602e.scn"
+path="res://.godot/imported/Shapell.glb-81fe666a5f05ee30db84c9ebb0ea72fd.scn"
 
 [deps]
 
-source_file="res://scenes/3dmodels/shapell.glb"
-dest_files=["res://.godot/imported/shapell.glb-0aa0c8307069f3031f9e249623d6602e.scn"]
+source_file="res://scenes/3dmodels/Shapell.glb"
+dest_files=["res://.godot/imported/Shapell.glb-81fe666a5f05ee30db84c9ebb0ea72fd.scn"]
 
 [params]
 
