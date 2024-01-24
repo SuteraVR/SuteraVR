@@ -1,14 +1,7 @@
-[gd_scene load_steps=22 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=15 format=3 uid="uid://ce61dcahc8n1t"]
 
-[ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_6f5eg"]
+[ext_resource type="PackedScene" uid="uid://w4x133wmjuv" path="res://scenes/Player.tscn" id="1_bg4ug"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
-[ext_resource type="PackedScene" uid="uid://njx823gyk04n" path="res://addons/godot-xr-tools/hands/scenes/highpoly/left_hand.tscn" id="2_gpcb0"]
-[ext_resource type="PackedScene" uid="uid://bl2nuu3qhlb5k" path="res://addons/godot-xr-tools/functions/movement_direct.tscn" id="3_0ksp0"]
-[ext_resource type="PackedScene" uid="uid://c2q5phg8w08o" path="res://addons/godot-xr-tools/functions/movement_jump.tscn" id="4_6akak"]
-[ext_resource type="PackedScene" uid="uid://b6bk2pj8vbj28" path="res://addons/godot-xr-tools/functions/movement_turn.tscn" id="4_35vsx"]
-[ext_resource type="PackedScene" uid="uid://diyu06cw06syv" path="res://addons/godot-xr-tools/player/player_body.tscn" id="5_qr1t1"]
-[ext_resource type="PackedScene" uid="uid://raeeicvvindd" path="res://addons/godot-xr-tools/hands/scenes/highpoly/right_hand.tscn" id="5_vd56b"]
-[ext_resource type="PackedScene" uid="uid://bm6yri2k540dt" path="res://scenes/3dmodels/Shapell.tscn" id="8_icga1"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
@@ -29,6 +22,12 @@ func _ready():
 		print(\"OpenXR not initialized, please check if your headset is connected\")
 "
 
+[sub_resource type="Environment" id="Environment_jscir"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_farqr"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jgrjk"]
+
 [sub_resource type="QuadMesh" id="QuadMesh_qh65e"]
 size = Vector2(1.6, 0.9)
 
@@ -38,12 +37,6 @@ viewport_path = NodePath("SubViewport")
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_verhv"]
 resource_local_to_scene = true
 albedo_texture = SubResource("ViewportTexture_tqnxw")
-
-[sub_resource type="Environment" id="Environment_jscir"]
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_farqr"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_jgrjk"]
 
 [sub_resource type="Theme" id="Theme_dy827"]
 
@@ -71,43 +64,7 @@ corner_radius_bottom_left = 4
 [node name="Node3D" type="Node3D"]
 script = SubResource("GDScript_qak7f")
 
-[node name="XROrigin3D" type="XROrigin3D" parent="."]
-
-[node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
-
-[node name="VRCommonShaderCache" parent="XROrigin3D/XRCamera3D" instance=ExtResource("1_6f5eg")]
-
-[node name="LeftHand" type="XRController3D" parent="XROrigin3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5)
-tracker = &"left_hand"
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="XROrigin3D/LeftHand"]
-transform = Transform3D(0.16146, 0, 0, 0, 0.16146, 0, 0, 0, 0.16146, 0.148207, 0.054749, -0.0200708)
-mesh = SubResource("QuadMesh_qh65e")
-skeleton = NodePath("../../../MeshInstance3D")
-surface_material_override/0 = SubResource("StandardMaterial3D_verhv")
-
-[node name="LeftHand" parent="XROrigin3D/LeftHand" instance=ExtResource("2_gpcb0")]
-
-[node name="MovementDirect" parent="XROrigin3D/LeftHand" instance=ExtResource("3_0ksp0")]
-strafe = true
-
-[node name="RightHand" type="XRController3D" parent="XROrigin3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1, -0.5)
-tracker = &"right_hand"
-
-[node name="RightHand" parent="XROrigin3D/RightHand" instance=ExtResource("5_vd56b")]
-
-[node name="MovementTurn" parent="XROrigin3D/RightHand" instance=ExtResource("4_35vsx")]
-turn_mode = 2
-
-[node name="MovementJump" parent="XROrigin3D/RightHand" instance=ExtResource("4_6akak")]
-
-[node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("5_qr1t1")]
-
-[node name="Shapell" parent="XROrigin3D/PlayerBody" instance=ExtResource("8_icga1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.101566)
+[node name="XROrigin3D" parent="." instance=ExtResource("1_bg4ug")]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jscir")
