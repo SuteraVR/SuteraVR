@@ -1,9 +1,6 @@
 extends CharacterBody3D
 
-
-@export var speed = 2
-@export var fall_acceleration = 75
-
+@export var SPEED = 2
 var target_velocity = Vector3.ZERO
 
 # Called when the node enters the scene tree for the first time.

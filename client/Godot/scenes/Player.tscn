@@ -26,6 +26,8 @@ height = 1.4
 
 [node name="CharacterBody3D" type="CharacterBody3D"]
 script = ExtResource("1_0pp0e")
+speed = null
+fall_acceleration = null
 
 [node name="XROrigin3D" type="XROrigin3D" parent="."]
 
