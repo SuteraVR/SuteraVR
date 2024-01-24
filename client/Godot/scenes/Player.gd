@@ -49,10 +49,6 @@ func _physics_process(delta):
 	)
 	
 	if direction != Vector2.ZERO:
-		var angle = atan2(direction.y, direction.x)
-		direction = Vector2(
-			cos(-mouse_rotation.y),
-			sin(-mouse_rotation.y)
-		).rotated(angle).normalized() * SPEED
-		velocity = Vector3(direction.x, 0, direction.y)
+		var looked = direction.rotated(-mouse_rotation.y).normalized() * SPEED
+		velocity = Vector3(looked.x, 0, looked.y)
 		move_and_slide()
