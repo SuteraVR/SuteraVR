@@ -29,9 +29,9 @@ func _unhandled_input(event):
 		mouse_raw = Vector2(-event.relative.y, -event.relative.x)
 	
 func _update_camera(delta):
-	
 	mouse_rotation += mouse_raw * delta * SENSITIVITY
 	mouse_rotation.x = clamp(mouse_rotation.x, TILT_LOWER_LIMIT, TILT_UPPER_LIMIT)
+	mouse_rotation.y = fmod(mouse_rotation.y, 2*PI)
 	
 	CAMERA_CONTROLLER.transform.basis = Basis.from_euler(
 		Vector3(mouse_rotation.x, mouse_rotation.y, 0)
