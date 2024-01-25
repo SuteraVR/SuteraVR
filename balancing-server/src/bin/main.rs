@@ -1,8 +1,21 @@
-use actix_web::middleware::Logger;
-use actix_web::{get, App, HttpResponse, HttpServer, Responder};
+use axum::{
+    routing::get,
+    response::{Response, Json},
+    Router,
+    middleware::{self, Next},
+    extract::Request,
+};
+use tower::{
+    ServiceBuilder,
+};
+
 use serde::Serialize;
 
 use std::env;
+use http::{
+    StatusCode,
+    header::HeaderValue,
+};
 
 // INFO: struct Hello and handler hello are placeholder
 #[derive(Serialize)]
@@ -10,15 +23,28 @@ struct Hello {
     hello: String,
 }
 
-#[get("/hello")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().json(Hello {
-        hello: "world".to_string(),
-    })
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+async fn hello() -> Json<Hello> {
+    Json(Hello { hello: "world".to_string() })
 }
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn my_middleware(request: Request, next: Next) -> Result<Response, StatusCode> {
+    match request.headers().get("SuteraVR-SchemaVersion") {
+        Some(version) if version == VERSION => {},
+        _ => {
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    }
+
+    let mut response = next.run(request).await;
+    response.headers_mut().insert("SuteraVR-SchemaVersion", VERSION.parse().unwrap());
+
+    Ok(response)
+}
+
+#[tokio::main]
+async fn main() {
     env::set_var("RUST_LOG", "info");
     env_logger::init();
 
@@ -28,10 +54,16 @@ async fn main() -> std::io::Result<()> {
         Err(_) => 3500,
     };
     log::info!("Run on port :{}", port);
+    
+    let app = Router::new()
+        .route("/hello", get(hello))
+        .layer(
+            ServiceBuilder::new()
+                .layer(axum::middleware::from_fn(my_middleware))
+            );
+
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await.unwrap();
 
     // Run server
-    HttpServer::new(|| App::new().wrap(Logger::default()).service(hello))
-        .bind(("0.0.0.0", port))?
-        .run()
-        .await
+    axum::serve(listener, app).await.unwrap();
 }
