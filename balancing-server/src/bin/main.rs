@@ -18,6 +18,7 @@ struct Hello {
     hello: String,
 }
 
+const SUTERAVR_SCHEMAVERSION: &str = "SuteraVR-SchemaVersion";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 async fn hello() -> Json<Hello> {
@@ -26,8 +27,8 @@ async fn hello() -> Json<Hello> {
     })
 }
 
-async fn my_middleware(request: Request, next: Next) -> Result<Response, StatusCode> {
-    match request.headers().get("SuteraVR-SchemaVersion") {
+async fn schemaversion_checker(request: Request, next: Next) -> Result<Response, StatusCode> {
+    match request.headers().get(SUTERAVR_SCHEMAVERSION) {
         Some(version) if version == VERSION => {}
         _ => {
             return Err(StatusCode::BAD_REQUEST);
@@ -37,7 +38,7 @@ async fn my_middleware(request: Request, next: Next) -> Result<Response, StatusC
     let mut response = next.run(request).await;
     response
         .headers_mut()
-        .insert("SuteraVR-SchemaVersion", VERSION.parse().unwrap());
+        .insert(SUTERAVR_SCHEMAVERSION, VERSION.parse().unwrap());
 
     Ok(response)
 }
@@ -56,7 +57,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/hello", get(hello))
-        .layer(ServiceBuilder::new().layer(axum::middleware::from_fn(my_middleware)));
+        .layer(ServiceBuilder::new().layer(axum::middleware::from_fn(schemaversion_checker)));
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
