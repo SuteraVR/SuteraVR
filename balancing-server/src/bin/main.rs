@@ -1,7 +1,15 @@
-use actix_web::middleware::Logger;
-use actix_web::{get, App, HttpResponse, HttpServer, Responder};
+use axum::{
+    extract::Request,
+    middleware::Next,
+    response::{Json, Response},
+    routing::get,
+    Router,
+};
+use tower::ServiceBuilder;
+
 use serde::Serialize;
 
+use http::StatusCode;
 use std::env;
 
 // INFO: struct Hello and handler hello are placeholder
@@ -10,15 +18,33 @@ struct Hello {
     hello: String,
 }
 
-#[get("/hello")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().json(Hello {
+const SUTERAVR_SCHEMAVERSION: &str = "SuteraVR-SchemaVersion";
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+async fn hello() -> Json<Hello> {
+    Json(Hello {
         hello: "world".to_string(),
     })
 }
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn schemaversion_checker(request: Request, next: Next) -> Result<Response, StatusCode> {
+    match request.headers().get(SUTERAVR_SCHEMAVERSION) {
+        Some(version) if version == VERSION => {}
+        _ => {
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    }
+
+    let mut response = next.run(request).await;
+    response
+        .headers_mut()
+        .insert(SUTERAVR_SCHEMAVERSION, VERSION.parse().unwrap());
+
+    Ok(response)
+}
+
+#[tokio::main]
+async fn main() {
     env::set_var("RUST_LOG", "info");
     env_logger::init();
 
@@ -29,9 +55,14 @@ async fn main() -> std::io::Result<()> {
     };
     log::info!("Run on port :{}", port);
 
-    // Run server
-    HttpServer::new(|| App::new().wrap(Logger::default()).service(hello))
-        .bind(("0.0.0.0", port))?
-        .run()
+    let app = Router::new()
+        .route("/hello", get(hello))
+        .layer(ServiceBuilder::new().layer(axum::middleware::from_fn(schemaversion_checker)));
+
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
+        .unwrap();
+
+    // Run server
+    axum::serve(listener, app).await.unwrap();
 }
