@@ -5,3 +5,5 @@
 //! use suteravr_lib::Foo;
 //! ```
 //!
+
+pub mod consts;
