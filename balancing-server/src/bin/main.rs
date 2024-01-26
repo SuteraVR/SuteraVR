@@ -1,4 +1,5 @@
 use axum::{
+    body::Body,
     extract::Request,
     middleware::Next,
     response::{Json, Response},
@@ -27,13 +28,17 @@ async fn hello() -> Json<Hello> {
     })
 }
 
-async fn schemaversion_checker(request: Request, next: Next) -> Result<Response, StatusCode> {
+async fn schemaversion_checker(request: Request, next: Next) -> Result<Response, Response> {
     match request.headers().get(SUTERAVR_SCHEMAVERSION) {
         Some(version) if version == VERSION => {}
         _ => {
-            return Err(StatusCode::BAD_REQUEST);
+            return Err(Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .header(SUTERAVR_SCHEMAVERSION, VERSION)
+                .body(Body::empty())
+                .unwrap())
         }
-    }
+    };
 
     let mut response = next.run(request).await;
     response
