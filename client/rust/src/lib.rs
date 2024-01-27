@@ -1,6 +1,4 @@
-use godot::{prelude::*};
-
-
+use godot::prelude::*;
 
 struct SuteraClientLib;
 
