@@ -148,3 +148,5 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("1_wjwcn")
 expand_mode = 1
+
+[node name="TestNode" type="TestNode" parent="."]
