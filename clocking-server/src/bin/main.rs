@@ -1,4 +1,4 @@
-use std::{env, io, path::PathBuf};
+use std::{io, path::PathBuf};
 
 use clocking_server::{certs::SingleCerts, consts};
 use log::{error, info};
@@ -6,10 +6,7 @@ use tokio_rustls::rustls::ServerConfig;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    if env::var("RUST_LOG").is_err() {
-        env::set_var("RUST_LOG", "info");
-    }
-    env_logger::init();
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     info!("====================");
     info!("SuteraVR / Clocking-server");
