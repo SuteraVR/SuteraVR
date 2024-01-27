@@ -2,6 +2,7 @@ use std::{env, io, path::PathBuf};
 
 use clocking_server::{certs::SingleCerts, consts};
 use log::{error, info};
+use tokio_rustls::rustls::ServerConfig;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
@@ -18,17 +19,19 @@ async fn main() -> io::Result<()> {
 
     info!("Loading Certifications...");
     let single_certs = SingleCerts::new(
-        &PathBuf::from("./cert.pem"),
-        &PathBuf::from("./root-ca.key.pem"),
+        &PathBuf::from("./ssl_certs/server.crt"),
+        &PathBuf::from("./ssl_certs/server.key"),
     ).map_err(|e| {
         error!("Failed to load certifications!: {}", e);
         error!("Ensure that ./server.crt and ./private.pem exists.");
+        info!("Hint: you can generate your own by certgen.sh");
         e
     })?;
 
+    let cfg: ServerConfig = single_certs.gen_server_config()?;
 
-
-    info!("Run on port :{}", *consts::PORT);
+    info!("");
+    info!("Server running on port :{}", *consts::PORT);
 
     Ok(())
 }
