@@ -19,9 +19,10 @@ async fn main() -> io::Result<()> {
 
     info!("Loading Certifications...");
     let single_certs = SingleCerts::new(
-        &PathBuf::from("./ssl_certs/server.crt"),
-        &PathBuf::from("./ssl_certs/server.key"),
-    ).map_err(|e| {
+        &PathBuf::from("./certs/server.crt"),
+        &PathBuf::from("./certs/server.key"),
+    )
+    .map_err(|e| {
         error!("Failed to load certifications!: {}", e);
         error!("Ensure that ./server.crt and ./private.pem exists.");
         info!("Hint: you can generate your own by certgen.sh");

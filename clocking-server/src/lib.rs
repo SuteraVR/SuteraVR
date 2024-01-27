@@ -6,5 +6,5 @@
 //! ```
 //!
 
-pub mod consts;
 pub mod certs;
+pub mod consts;
