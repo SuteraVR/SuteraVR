@@ -5,6 +5,8 @@ use log::{error, info};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
+    runtime::Builder,
+    task,
 };
 use tokio_rustls::{rustls::ServerConfig, TlsAcceptor};
 
@@ -17,7 +19,16 @@ async fn main() -> io::Result<()> {
     info!("Version: {}", consts::VERSION);
     info!("====================");
     info!("");
+    match *consts::ENV {
+        consts::SuteraEnv::Development => {
+            info!("Running in Development mode...");
+            console_subscriber::init();
+            info!("console_subscriber initialized. To debug, tokio-console may help you.");
+        }
+        consts::SuteraEnv::Production => info!("Running in Production mode..."),
+    }
 
+    info!("");
     info!("Loading Certifications...");
     let single_certs = SingleCerts::new(
         &PathBuf::from("./certs/server.crt"),
@@ -41,12 +52,12 @@ async fn main() -> io::Result<()> {
 
     info!("Ready! Server running on {}", &addr);
     loop {
-        let (strem, peer_addr) = listener.accept().await?;
+        let (stream, peer_addr) = listener.accept().await?;
         let acceptor = acceptor.clone();
         info!("Connection from {}...", peer_addr);
 
         let fut = async move {
-            let mut stream = acceptor.accept(strem).await?;
+            let mut stream = acceptor.accept(stream).await?;
             info!("Connection from {} is established.", peer_addr);
 
             let mut buf = vec![0; 1024];
@@ -64,7 +75,9 @@ async fn main() -> io::Result<()> {
             info!("Connection from {} is closed.", peer_addr);
             io::Result::Ok(())
         };
-
-        tokio::spawn(fut);
+        task::Builder::new()
+            .name(format!("Acceptor {}", peer_addr).as_str())
+            .spawn(fut)
+            .unwrap();
     }
 }
