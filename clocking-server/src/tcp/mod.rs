@@ -53,13 +53,15 @@ pub async fn tcp_server(
         }
     };
 
-    info!("Waiting for all connections to be closed...");
-    match shutdown_tx.send(shutdown_reason) {
-        Ok(_) => while (connections.join_next().await).is_some() {},
-        Err(e) => {
-            error!("Failed to send shutdown signal: {}", e);
-            warn!("Shutting down immediately...");
-            connections.shutdown().await;
+    if !connections.is_empty() {
+        info!("Waiting for all connections to be closed...");
+        match shutdown_tx.send(shutdown_reason) {
+            Ok(_) => while (connections.join_next().await).is_some() {},
+            Err(e) => {
+                error!("Failed to send shutdown signal: {}", e);
+                warn!("Shutting down immediately...");
+                connections.shutdown().await;
+            }
         }
     }
     info!("Shutting down... (tcp)");
