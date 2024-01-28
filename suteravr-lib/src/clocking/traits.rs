@@ -77,11 +77,27 @@ pub mod test_util {
         (T::parse_frame(&mut cursor, ctx).await, cursor)
     }
 
+    /// あるペイロードを、フレームに変換して、そのフレームを解析した結果が、元のペイロードと一致することを確認します。
     pub async fn test_clockingframe_reflective<T: ClockingFrame>(payload: T, ctx: T::Context) {
         let binary = encode(&payload, &ctx).await;
         let (re_encoded, cursor) = decode::<T>(&binary, &ctx).await;
 
         assert_eq!(re_encoded.unwrap(), payload);
         assert_eq!(cursor.has_remaining(), false);
+    }
+
+    /// フレームの解析が失敗することを確認します。
+    ///
+    /// `fail_at`が指定された場合、その位置で解析が失敗することを確認します。
+    pub async fn test_clockingframe_mustfail<T: ClockingFrame>(
+        buf: &[u8],
+        ctx: &T::Context,
+        fail_at: Option<usize>,
+    ) {
+        let (decoded, cursor) = decode::<T>(buf, ctx).await;
+        assert_eq!(decoded, None);
+        if let Some(fail_at) = fail_at {
+            assert_eq!(cursor.position() as usize, fail_at);
+        }
     }
 }

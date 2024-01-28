@@ -50,9 +50,9 @@ impl ClockingFrame for SuteraHeader {
 
 #[cfg(test)]
 mod tests {
-    use pretty_assertions::assert_eq;
-
-    use crate::clocking::traits::test_util::{decode, encode, test_clockingframe_reflective};
+    use crate::clocking::traits::test_util::{
+        encode, test_clockingframe_mustfail, test_clockingframe_reflective,
+    };
 
     use super::*;
 
@@ -93,8 +93,11 @@ mod tests {
         encoded[4] = b'r';
         encoded[5] = b'a';
 
-        let (decoded, cursor) = decode::<SuteraHeader>(&encoded, &()).await;
-        assert_eq!(decoded, None);
-        assert_eq!(cursor.position() as usize, SuteraHeader::PREFIX.len());
+        test_clockingframe_mustfail::<SuteraHeader>(
+            &encoded,
+            &(),
+            Some(SuteraHeader::PREFIX.len()),
+        )
+        .await;
     }
 }

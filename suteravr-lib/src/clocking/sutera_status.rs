@@ -101,7 +101,9 @@ impl ClockingFrame for SuteraStatus {
 
 #[cfg(test)]
 mod tests {
-    use crate::clocking::traits::test_util::test_clockingframe_reflective;
+    use crate::clocking::traits::test_util::{
+        test_clockingframe_mustfail, test_clockingframe_reflective,
+    };
 
     use super::*;
 
@@ -119,5 +121,17 @@ mod tests {
             (),
         )
         .await;
+    }
+
+    #[tokio::test]
+    async fn clockingframe_sutera_status_prefixerr() {
+        test_clockingframe_mustfail::<SuteraStatus>(&[0x02, 0x01, 0x00], &(), Some(1)).await;
+        test_clockingframe_mustfail::<SuteraStatus>(&[0x03, 0x00, 0x00, 0x00], &(), Some(1)).await;
+        test_clockingframe_mustfail::<SuteraStatus>(&[0x03, 0x01, 0x00, 0x00], &(), Some(1)).await;
+    }
+
+    #[tokio::test]
+    async fn clockingframe_sutera_status_unexists() {
+        test_clockingframe_mustfail::<SuteraStatus>(&[0x02, 0xFF, 0xFF, 0xFF], &(), Some(4)).await;
     }
 }
