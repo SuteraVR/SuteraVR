@@ -1,13 +1,14 @@
 pub mod certs;
 pub mod error;
 
+use log::error;
 use log::{info, warn};
 use std::{io, net::SocketAddr, sync::Arc};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
-    sync::mpsc::Receiver,
-    task,
+    sync::{broadcast, mpsc::Receiver},
+    task::JoinSet,
 };
 use tokio_rustls::{rustls::ServerConfig, TlsAcceptor};
 
@@ -32,22 +33,35 @@ pub async fn tcp_server(
 
     info!("Ready! Server running on {}", &addr);
 
-    loop {
+    let mut connections = JoinSet::new();
+    let (shutdown_tx, _) = broadcast::channel::<ShutdownReason>(1);
+
+    let shutdown_reason = 'accepting: loop {
         tokio::select! {
             signal = rx.recv() => {
                 match signal {
-                    Some(TcpServerSignal::Shutdown(_)) => {
-                        break;
+                    Some(TcpServerSignal::Shutdown(reason)) => {
+                        break 'accepting reason;
                     }
                     None => {
                         warn!("Signal channel is closed.");
-                        break;
+                        break 'accepting ShutdownReason::SignalChannelClosed;
                     }
                 }
             }
             accepted = listener.accept() => {
-                connection_init(accepted, acceptor).await?;
+                connection_init(accepted, acceptor, &mut connections, shutdown_tx.subscribe()).await?;
             }
+        }
+    };
+
+    info!("Waiting for all connections to be closed...");
+    match shutdown_tx.send(shutdown_reason) {
+        Ok(_) => while (connections.join_next().await).is_some() {},
+        Err(e) => {
+            error!("Failed to send shutdown signal: {}", e);
+            warn!("Shutting down immediately...");
+            connections.shutdown().await;
         }
     }
     info!("Shutting down... (tcp)");
@@ -57,6 +71,8 @@ pub async fn tcp_server(
 async fn connection_init(
     accepted: io::Result<(TcpStream, SocketAddr)>,
     acceptor: &TlsAcceptor,
+    join_set: &mut JoinSet<()>,
+    mut shutdown_rx: broadcast::Receiver<ShutdownReason>,
 ) -> Result<(), TcpServerError> {
     let Ok((stream, peer_addr)) = accepted else {
         if let Err(e) = accepted {
@@ -73,31 +89,41 @@ async fn connection_init(
         info!("Connection from {} is established.", peer_addr);
 
         let mut buf = vec![0; 1024];
-        while let Ok(n) = stream.read(&mut buf).await {
-            if n == 0 {
-                break;
+        loop {
+            tokio::select! {
+                Ok(n) = stream.read(&mut buf) => {
+                    if n == 0 {
+                        break;
+                    }
+                    let string = String::from_utf8_lossy(&buf[..n]);
+                    info!("Received from {}: {}", peer_addr, string.trim_end());
+                    stream
+                        .write_all(format!("Received: {}", string).as_bytes())
+                        .await?;
+                },
+                Ok(_) = shutdown_rx.recv() => {
+                    stream.shutdown().await?;
+                }
             }
-            let string = String::from_utf8_lossy(&buf[..n]);
-            info!("Received from {}: {}", peer_addr, string.trim_end());
-            stream
-                .write_all(format!("Received: {}", string).as_bytes())
-                .await?;
         }
 
         io::Result::Ok(())
     };
-    match task::Builder::new()
+
+    join_set
+        .build_task()
         .name(format!("Acceptor {}", peer_addr).as_str())
-        .spawn(fut)
-        .map_err(TcpServerError::SpawnError)?
-        .await?
-    {
-        Ok(_) => {
-            info!("Connection from {} is closed.", peer_addr);
-        }
-        Err(e) => {
-            warn!("Failed to spawn acceptor for {} ({})", peer_addr, e);
-        }
-    }
+        .spawn(async move {
+            match fut.await {
+                Ok(_) => {
+                    info!("Connection from {} is closed.", peer_addr);
+                }
+                Err(e) => {
+                    warn!("Failed to spawn acceptor for {} ({})", peer_addr, e);
+                }
+            }
+        })
+        .map_err(TcpServerError::SpawnError)?;
+
     Ok(())
 }
