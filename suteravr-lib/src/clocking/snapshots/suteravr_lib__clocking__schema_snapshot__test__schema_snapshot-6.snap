@@ -1,0 +1,5 @@
+---
+source: src/clocking/schema_snapshot.rs
+expression: "OneshotHeader::MAX_FRAME_SIZE"
+---
+14
