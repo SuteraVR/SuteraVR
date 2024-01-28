@@ -15,6 +15,7 @@ use super::traits::ClockingFrame;
 pub enum SuteraStatusError {
     SchemaVersionNotSupported,
     BadRequest,
+    Unimplemented,
     Unauthorized,
     AuthenticationHasBeenExpired,
     Forbidden,
@@ -22,12 +23,13 @@ pub enum SuteraStatusError {
 }
 static SUTERA_STATUS_ERROR_MAP: Lazy<EnumMap<SuteraStatusError, [u8; 3]>> = Lazy::new(|| {
     enum_map! {
-        SuteraStatusError::SchemaVersionNotSupported => [0x10, 0x00, 0x00],
-        SuteraStatusError::BadRequest => [0x10, 0x02, 0x00],
-        SuteraStatusError::Unauthorized => [0x20, 0x00, 0x00],
+        SuteraStatusError::SchemaVersionNotSupported    => [0x10, 0x00, 0x00],
+        SuteraStatusError::BadRequest                   => [0x10, 0x02, 0x00],
+        SuteraStatusError::Unimplemented                => [0x10, 0x02, 0x01],
+        SuteraStatusError::Unauthorized                 => [0x20, 0x00, 0x00],
         SuteraStatusError::AuthenticationHasBeenExpired => [0x20, 0x00, 0x01],
-        SuteraStatusError::Forbidden => [0x20, 0x01, 0x00],
-        SuteraStatusError::YouAreNotInInstance => [0x20, 0x02, 0x00],
+        SuteraStatusError::Forbidden                    => [0x20, 0x01, 0x00],
+        SuteraStatusError::YouAreNotInInstance          => [0x20, 0x02, 0x00],
     }
 });
 
@@ -63,16 +65,14 @@ impl ClockingFrame for SuteraStatus {
                 if cursor.remaining() < 3 {
                     return None;
                 }
-                let mut kind = [0u8; 3];
-                cursor.read_exact(&mut kind).unwrap();
+                let kind = [cursor.get_u8(), cursor.get_u8(), cursor.get_u8()];
                 search_from_enum(*SUTERA_STATUS_WARNING_MAP, &kind).map(Self::Warning)
             }
             0x02 => {
                 if cursor.remaining() < 3 {
                     return None;
                 }
-                let mut kind = [0u8; 3];
-                cursor.read_exact(&mut kind).unwrap();
+                let kind = [cursor.get_u8(), cursor.get_u8(), cursor.get_u8()];
                 search_from_enum(*SUTERA_STATUS_ERROR_MAP, &kind).map(Self::Error)
             }
             _ => None,
