@@ -2,6 +2,7 @@
 [gd_scene load_steps=25 format=3 uid="uid://ce61dcahc8n1t"]
 
 
+[ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_6f5eg"]
 [ext_resource type="PackedScene" uid="uid://w4x133wmjuv" path="res://scenes/Player.tscn" id="1_bg4ug"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="PackedScene" uid="uid://njx823gyk04n" path="res://addons/godot-xr-tools/hands/scenes/highpoly/left_hand.tscn" id="2_gpcb0"]
