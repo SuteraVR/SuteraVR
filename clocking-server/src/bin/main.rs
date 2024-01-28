@@ -1,16 +1,13 @@
-use std::{io, net::SocketAddr, path::PathBuf, sync::Arc};
+use clocking_server::tcp::{error::ClockingServerError, tcp_server, TcpServerSignal};
+use std::{net::SocketAddr, path::PathBuf};
+use tokio::{sync::mpsc, task};
 
-use clocking_server::{certs::SingleCerts, consts};
+use clocking_server::{consts, tcp::certs::SingleCerts};
 use log::{error, info};
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    net::TcpListener,
-    task,
-};
-use tokio_rustls::{rustls::ServerConfig, TlsAcceptor};
+use tokio_rustls::rustls::ServerConfig;
 
 #[tokio::main]
-async fn main() -> io::Result<()> {
+async fn main() -> Result<(), ClockingServerError> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     info!("====================");
@@ -46,37 +43,12 @@ async fn main() -> io::Result<()> {
 
     let addr = SocketAddr::from(([127, 0, 0, 1], *consts::PORT));
 
-    let acceptor = &TlsAcceptor::from(Arc::new(cfg));
-    let listener = TcpListener::bind(&addr).await?;
+    let (tcp_tx, tcp_rx) = mpsc::channel::<TcpServerSignal>(32);
 
-    info!("Ready! Server running on {}", &addr);
-    loop {
-        let (stream, peer_addr) = listener.accept().await?;
-        let acceptor = acceptor.clone();
-        info!("Connection from {}...", peer_addr);
-
-        let fut = async move {
-            let mut stream = acceptor.accept(stream).await?;
-            info!("Connection from {} is established.", peer_addr);
-
-            let mut buf = vec![0; 1024];
-            while let Ok(n) = stream.read(&mut buf).await {
-                if n == 0 {
-                    break;
-                }
-                let string = String::from_utf8_lossy(&buf[..n]);
-                info!("Received from {}: {}", peer_addr, string.trim_end());
-                stream
-                    .write_all(format!("Received: {}", string).as_bytes())
-                    .await?;
-            }
-
-            info!("Connection from {} is closed.", peer_addr);
-            io::Result::Ok(())
-        };
-        task::Builder::new()
-            .name(format!("Acceptor {}", peer_addr).as_str())
-            .spawn(fut)
-            .unwrap();
-    }
+    task::Builder::new()
+        .name("TCP server")
+        .spawn(tcp_server(cfg, addr, tcp_rx))
+        .map_err(ClockingServerError::SpawnError)?
+        .await?
+        .map_err(ClockingServerError::TcpServerError)
 }
