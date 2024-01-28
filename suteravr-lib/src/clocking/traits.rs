@@ -6,6 +6,11 @@ use tokio::io::{AsyncWriteExt, BufWriter};
 
 use bytes::Buf;
 
+pub enum MessageAuthor {
+    Client,
+    Server,
+}
+
 /// Clocking-Server で扱うフレームを表すトレイトです。
 pub trait ClockingFrame: Sized + Send + Sync + Debug + PartialEq {
     type Context;
