@@ -1,4 +1,5 @@
-use clocking_server::{server::clocking_server, tcp::error::ClockingServerError};
+use clocking_server::clocking_server;
+use clocking_server::errors::ClockingServerError;
 
 #[tokio::main]
 async fn main() -> Result<(), ClockingServerError> {

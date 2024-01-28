@@ -1,5 +1,4 @@
 pub mod certs;
-pub mod error;
 
 use log::error;
 use log::{info, warn};
@@ -12,9 +11,8 @@ use tokio::{
 };
 use tokio_rustls::{rustls::ServerConfig, TlsAcceptor};
 
+use crate::errors::TcpServerError;
 use crate::shutdown::ShutdownReason;
-
-use self::error::TcpServerError;
 
 #[derive(Debug)]
 pub enum TcpServerSignal {

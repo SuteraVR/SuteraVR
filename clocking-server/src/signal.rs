@@ -14,11 +14,11 @@ pub async fn listen_signal(
     tokio::select! {
         _ = sigterm.recv() => {
             info!("SIGTERM received");
-            shutdown.send(ShutdownReason::SIGTERM).unwrap();
+            shutdown.send(ShutdownReason::Sigterm).unwrap();
         }
         _ = sigint.recv() => {
             info!("SIGINT received");
-            shutdown.send(ShutdownReason::SIGINT).unwrap();
+            shutdown.send(ShutdownReason::Sigint).unwrap();
         }
     }
 
