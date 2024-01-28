@@ -1,7 +1,7 @@
 pub mod certs;
 pub mod error;
 
-use log::error;
+
 use log::{info, warn};
 use std::{io, net::SocketAddr, sync::Arc};
 use tokio::{
@@ -38,11 +38,10 @@ pub async fn tcp_server(
             signal = rx.recv() => {
                 match signal {
                     Some(TcpServerSignal::Shutdown(_)) => {
-                        info!("Shutting down...");
                         break;
                     }
                     None => {
-                        error!("Signal channel is closed. Shutting downe..");
+                        warn!("Signal channel is closed.");
                         break;
                     }
                 }
@@ -52,6 +51,7 @@ pub async fn tcp_server(
             }
         }
     }
+    info!("Shutting down... (tcp)");
     Ok(())
 }
 

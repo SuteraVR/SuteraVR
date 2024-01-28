@@ -7,6 +7,7 @@
 //!
 
 pub mod consts;
+pub mod server;
 pub mod shutdown;
 pub mod signal;
 pub mod tcp;

@@ -1,7 +1,27 @@
-use signal_hook::consts::{SIGINT, SIGTERM};
-use signal_hook::iterator::Signals;
+use log::info;
+use tokio::signal::unix::signal;
+use tokio::signal::unix::SignalKind;
+use tokio::sync::oneshot;
 
-async fn listen_signal() {
-    let mut signals = Signals::new(&[SIGINT, SIGTERM]).unwrap();
-    for sig in signals.forever() {}
+use crate::shutdown::ShutdownReason;
+
+pub async fn listen_signal(
+    shutdown: oneshot::Sender<ShutdownReason>,
+) -> Result<(), std::io::Error> {
+    let mut sigterm = signal(SignalKind::terminate())?;
+    let mut sigint = signal(SignalKind::interrupt())?;
+
+    tokio::select! {
+        _ = sigterm.recv() => {
+            info!("SIGTERM received");
+            shutdown.send(ShutdownReason::SIGTERM).unwrap();
+        }
+        _ = sigint.recv() => {
+            info!("SIGINT received");
+            shutdown.send(ShutdownReason::SIGINT).unwrap();
+        }
+    }
+
+    info!("Shutting down... (signal)");
+    Ok(())
 }

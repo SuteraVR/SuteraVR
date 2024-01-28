@@ -2,4 +2,5 @@
 pub enum ShutdownReason {
     SIGINT,
     SIGTERM,
+    SignalChannelClosed,
 }
