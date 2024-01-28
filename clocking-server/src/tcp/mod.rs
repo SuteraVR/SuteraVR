@@ -1,7 +1,6 @@
 pub mod certs;
 pub mod error;
 
-
 use log::{info, warn};
 use std::{io, net::SocketAddr, sync::Arc};
 use tokio::{
