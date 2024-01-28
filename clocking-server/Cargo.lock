@@ -1062,6 +1062,10 @@ checksum = "81cdd64d312baedb58e21336b31bc043b77e01cc99033ce76ef539f78e965ebc"
 [[package]]
 name = "suteravr-lib"
 version = "0.1.0"
+dependencies = [
+ "bytes",
+ "tokio",
+]
 
 [[package]]
 name = "syn"
