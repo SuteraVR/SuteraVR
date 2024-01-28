@@ -1,35 +1,10 @@
-use futures::{
-    task::{LocalFutureObj, LocalSpawn, LocalSpawnExt},
-    Future,
-};
+use futures::Future;
 use godot::{engine::Engine, prelude::*};
-use tokio::{
-    runtime::{Builder, Runtime},
-    task::LocalSet,
-};
+use tokio::runtime::{Builder, Runtime};
 
-#[derive(Default)]
-struct SharedLocalPool {
-    local_set: LocalSet,
-}
+use crate::{log, set_logger_target};
 
-impl LocalSpawn for SharedLocalPool {
-    fn spawn_local_obj(
-        &self,
-        future: LocalFutureObj<'static, ()>,
-    ) -> Result<(), futures::task::SpawnError> {
-        godot_print!("SharedLocalPool Generated");
-        self.local_set.spawn_local(future);
-
-        Ok(())
-    }
-}
-
-thread_local! {
-    static EXECUTOR: &'static SharedLocalPool = {
-        Box::leak(Box::default())
-    };
-}
+set_logger_target!("AsyncExecutorDriver");
 
 #[derive(GodotClass)]
 #[class(base=Node)]
@@ -41,38 +16,36 @@ pub struct AsyncExecutorDriver {
 #[godot_api]
 impl INode for AsyncExecutorDriver {
     fn init(base: Base<Node>) -> Self {
-        godot_print!("AsyncExecutorDriver Initialized!");
+        log!("Runtime initialized.");
         Self {
             base,
             runtime: Builder::new_multi_thread()
-                .worker_threads(4)
-                .enable_io()
-                .enable_time()
+                .worker_threads(1)
+                .enable_all()
                 .build()
                 .unwrap(),
         }
     }
-    fn process(&mut self, _delta: f64) {
-        // EXECUTOR.with(|e| {
-        //     self.runtime
-        //         .block_on(async {
-        //             e.local_set
-        //                 .run_until(async { tokio::task::spawn_local(async {}).await })
-        //                 .await
-        //         })
-        //         .unwrap()
-        // })
-    }
 }
 
 impl AsyncExecutorDriver {
-    pub fn spawn(&self, f: impl Future<Output = ()> + Send + 'static) {
-        // self.inner.spawn_ok(TokioIo { handle, inner: f });
-        // EXECUTOR.with(|e| e.spawn_local(f)).unwrap();
+    /// Spawns a new task on the runtime.
+    pub fn spawn(&self, name: &str, f: impl Future<Output = ()> + Send + 'static) {
+        log!("Spawning task: {}", name);
         self.runtime.spawn(f);
     }
 }
-pub fn driver() -> Gd<AsyncExecutorDriver> {
+
+/// Returns the singleton instance of the AsyncExecutorDriver.
+///
+/// ```no_run
+/// use sutera_client_lib::async_driver::tokio;
+///
+/// tokio().bind().spawn("my_task", async {
+///     //...
+/// });
+/// ```
+pub fn tokio() -> Gd<AsyncExecutorDriver> {
     Engine::singleton()
         .get_singleton(StringName::from("AsyncExecutorDriver"))
         .unwrap()

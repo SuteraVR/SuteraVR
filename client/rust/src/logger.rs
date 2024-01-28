@@ -8,3 +8,10 @@ macro_rules! log {
         )
     };
 }
+
+#[macro_export]
+macro_rules! set_logger_target {
+    ($target:expr) => {
+        pub const LOGGER_CONTEXT: &str = $target;
+    };
+}
