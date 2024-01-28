@@ -90,8 +90,14 @@ impl ClockingConnection {
                     sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &()).await
                 {
                     self.buffer.advance(buf.position() as usize);
-                    self.context =
-                        ConnectionContext::WaitStatus(header.message_length as usize - remaining);
+                    self.context = match self.author {
+                        MessageAuthor::Server => ConnectionContext::WaitStatus(
+                            header.message_length as usize - remaining,
+                        ),
+                        MessageAuthor::Client => ConnectionContext::WaitMessageType(
+                            header.message_length as usize - remaining,
+                        ),
+                    };
                     return Ok(Some(ClockingFrameUnit::SuteraHeader(header)));
                 }
 
