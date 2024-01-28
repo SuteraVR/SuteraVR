@@ -3,7 +3,7 @@ use std::time::Duration;
 use godot::prelude::*;
 use tokio::time::sleep;
 
-use crate::{async_driver::tokio, set_logger_target};
+use crate::{async_driver::tokio, log, set_logger_target};
 
 #[derive(GodotClass)]
 #[class(base=Node)]
@@ -22,7 +22,7 @@ impl INode for AsyncTimerForTokioTest {
         tokio().bind().spawn("timer", async move {
             loop {
                 sleep(Duration::from_secs(3)).await;
-                godot_print!("Hello from green thread!");
+                log!("Hello from green thread!");
             }
         })
     }
