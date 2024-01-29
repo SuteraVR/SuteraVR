@@ -1,0 +1,5 @@
+---
+source: src/clocking/schema_snapshot.rs
+expression: "SuteraHeader::MIN_FRAME_SIZE"
+---
+14
