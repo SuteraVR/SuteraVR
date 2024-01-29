@@ -45,7 +45,7 @@ pub struct ClockingConnection<W: AsyncReadExt + AsyncWriteExt + Unpin> {
     author: MessageAuthor,
     context: ConnectionContext,
 }
-impl<W: AsyncReadExt + AsyncWriteExt + Unpin>  ClockingConnection<W> {
+impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
     /// 既存のストリームから新しいClockingConnectionを作成します。
     ///
     /// **authorには、名前の通り「メッセージの送信者」が格納されることに注意してください。**
@@ -112,7 +112,7 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin>  ClockingConnection<W> {
                 // バッファのどこかにSuteraHeaderを検知できたらそれまでのところをUnfragmentedとする
                 self.context = ConnectionContext::Unfragmented(1);
                 self.parse_frame().await
-            },
+            }
             ConnectionContext::Unfragmented(checked_length) => {
                 let remaining = buf.remaining();
 
@@ -163,7 +163,7 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin>  ClockingConnection<W> {
                     return self.parse_frame().await;
                 }
                 Ok(None)
-            },
+            }
             ConnectionContext::WaitContent => todo!(),
         }
     }
@@ -173,65 +173,62 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin>  ClockingConnection<W> {
 mod test {
     use std::io::{Cursor, Write};
 
-    use pretty_assertions::assert_eq;
     use crate::clocking::traits::test_util::encode;
     use crate::clocking::{ClockingConnection, ClockingFrameUnit};
     use crate::{clocking::sutera_header::SuteraHeader, messaging::version::Version};
+    use pretty_assertions::assert_eq;
 
     #[tokio::test]
     async fn read_header_chunk() {
         let mut vec = Cursor::new(Vec::<u8>::new());
         let header = SuteraHeader {
-            version: Version { 
+            version: Version {
                 major: 0,
                 minor: 1,
                 patch: 0,
-            }
-        }; 
+            },
+        };
         let payload = encode(&header, &()).await;
         vec.write_all(&payload[..]).unwrap();
 
         vec.set_position(0);
-        let mut connection = ClockingConnection::new(
-            &mut vec, crate::clocking::traits::MessageAuthor::Client
-        );
+        let mut connection =
+            ClockingConnection::new(&mut vec, crate::clocking::traits::MessageAuthor::Client);
         assert_eq!(
             connection.read_frame().await.unwrap(),
             Some(ClockingFrameUnit::SuteraHeader(header))
-        ); 
+        );
     }
 
     #[tokio::test]
     async fn read_with_unfragmented_size() {
         let mut vec = Cursor::new(Vec::<u8>::new());
         let header = SuteraHeader {
-            version: Version { 
+            version: Version {
                 major: 0,
                 minor: 1,
                 patch: 0,
-            }
-        }; 
+            },
+        };
         let payload = encode(&header, &()).await;
         vec.write_all(&payload[..]).unwrap();
-        vec.write_all(&[ 0x01, 0x02, 0x03 ]).unwrap();
+        vec.write_all(&[0x01, 0x02, 0x03]).unwrap();
         vec.write_all(&payload[..]).unwrap();
 
-
         vec.set_position(0);
-        let mut connection = ClockingConnection::new(
-            &mut vec, crate::clocking::traits::MessageAuthor::Client
+        let mut connection =
+            ClockingConnection::new(&mut vec, crate::clocking::traits::MessageAuthor::Client);
+        assert_eq!(
+            connection.read_frame().await.unwrap(),
+            Some(ClockingFrameUnit::SuteraHeader(header.clone()))
+        );
+        assert_eq!(
+            connection.read_frame().await.unwrap(),
+            Some(ClockingFrameUnit::Unfragmented(vec![0x01, 0x02, 0x03]))
         );
         assert_eq!(
             connection.read_frame().await.unwrap(),
             Some(ClockingFrameUnit::SuteraHeader(header.clone()))
-        ); 
-        assert_eq!(
-            connection.read_frame().await.unwrap(),
-            Some(ClockingFrameUnit::Unfragmented(vec![0x01, 0x02, 0x03]))
-        ); 
-        assert_eq!(
-            connection.read_frame().await.unwrap(),
-            Some(ClockingFrameUnit::SuteraHeader(header.clone()))
-        ); 
+        );
     }
 }

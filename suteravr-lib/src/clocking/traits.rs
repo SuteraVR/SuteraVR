@@ -17,7 +17,6 @@ pub trait ClockingFrame: Sized + Send + Sync + Debug + PartialEq {
     const MIN_FRAME_SIZE: usize;
     const MAX_FRAME_SIZE: usize = Self::MIN_FRAME_SIZE;
 
-
     /// フレームの解析を行います。
     ///
     /// フレームが解析可能であれば、`Some(Self)`を返し、そうでない場合は`None`を返します。

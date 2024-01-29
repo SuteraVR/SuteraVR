@@ -15,8 +15,7 @@ impl SuteraHeader {
 }
 impl ClockingFrame for SuteraHeader {
     type Context = ();
-    const MIN_FRAME_SIZE: usize =
-        Self::PREFIX.len() + Version::MIN_FRAME_SIZE;
+    const MIN_FRAME_SIZE: usize = Self::PREFIX.len() + Version::MIN_FRAME_SIZE;
 
     async fn parse_frame_unchecked(
         cursor: &mut std::io::Cursor<&[u8]>,
@@ -26,9 +25,7 @@ impl ClockingFrame for SuteraHeader {
             return None;
         }
         let version = Version::parse_frame_unchecked(cursor, &()).await?;
-        Some(Self {
-            version,
-        })
+        Some(Self { version })
     }
 
     async fn write_frame<W: tokio::io::AsyncWriteExt + Unpin>(
