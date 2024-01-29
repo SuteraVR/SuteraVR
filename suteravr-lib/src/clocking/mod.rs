@@ -80,7 +80,7 @@ impl ClockingConnection {
 
                 // SuteraHeader (通信のはじまりの目印) を探す
                 // この時点で、SuteraHeaderの最小サイズよりも小さい場合は、次のバッファも読む
-                if remaining < sutera_header::SuteraHeader::MINIMAL_FRAME_SIZE {
+                if remaining < sutera_header::SuteraHeader::MIN_FRAME_SIZE {
                     return Ok(None);
                 }
 
@@ -106,7 +106,7 @@ impl ClockingConnection {
                 //
                 // ただ、一応次にどこかでSuteraHeaderが来るかもしれないので、
                 // バッファのどこかにSuteraHeaderを検知できたらそれまでのところをUnfragmentedとする
-                for i in 1..=(remaining - sutera_header::SuteraHeader::MINIMAL_FRAME_SIZE) {
+                for i in 1..=(remaining - sutera_header::SuteraHeader::MIN_FRAME_SIZE) {
                     buf.set_position(i as u64);
                     if (sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &()).await)
                         .is_some()

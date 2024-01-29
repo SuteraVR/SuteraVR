@@ -18,8 +18,8 @@ impl SuteraHeader {
 }
 impl ClockingFrame for SuteraHeader {
     type Context = ();
-    const MINIMAL_FRAME_SIZE: usize =
-        Self::PREFIX.len() + size_of::<u64>() + Version::MINIMAL_FRAME_SIZE;
+    const MIN_FRAME_SIZE: usize =
+        Self::PREFIX.len() + size_of::<u64>() + Version::MIN_FRAME_SIZE;
 
     async fn parse_frame_unchecked(
         cursor: &mut std::io::Cursor<&[u8]>,

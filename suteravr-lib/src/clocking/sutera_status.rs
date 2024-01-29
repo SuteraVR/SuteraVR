@@ -51,7 +51,8 @@ pub enum SuteraStatus {
 impl ClockingFrame for SuteraStatus {
     type Context = ();
 
-    const MINIMAL_FRAME_SIZE: usize = 1;
+    const MIN_FRAME_SIZE: usize = 1;
+    const MAX_FRAME_SIZE: usize = 4;
 
     async fn parse_frame_unchecked(
         cursor: &mut std::io::Cursor<&[u8]>,

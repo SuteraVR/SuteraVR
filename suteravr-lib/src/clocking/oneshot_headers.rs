@@ -85,7 +85,7 @@ impl OneshotHeader {
 impl ClockingFrame for OneshotHeader {
     type Context = MessageAuthor;
 
-    const MINIMAL_FRAME_SIZE: usize = Self::MESSAGE_STEP_DISTINCTOR_SIZE
+    const MIN_FRAME_SIZE: usize = Self::MESSAGE_STEP_DISTINCTOR_SIZE
         + size_of::<MessageId>()
         + Self::MESSAGE_TYPE_DISTINCTOR_SIZE;
 
@@ -202,7 +202,7 @@ mod tests {
         test_clockingframe_mustfail::<OneshotHeader>(
             &payload,
             &MessageAuthor::Server,
-            Some(OneshotHeader::MINIMAL_FRAME_SIZE),
+            Some(OneshotHeader::MIN_FRAME_SIZE),
         )
         .await;
     }
@@ -221,7 +221,7 @@ mod tests {
         test_clockingframe_mustfail::<OneshotHeader>(
             &payload,
             &MessageAuthor::Client,
-            Some(OneshotHeader::MINIMAL_FRAME_SIZE),
+            Some(OneshotHeader::MIN_FRAME_SIZE),
         )
         .await;
     }

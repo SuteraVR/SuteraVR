@@ -14,14 +14,16 @@ pub enum MessageAuthor {
 /// Clocking-Server で扱うフレームを表すトレイトです。
 pub trait ClockingFrame: Sized + Send + Sync + Debug + PartialEq {
     type Context;
-    const MINIMAL_FRAME_SIZE: usize;
+    const MIN_FRAME_SIZE: usize;
+    const MAX_FRAME_SIZE: usize = Self::MIN_FRAME_SIZE;
+
 
     /// フレームの解析を行います。
     ///
     /// フレームが解析可能であれば、`Some(Self)`を返し、そうでない場合は`None`を返します。
     #[allow(async_fn_in_trait)]
     async fn parse_frame(cursor: &mut Cursor<&[u8]>, ctx: &Self::Context) -> Option<Self> {
-        if cursor.remaining() < Self::MINIMAL_FRAME_SIZE {
+        if cursor.remaining() < Self::MIN_FRAME_SIZE {
             return None;
         }
         Self::parse_frame_unchecked(cursor, ctx).await
@@ -41,7 +43,7 @@ pub trait ClockingFrame: Sized + Send + Sync + Debug + PartialEq {
     ///    このとき、`cursor` は、フレームの終端まで読み捨てている必要があります。
     /// 4. 解析に失敗した場合は、できるかぎり早期に`None` を返します。
     ///
-    /// この関数が呼び出された時点で、`cursor`は少なくとも `Self::MINIMAL_FRAME_SIZE` バイトのデータを保持していることが保証されるので、  
+    /// この関数が呼び出された時点で、`cursor`は少なくとも `Self::MIN_FRAME_SIZE` バイトのデータを保持していることが保証されるので、  
     /// それに配慮する必要ありません。
     #[allow(async_fn_in_trait)]
     async fn parse_frame_unchecked(cursor: &mut Cursor<&[u8]>, ctx: &Self::Context)
