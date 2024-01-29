@@ -94,15 +94,19 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin + Send> ClockingConnection<W> {
         Ok(())
     }
 
+    /// フレームを読み込みます。
+    ///
+    ///this function is cancellation safe.
     pub fn read_frame(
         &mut self,
     ) -> BoxFuture<'_, Result<Option<ClockingFrameUnit>, ClockingFramingError>> {
         async {
             loop {
-                if let Some(frame) = self.parse_frame().await? {
+                if let Some(frame) = self.parse_frame()? {
                     return Ok(Some(frame));
                 }
 
+                // read_buf is cancellation safe.
                 if self.stream.read_buf(&mut self.buffer).await? == 0 {
                     if self.buffer.is_empty() {
                         return Ok(None);
@@ -116,157 +120,149 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin + Send> ClockingConnection<W> {
     }
 
     #[inline]
-    fn parse_frame(
-        &mut self,
-    ) -> BoxFuture<'_, Result<Option<ClockingFrameUnit>, ClockingFramingError>> {
-        async {
-            let mut buf = Cursor::new(&self.buffer[..]);
-            match self.context {
-                ConnectionContext::None => {
-                    let remaining = buf.remaining();
+    fn parse_frame(&mut self) -> Result<Option<ClockingFrameUnit>, ClockingFramingError> {
+        let mut buf = Cursor::new(&self.buffer[..]);
+        match self.context {
+            ConnectionContext::None => {
+                let remaining = buf.remaining();
 
-                    // SuteraHeader (通信のはじまりの目印) を探す
-                    // この時点で、SuteraHeaderの最小サイズよりも小さい場合は、次のバッファも読む
-                    if remaining < sutera_header::SuteraHeader::MIN_FRAME_SIZE {
-                        return Ok(None);
-                    }
-
-                    // 先頭からSuteraHeaderが成立していれば文句なしでOK
-                    buf.set_position(0);
-                    if let Some(header) =
-                        sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &()).await
-                    {
-                        self.buffer.advance(buf.position() as usize);
-                        self.context = match self.author {
-                            MessageAuthor::Server => ConnectionContext::WaitStatus,
-                            MessageAuthor::Client => ConnectionContext::WaitMessageType,
-                        };
-                        return Ok(Some(ClockingFrameUnit::SuteraHeader(header)));
-                    }
-
-                    if remaining < sutera_header::SuteraHeader::MAX_FRAME_SIZE {
-                        return Ok(None);
-                    }
-
-                    // 処理がここまで流れている時点で、
-                    // 最後にフレームが成立してから直ちにヘッダーが来ていないから何かがおかしい
-                    //
-                    // ただ、一応次にどこかでSuteraHeaderが来るかもしれないので、
-                    // バッファのどこかにSuteraHeaderを検知できたらそれまでのところをUnfragmentedとする
-                    self.context = ConnectionContext::Unfragmented(1);
-                    self.parse_frame().await
+                // SuteraHeader (通信のはじまりの目印) を探す
+                // この時点で、SuteraHeaderの最小サイズよりも小さい場合は、次のバッファも読む
+                if remaining < sutera_header::SuteraHeader::MIN_FRAME_SIZE {
+                    return Ok(None);
                 }
-                ConnectionContext::Unfragmented(checked_length) => {
-                    let remaining = buf.remaining();
 
-                    // この時点で、SuteraHeaderの最小サイズよりも小さい場合は、次のバッファも読む
-                    if remaining < sutera_header::SuteraHeader::MIN_FRAME_SIZE {
-                        return Ok(None);
-                    }
-
-                    // 新しく増えた領域にSuteraHeaderが存在しないか確認する
-                    let last_possible_index =
-                        remaining - sutera_header::SuteraHeader::MIN_FRAME_SIZE;
-                    for i in checked_length..=last_possible_index {
-                        buf.set_position(i as u64);
-                        if (sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &()).await)
-                            .is_some()
-                        {
-                            self.context = ConnectionContext::None;
-                            return Ok(Some(ClockingFrameUnit::Unfragmented(
-                                self.buffer.copy_to_bytes(i).to_vec(),
-                            )));
-                        }
-                    }
-
-                    // 認識されていない状態でバッファが増えつづけると危険なので、
-                    // 定期的にUnfragmentedとして処理する
-                    if remaining > 1024 {
-                        self.context = ConnectionContext::Unfragmented(0);
-                        Ok(Some(ClockingFrameUnit::Unfragmented(
-                            self.buffer.copy_to_bytes(1024).to_vec(),
-                        )))
-                    } else {
-                        self.context = ConnectionContext::Unfragmented(checked_length + 1);
-                        Ok(None)
-                    }
+                // 先頭からSuteraHeaderが成立していれば文句なしでOK
+                buf.set_position(0);
+                if let Some(header) =
+                    sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &())
+                {
+                    self.buffer.advance(buf.position() as usize);
+                    self.context = match self.author {
+                        MessageAuthor::Server => ConnectionContext::WaitStatus,
+                        MessageAuthor::Client => ConnectionContext::WaitMessageType,
+                    };
+                    return Ok(Some(ClockingFrameUnit::SuteraHeader(header)));
                 }
-                ConnectionContext::WaitStatus => {
-                    buf.set_position(0);
-                    if let Some(status) = SuteraStatus::parse_frame(&mut buf, &()).await {
-                        self.context = ConnectionContext::WaitMessageType;
-                        self.buffer.advance(buf.position() as usize);
-                        return Ok(Some(ClockingFrameUnit::SuteraStatus(status)));
-                    }
 
-                    buf.set_position(0);
-                    let remaining = buf.remaining();
-                    let max_parsable_size = SuteraStatus::MAX_FRAME_SIZE;
-                    if remaining >= max_parsable_size {
-                        self.context = ConnectionContext::Unfragmented(0);
-                        return self.parse_frame().await;
-                    }
-
-                    Ok(None)
+                if remaining < sutera_header::SuteraHeader::MAX_FRAME_SIZE {
+                    return Ok(None);
                 }
-                ConnectionContext::WaitMessageType => {
-                    buf.set_position(0);
-                    if let Some(header) = OneshotHeader::parse_frame(&mut buf, &self.author).await {
-                        self.context = ConnectionContext::WaitContent;
-                        self.buffer.advance(buf.position() as usize);
-                        return Ok(Some(ClockingFrameUnit::OneshotHeaders(header)));
-                    }
 
-                    buf.set_position(0);
-                    let remaining = buf.remaining();
-                    let max_parsable_size = OneshotHeader::MAX_FRAME_SIZE;
-                    if remaining >= max_parsable_size {
-                        self.context = ConnectionContext::Unfragmented(0);
-                        return self.parse_frame().await;
-                    }
-                    Ok(None)
+                // 処理がここまで流れている時点で、
+                // 最後にフレームが成立してから直ちにヘッダーが来ていないから何かがおかしい
+                //
+                // ただ、一応次にどこかでSuteraHeaderが来るかもしれないので、
+                // バッファのどこかにSuteraHeaderを検知できたらそれまでのところをUnfragmentedとする
+                self.context = ConnectionContext::Unfragmented(1);
+                self.parse_frame()
+            }
+            ConnectionContext::Unfragmented(checked_length) => {
+                let remaining = buf.remaining();
+
+                // この時点で、SuteraHeaderの最小サイズよりも小さい場合は、次のバッファも読む
+                if remaining < sutera_header::SuteraHeader::MIN_FRAME_SIZE {
+                    return Ok(None);
                 }
-                ConnectionContext::WaitContent => {
-                    if buf.remaining() <= size_of::<u64>() {
-                        return Ok(None);
-                    }
 
-                    // 送信するデータの長さを読む
-                    // 長さは二回同じものが出力される。
-                    // 同じものの場合のみ入力を受け付け、違うものの場合Contentを読んでいないと考えUnfragmentedに
-                    let content_length = buf.get_u64();
-                    let remaining = buf.remaining();
-                    if remaining <= size_of::<u64>() {
-                        return if buf.copy_to_bytes(remaining)
-                            != content_length.to_be_bytes()[0..remaining]
-                        {
-                            // 与えられた入力が違う場合はその時点で却下
-                            self.context = ConnectionContext::Unfragmented(0);
-                            self.parse_frame().await
-                        } else {
-                            // 二回目の長さが最後まで届いていないが、届いていたところまではあっている場合
-                            // 続きを待つ
-                            Ok(None)
-                        };
-                    }
-
-                    let content_length_check = buf.get_u64();
-                    if content_length != content_length_check {
-                        return Ok(None);
-                    }
-
-                    if buf.remaining() < content_length as usize {
-                        Ok(None)
-                    } else {
-                        let data = buf.copy_to_bytes(content_length as usize);
-                        self.buffer.advance(buf.position() as usize);
+                // 新しく増えた領域にSuteraHeaderが存在しないか確認する
+                let last_possible_index = remaining - sutera_header::SuteraHeader::MIN_FRAME_SIZE;
+                for i in checked_length..=last_possible_index {
+                    buf.set_position(i as u64);
+                    if sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &()).is_some() {
                         self.context = ConnectionContext::None;
-                        Ok(Some(ClockingFrameUnit::Content(data.to_vec())))
+                        return Ok(Some(ClockingFrameUnit::Unfragmented(
+                            self.buffer.copy_to_bytes(i).to_vec(),
+                        )));
                     }
+                }
+
+                // 認識されていない状態でバッファが増えつづけると危険なので、
+                // 定期的にUnfragmentedとして処理する
+                if remaining > 1024 {
+                    self.context = ConnectionContext::Unfragmented(0);
+                    Ok(Some(ClockingFrameUnit::Unfragmented(
+                        self.buffer.copy_to_bytes(1024).to_vec(),
+                    )))
+                } else {
+                    self.context = ConnectionContext::Unfragmented(checked_length + 1);
+                    Ok(None)
+                }
+            }
+            ConnectionContext::WaitStatus => {
+                buf.set_position(0);
+                if let Some(status) = SuteraStatus::parse_frame(&mut buf, &()) {
+                    self.context = ConnectionContext::WaitMessageType;
+                    self.buffer.advance(buf.position() as usize);
+                    return Ok(Some(ClockingFrameUnit::SuteraStatus(status)));
+                }
+
+                buf.set_position(0);
+                let remaining = buf.remaining();
+                let max_parsable_size = SuteraStatus::MAX_FRAME_SIZE;
+                if remaining >= max_parsable_size {
+                    self.context = ConnectionContext::Unfragmented(0);
+                    return self.parse_frame();
+                }
+
+                Ok(None)
+            }
+            ConnectionContext::WaitMessageType => {
+                buf.set_position(0);
+                if let Some(header) = OneshotHeader::parse_frame(&mut buf, &self.author) {
+                    self.context = ConnectionContext::WaitContent;
+                    self.buffer.advance(buf.position() as usize);
+                    return Ok(Some(ClockingFrameUnit::OneshotHeaders(header)));
+                }
+
+                buf.set_position(0);
+                let remaining = buf.remaining();
+                let max_parsable_size = OneshotHeader::MAX_FRAME_SIZE;
+                if remaining >= max_parsable_size {
+                    self.context = ConnectionContext::Unfragmented(0);
+                    return self.parse_frame();
+                }
+                Ok(None)
+            }
+            ConnectionContext::WaitContent => {
+                if buf.remaining() <= size_of::<u64>() {
+                    return Ok(None);
+                }
+
+                // 送信するデータの長さを読む
+                // 長さは二回同じものが出力される。
+                // 同じものの場合のみ入力を受け付け、違うものの場合Contentを読んでいないと考えUnfragmentedに
+                let content_length = buf.get_u64();
+                let remaining = buf.remaining();
+                if remaining <= size_of::<u64>() {
+                    return if buf.copy_to_bytes(remaining)
+                        != content_length.to_be_bytes()[0..remaining]
+                    {
+                        // 与えられた入力が違う場合はその時点で却下
+                        self.context = ConnectionContext::Unfragmented(0);
+                        self.parse_frame()
+                    } else {
+                        // 二回目の長さが最後まで届いていないが、届いていたところまではあっている場合
+                        // 続きを待つ
+                        Ok(None)
+                    };
+                }
+
+                let content_length_check = buf.get_u64();
+                if content_length != content_length_check {
+                    return Ok(None);
+                }
+
+                if buf.remaining() < content_length as usize {
+                    Ok(None)
+                } else {
+                    let data = buf.copy_to_bytes(content_length as usize);
+                    self.buffer.advance(buf.position() as usize);
+                    self.context = ConnectionContext::None;
+                    Ok(Some(ClockingFrameUnit::Content(data.to_vec())))
                 }
             }
         }
-        .boxed()
     }
 }
 

@@ -16,14 +16,14 @@ impl ClockingFrame for SuteraHeader {
     type Context = ();
     const MIN_FRAME_SIZE: usize = Self::PREFIX.len() + Version::MIN_FRAME_SIZE;
 
-    async fn parse_frame_unchecked(
+    fn parse_frame_unchecked(
         cursor: &mut std::io::Cursor<&[u8]>,
         _ctx: &Self::Context,
     ) -> Option<Self> {
         if Self::PREFIX != cursor.copy_to_bytes(Self::PREFIX.len()) {
             return None;
         }
-        let version = Version::parse_frame_unchecked(cursor, &()).await?;
+        let version = Version::parse_frame_unchecked(cursor, &())?;
         Some(Self { version })
     }
 

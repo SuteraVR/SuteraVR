@@ -53,7 +53,7 @@ impl ClockingFrame for SuteraStatus {
     const MIN_FRAME_SIZE: usize = 1;
     const MAX_FRAME_SIZE: usize = 4;
 
-    async fn parse_frame_unchecked(
+    fn parse_frame_unchecked(
         cursor: &mut std::io::Cursor<&[u8]>,
         _ctx: &Self::Context,
     ) -> Option<Self> {
