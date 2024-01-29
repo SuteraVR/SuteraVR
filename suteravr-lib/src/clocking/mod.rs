@@ -7,7 +7,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use crate::clocking::traits::ClockingFrame;
 
-use self::{oneshot_headers::OneshotHeader, traits::MessageAuthor};
+use self::{oneshot_headers::OneshotHeader, sutera_status::SuteraStatus, traits::MessageAuthor};
 
 pub mod oneshot_headers;
 pub mod sutera_header;
@@ -147,7 +147,23 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
                     Ok(None)
                 }
             }
-            ConnectionContext::WaitStatus => todo!(),
+            ConnectionContext::WaitStatus => {
+                buf.set_position(0);
+                if let Some(status) = SuteraStatus::parse_frame(&mut buf, &()).await {
+                    self.context = ConnectionContext::WaitMessageType;
+                    return Ok(Some(ClockingFrameUnit::SuteraStatus(status)));
+                }
+
+                buf.set_position(0);
+                let remaining = buf.remaining();
+                let max_parsable_size = SuteraStatus::MAX_FRAME_SIZE;
+                if remaining >= max_parsable_size {
+                    self.context = ConnectionContext::Unfragmented(0);
+                    return self.parse_frame().await;
+                }
+
+                Ok(None)
+            }
             ConnectionContext::WaitMessageType => {
                 buf.set_position(0);
                 if let Some(header) = OneshotHeader::parse_frame(&mut buf, &self.author).await {
@@ -171,12 +187,15 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
 
 #[cfg(test)]
 mod test {
+    use rstest::*;
     use std::io::{Cursor, Write};
 
     use crate::clocking::traits::test_util::encode;
     use crate::clocking::{ClockingConnection, ClockingFrameUnit};
     use crate::{clocking::sutera_header::SuteraHeader, messaging::version::Version};
     use pretty_assertions::assert_eq;
+
+    use super::traits::MessageAuthor;
 
     #[tokio::test]
     async fn read_header_chunk() {
@@ -200,8 +219,11 @@ mod test {
         );
     }
 
+    #[rstest]
+    #[case::client(MessageAuthor::Client)]
+    #[case::server(MessageAuthor::Server)]
     #[tokio::test]
-    async fn read_with_unfragmented_size() {
+    async fn read_with_unfragmented_size(#[case] author: MessageAuthor) {
         let mut vec = Cursor::new(Vec::<u8>::new());
         let header = SuteraHeader {
             version: Version {
@@ -216,8 +238,7 @@ mod test {
         vec.write_all(&payload[..]).unwrap();
 
         vec.set_position(0);
-        let mut connection =
-            ClockingConnection::new(&mut vec, crate::clocking::traits::MessageAuthor::Client);
+        let mut connection = ClockingConnection::new(&mut vec, author);
         assert_eq!(
             connection.read_frame().await.unwrap(),
             Some(ClockingFrameUnit::SuteraHeader(header.clone()))
