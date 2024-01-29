@@ -119,7 +119,7 @@ async fn connection_init(
                     info!("Connection from {} is closed.", peer_addr);
                 }
                 Err(e) => {
-                    warn!("Failed to spawn acceptor for {} ({})", peer_addr, e);
+                    warn!("Failed in Acceptor {} ({})", peer_addr, e);
                 }
             }
         })
