@@ -1,4 +1,5 @@
 pub mod certs;
+pub mod parser;
 
 use log::error;
 use log::{info, warn};
