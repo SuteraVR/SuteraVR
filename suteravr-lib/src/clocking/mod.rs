@@ -219,10 +219,9 @@ mod test {
         );
     }
 
-   
     #[rstest(
         author => [MessageAuthor::Client, MessageAuthor::Server],
-        inject => [&[0x01, 0x02, 0x03], b"SuteraVR LongPayloooad", &[0x00]],
+        inject => [&[0x01, 0x02, 0x03], b"LongPayloooooooooooooad", &[0x0f]],
         ::trace
     )]
     #[tokio::test]
