@@ -5,7 +5,7 @@ use tokio::io::{AsyncWriteExt, BufWriter};
 
 use crate::clocking::traits::ClockingFrame;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Version {
     pub major: u16,
     pub minor: u16,

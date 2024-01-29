@@ -5,7 +5,7 @@ use crate::messaging::version::Version;
 
 use super::traits::ClockingFrame;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct SuteraHeader {
     pub version: Version,
 }
