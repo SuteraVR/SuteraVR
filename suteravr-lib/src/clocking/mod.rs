@@ -219,11 +219,14 @@ mod test {
         );
     }
 
-    #[rstest]
-    #[case::client(MessageAuthor::Client)]
-    #[case::server(MessageAuthor::Server)]
+   
+    #[rstest(
+        author => [MessageAuthor::Client, MessageAuthor::Server],
+        inject => [&[0x01, 0x02, 0x03], b"SuteraVR LongPayloooad", &[0x00]],
+        ::trace
+    )]
     #[tokio::test]
-    async fn read_with_unfragmented_size(#[case] author: MessageAuthor) {
+    async fn read_with_unfragmented_size(author: MessageAuthor, inject: &[u8]) {
         let mut vec = Cursor::new(Vec::<u8>::new());
         let header = SuteraHeader {
             version: Version {
@@ -234,7 +237,7 @@ mod test {
         };
         let payload = encode(&header, &()).await;
         vec.write_all(&payload[..]).unwrap();
-        vec.write_all(&[0x01, 0x02, 0x03]).unwrap();
+        vec.write_all(inject).unwrap();
         vec.write_all(&payload[..]).unwrap();
 
         vec.set_position(0);
@@ -245,7 +248,7 @@ mod test {
         );
         assert_eq!(
             connection.read_frame().await.unwrap(),
-            Some(ClockingFrameUnit::Unfragmented(vec![0x01, 0x02, 0x03]))
+            Some(ClockingFrameUnit::Unfragmented(inject.into()))
         );
         assert_eq!(
             connection.read_frame().await.unwrap(),

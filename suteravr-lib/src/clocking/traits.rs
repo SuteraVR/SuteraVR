@@ -5,7 +5,7 @@ use std::{
 use tokio::io::{AsyncWriteExt, BufWriter};
 
 use bytes::Buf;
-
+#[derive(Debug)]
 pub enum MessageAuthor {
     Client,
     Server,
