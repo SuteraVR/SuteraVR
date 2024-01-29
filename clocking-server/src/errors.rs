@@ -11,9 +11,13 @@ pub enum ClockingServerError {
 }
 
 #[derive(Debug, Error)]
-#[error(transparent)]
 pub enum TcpServerError {
+    #[error("The thread was already dead.")]
+    ThreadDead,
+    #[error(transparent)]
     ListenerBindError(std::io::Error),
+    #[error(transparent)]
     SpawnError(std::io::Error),
+    #[error(transparent)]
     JoinError(#[from] tokio::task::JoinError),
 }
