@@ -4,7 +4,6 @@ use bytes::Buf;
 use enum_map::enum_map;
 use enum_map::{Enum, EnumMap};
 use once_cell::sync::Lazy;
-use tokio::io::AsyncWriteExt;
 
 use crate::messaging::id::MessageId;
 use crate::util::search_from_enum;
@@ -128,7 +127,7 @@ impl ClockingFrame for OneshotHeader {
 
     async fn write_frame<W: tokio::io::AsyncWriteExt + Unpin>(
         &self,
-        stream: &mut tokio::io::BufWriter<W>,
+        stream: &mut W,
         _ctx: &Self::Context,
     ) -> std::io::Result<()> {
         stream.write_all(&ONESHOT_STEP_MAP[self.step]).await?;

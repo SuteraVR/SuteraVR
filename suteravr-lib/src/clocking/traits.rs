@@ -2,9 +2,9 @@ use std::{
     fmt::Debug,
     io::{self, Cursor},
 };
-use tokio::io::{AsyncWriteExt, BufWriter};
 
 use bytes::Buf;
+use tokio::io::AsyncWriteExt;
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum MessageAuthor {
     Client,
@@ -51,7 +51,7 @@ pub trait ClockingFrame: Sized + Send + Sync + Debug + PartialEq {
     #[allow(async_fn_in_trait)]
     async fn write_frame<W: AsyncWriteExt + Unpin>(
         &self,
-        stream: &mut BufWriter<W>,
+        stream: &mut W,
         ctx: &Self::Context,
     ) -> io::Result<()>;
 }

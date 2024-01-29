@@ -59,6 +59,33 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
         }
     }
 
+    pub async fn write_frame(
+        &mut self,
+        frame: &ClockingFrameUnit,
+    ) -> Result<(), ClockingFramingError> {
+        match frame {
+            ClockingFrameUnit::SuteraHeader(header) => {
+                header.write_frame(&mut self.stream, &()).await?;
+            }
+            ClockingFrameUnit::SuteraStatus(status) => {
+                status.write_frame(&mut self.stream, &()).await?;
+            }
+            ClockingFrameUnit::OneshotHeaders(header) => {
+                header.write_frame(&mut self.stream, &self.author).await?;
+            }
+            ClockingFrameUnit::Content(content) => {
+                self.stream.write_u64(content.len() as u64).await?;
+                self.stream.write_u64(content.len() as u64).await?;
+                self.stream.write_all(content).await?;
+            }
+            ClockingFrameUnit::Unfragmented(content) => {
+                self.stream.write_all(content).await?;
+            }
+        }
+        self.stream.flush().await?;
+        Ok(())
+    }
+
     pub async fn read_frame(&mut self) -> Result<Option<ClockingFrameUnit>, ClockingFramingError> {
         loop {
             if let Some(frame) = self.parse_frame().await? {

@@ -1,7 +1,7 @@
 use std::mem::size_of;
 
 use bytes::Buf;
-use tokio::io::{AsyncWriteExt, BufWriter};
+use tokio::io::{AsyncWriteExt};
 
 use crate::clocking::traits::ClockingFrame;
 
@@ -32,7 +32,7 @@ impl ClockingFrame for Version {
 
     async fn write_frame<W: AsyncWriteExt + Unpin>(
         &self,
-        stream: &mut BufWriter<W>,
+        stream: &mut W,
         _context: &Self::Context,
     ) -> std::io::Result<()> {
         stream.write_u16(self.major).await?;

@@ -3,7 +3,6 @@ use enum_map::enum_map;
 use enum_map::Enum;
 use enum_map::EnumMap;
 use once_cell::sync::Lazy;
-use tokio::io::AsyncWriteExt;
 
 use crate::util::search_from_enum;
 
@@ -80,7 +79,7 @@ impl ClockingFrame for SuteraStatus {
 
     async fn write_frame<W: tokio::io::AsyncWriteExt + Unpin>(
         &self,
-        stream: &mut tokio::io::BufWriter<W>,
+        stream: &mut W,
         _ctx: &Self::Context,
     ) -> std::io::Result<()> {
         match self {

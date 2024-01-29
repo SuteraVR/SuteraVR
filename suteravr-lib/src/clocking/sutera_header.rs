@@ -1,5 +1,4 @@
 use bytes::Buf;
-use tokio::io::AsyncWriteExt;
 
 use crate::messaging::version::Version;
 
@@ -30,7 +29,7 @@ impl ClockingFrame for SuteraHeader {
 
     async fn write_frame<W: tokio::io::AsyncWriteExt + Unpin>(
         &self,
-        stream: &mut tokio::io::BufWriter<W>,
+        stream: &mut W,
         _ctx: &Self::Context,
     ) -> std::io::Result<()> {
         stream.write_all(Self::PREFIX).await?;
