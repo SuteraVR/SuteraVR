@@ -1,5 +1,3 @@
-use std::mem::size_of;
-
 use bytes::Buf;
 use tokio::io::AsyncWriteExt;
 
@@ -9,7 +7,6 @@ use super::traits::ClockingFrame;
 
 #[derive(Debug, PartialEq)]
 pub struct SuteraHeader {
-    pub message_length: u64,
     pub version: Version,
 }
 
@@ -19,7 +16,7 @@ impl SuteraHeader {
 impl ClockingFrame for SuteraHeader {
     type Context = ();
     const MIN_FRAME_SIZE: usize =
-        Self::PREFIX.len() + size_of::<u64>() + Version::MIN_FRAME_SIZE;
+        Self::PREFIX.len() + Version::MIN_FRAME_SIZE;
 
     async fn parse_frame_unchecked(
         cursor: &mut std::io::Cursor<&[u8]>,
@@ -28,10 +25,8 @@ impl ClockingFrame for SuteraHeader {
         if Self::PREFIX != cursor.copy_to_bytes(Self::PREFIX.len()) {
             return None;
         }
-        let message_length = cursor.get_u64();
         let version = Version::parse_frame_unchecked(cursor, &()).await?;
         Some(Self {
-            message_length,
             version,
         })
     }
@@ -42,7 +37,6 @@ impl ClockingFrame for SuteraHeader {
         _ctx: &Self::Context,
     ) -> std::io::Result<()> {
         stream.write_all(Self::PREFIX).await?;
-        stream.write_u64(self.message_length).await?;
         self.version.write_frame(stream, _ctx).await?;
         Ok(())
     }
@@ -60,7 +54,6 @@ mod tests {
     async fn clockingframe_suteraheader() {
         test_clockingframe_reflective(
             SuteraHeader {
-                message_length: 194u64,
                 version: Version {
                     major: 1,
                     minor: 2,
@@ -76,7 +69,6 @@ mod tests {
     async fn clockingframe_suteraheader_prefixerr() {
         let mut encoded = encode(
             &SuteraHeader {
-                message_length: 194u64,
                 version: Version {
                     major: 1,
                     minor: 2,

@@ -2,7 +2,7 @@ use std::io::Cursor;
 
 use bytes::{Buf, BytesMut};
 use thiserror::Error;
-use tokio::{io::AsyncReadExt, net::TcpStream};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use crate::clocking::traits::ClockingFrame;
 
@@ -23,9 +23,10 @@ pub enum ClockingFramingError {
 
 enum ConnectionContext {
     None,
-    WaitStatus(usize),
-    WaitMessageType(usize),
-    WaitContent(usize),
+    Unfragmented(usize),
+    WaitStatus,
+    WaitMessageType,
+    WaitContent,
 }
 
 pub enum ClockingFrameUnit {
@@ -36,18 +37,18 @@ pub enum ClockingFrameUnit {
     Unfragmented(Vec<u8>),
 }
 
-pub struct ClockingConnection {
-    stream: TcpStream,
+pub struct ClockingConnection<W: AsyncReadExt + AsyncWriteExt + Unpin> {
+    stream: W,
     buffer: BytesMut,
     author: MessageAuthor,
     context: ConnectionContext,
 }
-impl ClockingConnection {
+impl<W: AsyncReadExt + AsyncWriteExt + Unpin>  ClockingConnection<W> {
     /// 既存のストリームから新しいClockingConnectionを作成します。
     ///
     /// **authorには、名前の通り「メッセージの送信者」が格納されることに注意してください。**
     /// たとえば、サーバー側で動いている場合は、[`MessageAuthor::Client`]を`author`に指定する必要があります。`
-    pub fn new(stream: TcpStream, author: MessageAuthor) -> Self {
+    pub fn new(stream: W, author: MessageAuthor) -> Self {
         Self {
             stream,
             author,
@@ -91,14 +92,14 @@ impl ClockingConnection {
                 {
                     self.buffer.advance(buf.position() as usize);
                     self.context = match self.author {
-                        MessageAuthor::Server => ConnectionContext::WaitStatus(
-                            header.message_length as usize - remaining,
-                        ),
-                        MessageAuthor::Client => ConnectionContext::WaitMessageType(
-                            header.message_length as usize - remaining,
-                        ),
+                        MessageAuthor::Server => ConnectionContext::WaitStatus,
+                        MessageAuthor::Client => ConnectionContext::WaitMessageType,
                     };
                     return Ok(Some(ClockingFrameUnit::SuteraHeader(header)));
+                }
+
+                if remaining < sutera_header::SuteraHeader::MAX_FRAME_SIZE {
+                    return Ok(None);
                 }
 
                 // 処理がここまで流れている時点で、
@@ -106,7 +107,20 @@ impl ClockingConnection {
                 //
                 // ただ、一応次にどこかでSuteraHeaderが来るかもしれないので、
                 // バッファのどこかにSuteraHeaderを検知できたらそれまでのところをUnfragmentedとする
-                for i in 1..=(remaining - sutera_header::SuteraHeader::MIN_FRAME_SIZE) {
+                self.context = ConnectionContext::Unfragmented(1);
+                Ok(None)
+            },
+            ConnectionContext::Unfragmented(checked_length) => {
+                let remaining = buf.remaining();
+
+                // この時点で、SuteraHeaderの最小サイズよりも小さい場合は、次のバッファも読む
+                if remaining < sutera_header::SuteraHeader::MIN_FRAME_SIZE {
+                    return Ok(None);
+                }
+
+                // 新しく増えた領域にSuteraHeaderが存在しないか確認する
+                let last_possible_index = remaining - sutera_header::SuteraHeader::MIN_FRAME_SIZE;
+                for i in checked_length..=last_possible_index {
                     buf.set_position(i as u64);
                     if (sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &()).await)
                         .is_some()
@@ -120,16 +134,18 @@ impl ClockingConnection {
                 // 認識されていない状態でバッファが増えつづけると危険なので、
                 // 定期的にUnfragmentedとして処理する
                 if remaining > 1024 {
+                    self.context = ConnectionContext::Unfragmented(0);
                     Ok(Some(ClockingFrameUnit::Unfragmented(
                         self.buffer.copy_to_bytes(1024).to_vec(),
                     )))
                 } else {
+                    self.context = ConnectionContext::Unfragmented(checked_length + 1);
                     Ok(None)
                 }
             }
-            ConnectionContext::WaitStatus(_) => todo!(),
-            ConnectionContext::WaitMessageType(_) => todo!(),
-            ConnectionContext::WaitContent(_) => todo!(),
+            ConnectionContext::WaitStatus => todo!(),
+            ConnectionContext::WaitMessageType => todo!(),
+            ConnectionContext::WaitContent => todo!(),
         }
     }
 }
