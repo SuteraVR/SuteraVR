@@ -6,7 +6,6 @@ use log::error;
 use log::{info, warn};
 use std::{io, net::SocketAddr, sync::Arc};
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
     sync::{broadcast, mpsc::Receiver},
     task::JoinSet,
@@ -15,6 +14,7 @@ use tokio_rustls::{rustls::ServerConfig, TlsAcceptor};
 
 use crate::errors::TcpServerError;
 use crate::shutdown::ShutdownReason;
+use crate::tcp::stream::ClientMessageStream;
 
 #[derive(Debug)]
 pub enum TcpServerSignal {
@@ -87,29 +87,23 @@ async fn connection_init(
     info!("Connection from {}...", peer_addr);
 
     let fut = async move {
-        let mut stream = acceptor.accept(stream).await?;
+        let stream = acceptor
+            .accept(stream)
+            .await
+            .map_err(TcpServerError::AcceptError)?;
         info!("Connection from {} is established.", peer_addr);
 
-        let mut buf = vec![0; 1024];
+        let message = ClientMessageStream::new(stream, peer_addr)?;
+
         loop {
             tokio::select! {
-                Ok(n) = stream.read(&mut buf) => {
-                    if n == 0 {
-                        break;
-                    }
-                    let string = String::from_utf8_lossy(&buf[..n]);
-                    info!("Received from {}: {}", peer_addr, string.trim_end());
-                    stream
-                        .write_all(format!("Received: {}", string).as_bytes())
-                        .await?;
-                },
-                Ok(_) = shutdown_rx.recv() => {
-                    stream.shutdown().await?;
+                Ok(reason) = shutdown_rx.recv() => {
+                    message.shutdown_and_wait(reason).await?;
+                    break;
                 }
             }
         }
-
-        io::Result::Ok(())
+        Ok::<(), TcpServerError>(())
     };
 
     join_set
