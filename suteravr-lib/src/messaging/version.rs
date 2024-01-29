@@ -1,7 +1,7 @@
 use std::mem::size_of;
 
 use bytes::Buf;
-use tokio::io::{AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 
 use crate::clocking::traits::ClockingFrame;
 

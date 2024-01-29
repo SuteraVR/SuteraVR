@@ -21,6 +21,7 @@ pub trait ClockingFrame: Sized + Send + Sync + Debug + PartialEq {
     ///
     /// フレームが解析可能であれば、`Some(Self)`を返し、そうでない場合は`None`を返します。
     #[allow(async_fn_in_trait)]
+    #[inline]
     async fn parse_frame(cursor: &mut Cursor<&[u8]>, ctx: &Self::Context) -> Option<Self> {
         if cursor.remaining() < Self::MIN_FRAME_SIZE {
             return None;
@@ -47,6 +48,7 @@ pub trait ClockingFrame: Sized + Send + Sync + Debug + PartialEq {
     #[allow(async_fn_in_trait)]
     async fn parse_frame_unchecked(cursor: &mut Cursor<&[u8]>, ctx: &Self::Context)
         -> Option<Self>;
+
     /// フレームの書き込みを行います。
     #[allow(async_fn_in_trait)]
     async fn write_frame<W: AsyncWriteExt + Unpin>(

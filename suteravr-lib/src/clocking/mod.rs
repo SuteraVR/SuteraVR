@@ -103,6 +103,7 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
     }
 
     #[async_recursion(?Send)]
+    #[inline]
     async fn parse_frame(&mut self) -> Result<Option<ClockingFrameUnit>, ClockingFramingError> {
         let mut buf = Cursor::new(&self.buffer[..]);
         match self.context {
