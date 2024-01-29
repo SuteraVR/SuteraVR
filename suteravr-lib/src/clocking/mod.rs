@@ -226,6 +226,10 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
 
 #[cfg(test)]
 mod test {
+    use crate::clocking::oneshot_headers::OneshotStep;
+    use crate::clocking::oneshot_headers::OneshotTypes;
+    use crate::clocking::OneshotHeader;
+    use crate::clocking::SuteraStatus;
     use rstest::*;
     use std::io::{Cursor, Write};
 
@@ -291,6 +295,71 @@ mod test {
         assert_eq!(
             connection.read_frame().await.unwrap(),
             Some(ClockingFrameUnit::SuteraHeader(header.clone()))
+        );
+    }
+
+    #[rstest]
+    #[case::client(MessageAuthor::Client)]
+    #[case::server(MessageAuthor::Server)]
+    #[tokio::test]
+    async fn read_all_frame(#[case] author: MessageAuthor) {
+        let mut vec = Cursor::new(Vec::<u8>::new());
+
+        let header = SuteraHeader {
+            version: Version {
+                major: 0,
+                minor: 1,
+                patch: 0,
+            },
+        };
+
+        let status = SuteraStatus::Ok;
+
+        let oneshot_header = OneshotHeader {
+            step: match author {
+                MessageAuthor::Client => OneshotStep::Request,
+                MessageAuthor::Server => OneshotStep::Response,
+            },
+            message_id: 0x1234,
+            message_type: OneshotTypes::Authentication_Login_Pull,
+        };
+
+        let payload = b"Wao!";
+
+        vec.write_all(&encode(&header, &()).await).unwrap();
+
+        if author == MessageAuthor::Server {
+            vec.write_all(&encode(&status, &()).await).unwrap();
+        }
+
+        vec.write_all(&encode(&oneshot_header, &author).await)
+            .unwrap();
+
+        vec.write_all(&(payload.len() as u64).to_be_bytes())
+            .unwrap();
+        vec.write_all(&(payload.len() as u64).to_be_bytes())
+            .unwrap();
+        vec.write_all(&payload[..]).unwrap();
+
+        vec.set_position(0);
+        let mut connection = ClockingConnection::new(&mut vec, author);
+        assert_eq!(
+            connection.read_frame().await.unwrap(),
+            Some(ClockingFrameUnit::SuteraHeader(header))
+        );
+        if author == MessageAuthor::Server {
+            assert_eq!(
+                connection.read_frame().await.unwrap(),
+                Some(ClockingFrameUnit::SuteraStatus(status))
+            );
+        }
+        assert_eq!(
+            connection.read_frame().await.unwrap(),
+            Some(ClockingFrameUnit::OneshotHeaders(oneshot_header))
+        );
+        assert_eq!(
+            connection.read_frame().await.unwrap(),
+            Some(ClockingFrameUnit::Content(payload.into()))
         );
     }
 }
