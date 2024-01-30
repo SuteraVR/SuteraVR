@@ -178,6 +178,7 @@ impl ClientMessageStream {
         ))
     }
 
+    #[inline]
     pub async fn recv(&mut self) -> Option<Request> {
         self.receive_rx.recv().await
     }

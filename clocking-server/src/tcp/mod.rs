@@ -5,6 +5,8 @@ pub mod stream;
 use log::error;
 use log::{info, warn};
 use std::{io, net::SocketAddr, sync::Arc};
+use suteravr_lib::clocking::oneshot_headers::OneshotTypes;
+use suteravr_lib::clocking::sutera_status::{SuteraStatus, SuteraStatusError};
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::{broadcast, mpsc::Receiver},
@@ -14,6 +16,7 @@ use tokio_rustls::{rustls::ServerConfig, TlsAcceptor};
 
 use crate::errors::TcpServerError;
 use crate::shutdown::ShutdownReason;
+use crate::tcp::requests::Request;
 use crate::tcp::stream::ClientMessageStream;
 
 #[derive(Debug)]
@@ -99,8 +102,15 @@ async fn connection_init(
                 _ = &mut stream_handle => {
                     break;
                 },
-                _ = message.recv() => {
-
+                Some(request) = message.recv() => {
+                    match request {
+                        Request::Oneshot(request) if request.oneshot_header.message_type == OneshotTypes::Connection_HealthCheck_Pull => {
+                            request.reply(Vec::new());
+                        }
+                        Request::Oneshot(request) => {
+                            request.reply_failed(SuteraStatus::Error(SuteraStatusError::Unimplemented));
+                        }
+                    }
                 },
                 Ok(reason) = shutdown_rx.recv() => {
                     message.shutdown(reason).await?;
