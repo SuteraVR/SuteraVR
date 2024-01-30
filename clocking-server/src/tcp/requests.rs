@@ -7,7 +7,7 @@ use suteravr_lib::{
     },
     SCHEMA_VERSION,
 };
-use tokio::sync::oneshot;
+use tokio::sync::mpsc;
 
 use crate::errors::TcpServerError;
 
@@ -22,12 +22,12 @@ pub enum Response {
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct OneshotRequest {
-    sutera_header: SuteraHeader,
-    oneshot_header: OneshotHeader,
-    payload: Vec<u8>,
+    pub sutera_header: SuteraHeader,
+    pub oneshot_header: OneshotHeader,
+    pub payload: Vec<u8>,
 
     #[derivative(Debug = "ignore")]
-    reply: oneshot::Sender<OneshotResponse>,
+    reply: mpsc::Sender<Response>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -39,12 +39,27 @@ pub struct OneshotResponse {
 }
 
 impl OneshotRequest {
+    pub fn new(
+        sutera_header: SuteraHeader,
+        oneshot_header: OneshotHeader,
+        payload: Vec<u8>,
+        reply: mpsc::Sender<Response>,
+    ) -> Self {
+        Self {
+            sutera_header,
+            oneshot_header,
+            payload,
+            reply
+        }
+    }
+
     #[inline]
     pub async fn send_reply(self, payload: Vec<u8>) -> Result<(), TcpServerError> {
         let response = self.reply(payload);
         self.reply
-            .send(response)
-            .map_err(|_| TcpServerError::ThreadDead)?;
+            .send(Response::Oneshot(response))
+            .await
+            .map_err(TcpServerError::CannotSendResponse)?;
         Ok(())
     }
 
@@ -52,8 +67,9 @@ impl OneshotRequest {
     pub async fn send_reply_failed(self, fail_status: SuteraStatus) -> Result<(), TcpServerError> {
         let response = self.reply_failed(fail_status);
         self.reply
-            .send(response)
-            .map_err(|_| TcpServerError::ThreadDead)?;
+            .send(Response::Oneshot(response))
+            .await
+            .map_err(TcpServerError::CannotSendResponse)?;
         Ok(())
     }
 

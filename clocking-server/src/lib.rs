@@ -5,7 +5,6 @@
 //! use suteravr_lib::Foo;
 //! ```
 //!
-
 use std::{net::SocketAddr, path::PathBuf};
 
 use errors::ClockingServerError;

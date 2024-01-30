@@ -69,7 +69,7 @@ pub static ONESHOT_STEP_MAP: Lazy<
     }
 });
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct OneshotHeader {
     pub step: OneshotStep,
     pub message_type: OneshotTypes,

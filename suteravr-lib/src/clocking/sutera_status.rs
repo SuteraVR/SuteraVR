@@ -40,7 +40,7 @@ static SUTERA_STATUS_WARNING_MAP: Lazy<EnumMap<SuteraStatusWarning, [u8; 3]>> = 
     }
 });
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum SuteraStatus {
     Ok,
     Warning(SuteraStatusWarning),

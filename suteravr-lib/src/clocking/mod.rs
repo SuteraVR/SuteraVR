@@ -34,7 +34,7 @@ enum ConnectionContext {
     WaitContent,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ClockingFrameUnit {
     SuteraHeader(sutera_header::SuteraHeader),
     SuteraStatus(sutera_status::SuteraStatus),
