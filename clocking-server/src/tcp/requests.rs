@@ -49,7 +49,7 @@ impl OneshotRequest {
             sutera_header,
             oneshot_header,
             payload,
-            reply
+            reply,
         }
     }
 

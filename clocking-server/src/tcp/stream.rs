@@ -72,11 +72,8 @@ impl ClientMessageStream {
                 let connection = &mut connection;
                 let mut shutdown = shutdown_rx;
                 let mut frame_buffer = FrameBuffer::new(peer_addr);
-                
                 let receive = receive_tx;
                 let send = send_rx;
-
-                
                 let mut add_frame_buffer = |payload: ClockingFrameUnit| -> Option<Request> {
                     match payload {
                         ClockingFrameUnit::SuteraStatus(_) => {
@@ -155,12 +152,15 @@ impl ClientMessageStream {
             })
             .map_err(TcpServerError::SpawnError)?;
 
-        Ok((Self {
-            peer_addr,
-            shutdown_tx,
-            receive_rx,
-            send_tx,
-        },handle))
+        Ok((
+            Self {
+                peer_addr,
+                shutdown_tx,
+                receive_rx,
+                send_tx,
+            },
+            handle,
+        ))
     }
 
     pub async fn recv(&mut self) -> Option<Request> {

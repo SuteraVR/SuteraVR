@@ -96,13 +96,13 @@ async fn connection_init(
         info!("Connection from {} is established.", peer_addr);
 
         let (mut message, mut stream_handle) = ClientMessageStream::new(stream, peer_addr)?;
-         loop {
+        loop {
             tokio::select! {
                 _ = &mut stream_handle => {
                     break;
                 },
                 _ = message.recv() => {
-                    
+
                 },
                 Ok(reason) = shutdown_rx.recv() => {
                     message.shutdown(reason).await?;
