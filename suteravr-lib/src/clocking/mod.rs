@@ -171,9 +171,13 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin + Send> ClockingConnection<W> {
                     buf.set_position(i as u64);
                     if sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &()).is_some() {
                         self.context = ConnectionContext::None;
-                        return Ok(Some(ClockingFrameUnit::Unfragmented(
-                            self.buffer.copy_to_bytes(i).to_vec(),
-                        )));
+                        if i == 0 {
+                            return self.parse_frame();
+                        } else {
+                            return Ok(Some(ClockingFrameUnit::Unfragmented(
+                                self.buffer.copy_to_bytes(i).to_vec(),
+                            )));
+                        }
                     }
                 }
 
@@ -234,7 +238,7 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin + Send> ClockingConnection<W> {
                 // 同じものの場合のみ入力を受け付け、違うものの場合Contentを読んでいないと考えUnfragmentedに
                 let content_length = buf.get_u64();
                 let remaining = buf.remaining();
-                if remaining <= size_of::<u64>() {
+                if remaining < size_of::<u64>() {
                     return if buf.copy_to_bytes(remaining)
                         != content_length.to_be_bytes()[0..remaining]
                     {

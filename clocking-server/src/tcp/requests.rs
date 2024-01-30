@@ -55,7 +55,7 @@ impl OneshotRequest {
 
     #[inline]
     pub async fn send_reply(self, payload: Vec<u8>) -> Result<(), TcpServerError> {
-        let response = self.reply(payload);
+        let response = self.to_reply(payload);
         self.reply
             .send(Response::Oneshot(response))
             .await
@@ -65,7 +65,7 @@ impl OneshotRequest {
 
     #[inline]
     pub async fn send_reply_failed(self, fail_status: SuteraStatus) -> Result<(), TcpServerError> {
-        let response = self.reply_failed(fail_status);
+        let response = self.to_reply_failed(fail_status);
         self.reply
             .send(Response::Oneshot(response))
             .await
@@ -74,7 +74,7 @@ impl OneshotRequest {
     }
 
     #[inline]
-    pub fn reply(&self, payload: Vec<u8>) -> OneshotResponse {
+    pub fn to_reply(&self, payload: Vec<u8>) -> OneshotResponse {
         OneshotResponse {
             sutera_header: SuteraHeader {
                 version: SCHEMA_VERSION,
@@ -90,7 +90,7 @@ impl OneshotRequest {
     }
 
     #[inline]
-    pub fn reply_failed(&self, fail_status: SuteraStatus) -> OneshotResponse {
+    pub fn to_reply_failed(&self, fail_status: SuteraStatus) -> OneshotResponse {
         OneshotResponse {
             sutera_header: SuteraHeader {
                 version: SCHEMA_VERSION,

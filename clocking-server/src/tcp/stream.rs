@@ -80,7 +80,6 @@ impl ClientMessageStream {
                 let receive = receive_tx;
                 let mut send = send_rx;
                 let mut add_frame_buffer = |payload: ClockingFrameUnit| -> Option<Request> {
-                    debug!("Payload: {:?}", &payload);
                     match payload {
                         ClockingFrameUnit::SuteraStatus(_) => {
                             error!("Unexpected SuteraStatus of ClockingConnection! ({})", peer_addr);
@@ -117,6 +116,7 @@ impl ClientMessageStream {
                                         reply.clone(),
                                     );
                                     info!("Request from {}: {:?}", peer_addr, &request);
+                                    frame_buffer.clear();
                                     return Some(Request::Oneshot(request));
                                 },
                                 Some(_) | None => {

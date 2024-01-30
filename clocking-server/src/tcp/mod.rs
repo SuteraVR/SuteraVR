@@ -99,18 +99,18 @@ async fn connection_init(
         let (mut message, mut stream_handle) = ClientMessageStream::new(stream, peer_addr)?;
         loop {
             tokio::select! {
-                _ = &mut stream_handle => {
-                    break;
-                },
                 Some(request) = message.recv() => {
                     match request {
                         Request::Oneshot(request) if request.oneshot_header.message_type == OneshotTypes::Connection_HealthCheck_Pull => {
-                            request.reply(Vec::new());
+                            request.send_reply(Vec::new()).await?;
                         }
                         Request::Oneshot(request) => {
-                            request.reply_failed(SuteraStatus::Error(SuteraStatusError::Unimplemented));
+                            request.send_reply_failed(SuteraStatus::Error(SuteraStatusError::Unimplemented)).await?;
                         }
                     }
+                },
+                _ = &mut stream_handle => {
+                    break;
                 },
                 Ok(reason) = shutdown_rx.recv() => {
                     message.shutdown(reason).await?;
