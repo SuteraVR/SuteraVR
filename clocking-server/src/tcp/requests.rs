@@ -32,10 +32,10 @@ pub struct OneshotRequest {
 
 #[derive(Debug, PartialEq)]
 pub struct OneshotResponse {
-    sutera_header: SuteraHeader,
-    sutera_status: SuteraStatus,
-    oneshot_header: OneshotHeader,
-    payload: Vec<u8>,
+    pub sutera_header: SuteraHeader,
+    pub sutera_status: SuteraStatus,
+    pub oneshot_header: OneshotHeader,
+    pub payload: Vec<u8>,
 }
 
 impl OneshotRequest {

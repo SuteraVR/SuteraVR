@@ -49,9 +49,14 @@ impl FrameBuffer {
 }
 
 pub struct ClientMessageStream {
-    peer_addr: SocketAddr,
+    _peer_addr: SocketAddr,
     shutdown_tx: oneshot::Sender<ShutdownReason>,
+
+    // サーバー側が自発的にリクエストを生成することが今はあんまりない
+    // そのうち実装します
+    #[allow(dead_code)]
     send_tx: mpsc::Sender<Response>,
+
     receive_rx: mpsc::Receiver<Request>,
 }
 
@@ -73,7 +78,7 @@ impl ClientMessageStream {
                 let mut shutdown = shutdown_rx;
                 let mut frame_buffer = FrameBuffer::new(peer_addr);
                 let receive = receive_tx;
-                let send = send_rx;
+                let mut send = send_rx;
                 let mut add_frame_buffer = |payload: ClockingFrameUnit| -> Option<Request> {
                     match payload {
                         ClockingFrameUnit::SuteraStatus(_) => {
@@ -127,6 +132,16 @@ impl ClientMessageStream {
 
                 loop {
                     tokio::select! {
+                        Some(response) = send.recv() => {
+                            match response {
+                                Response::Oneshot(oneshot) => {
+                                    connection.write_frame(&ClockingFrameUnit::SuteraHeader(oneshot.sutera_header)).await?;
+                                    connection.write_frame(&ClockingFrameUnit::SuteraStatus(oneshot.sutera_status)).await?;
+                                    connection.write_frame(&ClockingFrameUnit::OneshotHeaders(oneshot.oneshot_header)).await?;
+                                    connection.write_frame(&ClockingFrameUnit::Content(oneshot.payload)).await?;
+                                },
+                            }
+                        },
                         read = connection.read_frame() => {
                             match read {
                                 Ok(Some(payload)) => {
@@ -154,7 +169,7 @@ impl ClientMessageStream {
 
         Ok((
             Self {
-                peer_addr,
+                _peer_addr: peer_addr,
                 shutdown_tx,
                 receive_rx,
                 send_tx,
