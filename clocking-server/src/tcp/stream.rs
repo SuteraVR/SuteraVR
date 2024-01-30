@@ -1,4 +1,4 @@
-use std::{future::IntoFuture, net::SocketAddr};
+use std::net::SocketAddr;
 
 use log::{debug, error, info, warn};
 use suteravr_lib::clocking::{traits::MessageAuthor, ClockingConnection, ClockingFrameUnit};
@@ -44,7 +44,7 @@ impl FrameBuffer {
 
     #[inline]
     fn get_into(&self, index: usize) -> Option<ClockingFrameUnit> {
-        self.buffer.get(index).map(|v| v.clone())
+        self.buffer.get(index).cloned()
     }
 }
 

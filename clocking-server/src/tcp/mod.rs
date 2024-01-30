@@ -4,8 +4,6 @@ pub mod stream;
 
 use log::error;
 use log::{info, warn};
-use std::borrow::BorrowMut;
-use std::future::IntoFuture;
 use std::{io, net::SocketAddr, sync::Arc};
 use tokio::{
     net::{TcpListener, TcpStream},
