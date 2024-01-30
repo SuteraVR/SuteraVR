@@ -1,4 +1,4 @@
-use std::net::SocketAddr;
+use std::{future::IntoFuture, net::SocketAddr};
 
 use log::{debug, error, info, warn};
 use suteravr_lib::clocking::{traits::MessageAuthor, ClockingConnection, ClockingFrameUnit};
@@ -49,7 +49,6 @@ impl FrameBuffer {
 }
 
 pub struct ClientMessageStream {
-    handle: JoinHandle<Result<(), TcpServerError>>,
     peer_addr: SocketAddr,
     shutdown_tx: oneshot::Sender<ShutdownReason>,
     send_tx: mpsc::Sender<Response>,
@@ -60,7 +59,7 @@ impl ClientMessageStream {
     pub fn new<W: AsyncReadExt + AsyncWriteExt + Unpin + Send + 'static>(
         stream: W,
         peer_addr: SocketAddr,
-    ) -> Result<Self, TcpServerError> {
+    ) -> Result<(Self, JoinHandle<Result<(), TcpServerError>>), TcpServerError> {
         let mut connection = ClockingConnection::new(stream, MessageAuthor::Client);
         let (shutdown_tx, shutdown_rx) = oneshot::channel::<ShutdownReason>();
         let (receive_tx, receive_rx) = mpsc::channel::<Request>(32);
@@ -156,19 +155,22 @@ impl ClientMessageStream {
             })
             .map_err(TcpServerError::SpawnError)?;
 
-        Ok(Self {
-            handle,
+        Ok((Self {
             peer_addr,
             shutdown_tx,
             receive_rx,
             send_tx,
-        })
+        },handle))
     }
 
-    pub async fn shutdown_and_wait(self, reason: ShutdownReason) -> Result<(), TcpServerError> {
+    pub async fn recv(&mut self) -> Option<Request> {
+        self.receive_rx.recv().await
+    }
+
+    pub async fn shutdown(self, reason: ShutdownReason) -> Result<(), TcpServerError> {
         self.shutdown_tx
             .send(reason)
             .map_err(|_| TcpServerError::ThreadDead)?;
-        self.handle.await?
+        Ok(())
     }
 }

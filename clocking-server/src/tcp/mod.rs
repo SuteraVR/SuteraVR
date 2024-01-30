@@ -4,6 +4,8 @@ pub mod stream;
 
 use log::error;
 use log::{info, warn};
+use std::borrow::BorrowMut;
+use std::future::IntoFuture;
 use std::{io, net::SocketAddr, sync::Arc};
 use tokio::{
     net::{TcpListener, TcpStream},
@@ -93,12 +95,17 @@ async fn connection_init(
             .map_err(TcpServerError::AcceptError)?;
         info!("Connection from {} is established.", peer_addr);
 
-        let message = ClientMessageStream::new(stream, peer_addr)?;
-
-        loop {
+        let (mut message, mut stream_handle) = ClientMessageStream::new(stream, peer_addr)?;
+         loop {
             tokio::select! {
+                _ = &mut stream_handle => {
+                    break;
+                },
+                _ = message.recv() => {
+                    
+                },
                 Ok(reason) = shutdown_rx.recv() => {
-                    message.shutdown_and_wait(reason).await?;
+                    message.shutdown(reason).await?;
                     break;
                 }
             }
