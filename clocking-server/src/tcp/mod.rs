@@ -114,11 +114,11 @@ async fn connection_init(
                 },
                 Ok(reason) = shutdown_rx.recv() => {
                     message.shutdown(reason).await?;
+                    stream_handle.await??;
                     break;
                 }
             }
         }
-        stream_handle.await??;
         Ok::<(), TcpServerError>(())
     };
 

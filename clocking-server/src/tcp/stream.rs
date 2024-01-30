@@ -1,6 +1,5 @@
 use std::net::SocketAddr;
 
-use futures::FutureExt;
 use log::{debug, error, info, warn};
 use suteravr_lib::clocking::{traits::MessageAuthor, ClockingConnection, ClockingFrameUnit};
 use tokio::{
@@ -165,7 +164,6 @@ impl ClientMessageStream {
                         },
                     }
                 }
-                shutdown.fuse().await.map_err(TcpServerError::FuseError)?;
                 Ok::<(), TcpServerError>(())
             })
             .map_err(TcpServerError::SpawnError)?;
