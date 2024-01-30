@@ -58,7 +58,7 @@ pub async fn tcp_server(
         }
     };
 
-    if !connections.is_empty() {
+    if shutdown_tx.receiver_count() > 0 {
         info!("Waiting for all connections to be closed...");
         match shutdown_tx.send(shutdown_reason) {
             Ok(_) => while (connections.join_next().await).is_some() {},
