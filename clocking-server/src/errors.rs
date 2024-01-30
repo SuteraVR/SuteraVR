@@ -1,6 +1,6 @@
 use suteravr_lib::clocking::ClockingFramingError;
 use thiserror::Error;
-use tokio::sync::mpsc::error::SendError;
+use tokio::sync::{mpsc::error::SendError, oneshot};
 
 use crate::tcp::requests::{Request, Response};
 
@@ -28,6 +28,8 @@ pub enum TcpServerError {
     AcceptError(std::io::Error),
     #[error(transparent)]
     ShutdownError(std::io::Error),
+    #[error(transparent)]
+    FuseError(oneshot::error::RecvError),
     #[error(transparent)]
     ListenerBindError(std::io::Error),
     #[error(transparent)]

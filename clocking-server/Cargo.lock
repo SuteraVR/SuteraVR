@@ -226,6 +226,7 @@ dependencies = [
  "console-subscriber",
  "derivative",
  "env_logger",
+ "futures",
  "log",
  "once_cell",
  "rustls-pemfile",

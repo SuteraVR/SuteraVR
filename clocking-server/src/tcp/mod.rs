@@ -118,6 +118,7 @@ async fn connection_init(
                 }
             }
         }
+        stream_handle.await??;
         Ok::<(), TcpServerError>(())
     };
 
