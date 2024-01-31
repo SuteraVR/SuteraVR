@@ -16,3 +16,4 @@ tokio-rustls = "0.25.0"
 webpki-roots = "0.26.0"
 suteravr-lib = { path = "../../suteravr-lib" }
 thiserror = "1.0.56"
+derivative = "2.2.0"

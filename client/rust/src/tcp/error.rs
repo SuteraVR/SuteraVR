@@ -1,9 +1,15 @@
 use suteravr_lib::clocking::ClockingFramingError;
 use thiserror::Error;
-use tokio::sync::oneshot;
+use tokio::sync::{mpsc::error::SendError, oneshot};
+
+use super::requests::{Request, Response};
 
 #[derive(Debug, Error)]
 pub enum TcpServerError {
+    #[error("The request cannot be sent.")]
+    CannotSendRequest(SendError<Request>),
+    #[error("The response cannot be sent.")]
+    CannotSendResponse(SendError<Response>),
     #[error(transparent)]
     ConnectingError(std::io::Error),
     #[error(transparent)]

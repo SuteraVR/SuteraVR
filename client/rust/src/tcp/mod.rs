@@ -1,5 +1,6 @@
 pub mod allow_unknown_cert;
 pub mod error;
+pub mod requests;
 
 use std::sync::Arc;
 
@@ -7,7 +8,7 @@ use futures::executor::block_on;
 use godot::{engine::notify::NodeNotification, prelude::*};
 use suteravr_lib::{
     clocking::{
-        buffer::FrameBuffer,
+        buffer::{ContentHeader, FrameBuffer},
         oneshot_headers::{OneshotHeader, OneshotStep, OneshotTypes},
         sutera_header::SuteraHeader,
         traits::MessageAuthor,
@@ -17,7 +18,7 @@ use suteravr_lib::{
 };
 use tokio::{
     net::TcpStream,
-    sync::oneshot,
+    sync::{mpsc, oneshot},
     task::{JoinError, JoinHandle},
 };
 use tokio_rustls::{
@@ -28,8 +29,13 @@ use tokio_rustls::{
 use crate::{
     async_driver::tokio,
     logger::GodotLogger,
-    tcp::{allow_unknown_cert::AllowUnknownCertVerifier, error::TcpServerError},
+    tcp::{
+        allow_unknown_cert::AllowUnknownCertVerifier, error::TcpServerError,
+        requests::OneshotRequest,
+    },
 };
+
+use self::requests::{Request, Response};
 
 #[derive(Debug)]
 enum ShutdownReason {
@@ -42,6 +48,8 @@ struct ClockerConnection {
     base: Base<Node>,
     logger: GodotLogger,
     shutdown_tx: Option<oneshot::Sender<ShutdownReason>>,
+    receive_rx: Option<mpsc::Receiver<Request>>,
+    send_tx: Option<mpsc::Sender<Response>>,
     handle: Option<JoinHandle<()>>,
 }
 
@@ -72,6 +80,8 @@ impl INode for ClockerConnection {
             logger,
             handle: None,
             shutdown_tx: None,
+            receive_rx: None,
+            send_tx: None,
         }
     }
 
@@ -80,6 +90,12 @@ impl INode for ClockerConnection {
 
         let (shutdown_tx, mut shutdown_rx) = oneshot::channel::<ShutdownReason>();
         self.shutdown_tx = Some(shutdown_tx);
+
+        let (receive_tx, receive_rx) = mpsc::channel::<Request>(32);
+        self.receive_rx = Some(receive_rx);
+
+        let (send_tx, mut send_rx) = mpsc::channel::<Response>(32);
+        self.send_tx = Some(send_tx.clone());
 
         let logger = self.logger();
         let server = async move {
@@ -112,6 +128,9 @@ impl INode for ClockerConnection {
             let mut connection = ClockingConnection::new(stream, MessageAuthor::Server);
             let mut frame_buffer = FrameBuffer::new(logger.clone());
 
+            let receive = receive_tx;
+            let reply = send_tx.clone();
+
             connection
                 .write_frame(&ClockingFrameUnit::SuteraHeader(SuteraHeader {
                     version: SCHEMA_VERSION,
@@ -130,10 +149,35 @@ impl INode for ClockerConnection {
 
             loop {
                 tokio::select! {
+                    Some(request) = send_rx.recv() => {
+                        match request {
+                            Response::Oneshot(oneshot) => {
+                                connection.write_frame(&ClockingFrameUnit::SuteraHeader(oneshot.sutera_header)).await?;
+                                connection.write_frame(&ClockingFrameUnit::OneshotHeaders(oneshot.oneshot_header)).await?;
+                                connection.write_frame(&ClockingFrameUnit::Content(oneshot.payload)).await?;
+                            },
+                        }
+                    },
                     read = connection.read_frame() => {
                         match read {
                             Ok(Some(payload)) => {
-                                if let Some(_received) = frame_buffer.append(payload, MessageAuthor::Server) {
+                                if let Some(received) = frame_buffer.append(payload, MessageAuthor::Server) {
+                                        if received.sutera_status.is_none() {
+                                            panic!("Received message doesn't contain sutera_header! (Maybe frame_buffer has bugs.)")
+                                        }
+                                        match received.content_header {
+                                            ContentHeader::Oneshot(oneshot_header) => {
+                                                receive.send(
+                                                    Request::Oneshot(OneshotRequest::new(
+                                                        received.sutera_header,
+                                                        received.sutera_status.unwrap(),
+                                                        oneshot_header,
+                                                        received.payload,
+                                                        reply.clone()
+                                                    ))
+                                                ).await.map_err(TcpServerError::CannotSendRequest)?;
+                                            },
+                                        }
                                 }
                             }
                             Ok(None) => {
