@@ -1,6 +1,6 @@
 use crate::clocking::ClockingFrameUnit;
 use crate::util::logger::Logger;
-use crate::{debug, info, warn, error};
+use crate::{debug, error, info, warn};
 
 use super::oneshot_headers::OneshotHeader;
 use super::sutera_header::SuteraHeader;
@@ -14,7 +14,7 @@ pub struct FrameBuffer<T: Logger> {
 
 #[derive(Debug, Clone)]
 pub enum ContentHeader {
-    Oneshot(OneshotHeader)
+    Oneshot(OneshotHeader),
 }
 
 #[derive(Debug, Clone)]
@@ -63,7 +63,10 @@ impl<T: Logger> FrameBuffer<T> {
     ) -> Option<ReceivePayload> {
         match payload {
             ClockingFrameUnit::SuteraStatus(_) => {
-                error!(self.logger, "Unexpected SuteraStatus of ClockingConnection!");
+                error!(
+                    self.logger,
+                    "Unexpected SuteraStatus of ClockingConnection!"
+                );
                 unreachable!();
             }
             ClockingFrameUnit::SuteraHeader(_) => {
@@ -71,19 +74,20 @@ impl<T: Logger> FrameBuffer<T> {
                 if self.len() != 0 {
                     warn!(self.logger, "Skipped {} frame(s).", len);
                     self.clear();
-
                 }
                 self.push(payload);
-            },
+            }
             ClockingFrameUnit::Unfragmented(c) => {
                 warn!(self.logger, "Receive {} unfragmented byte(s)", c.len());
-            },
+            }
             ClockingFrameUnit::Content(payload) => {
                 let len = self.len();
-                if len != match author {
-                    MessageAuthor::Client => 2,
-                    MessageAuthor::Server => 3,
-                } {
+                if len
+                    != match author {
+                        MessageAuthor::Client => 2,
+                        MessageAuthor::Server => 3,
+                    }
+                {
                     warn!(self.logger, "Unexpected content, Skipped {} frame(s).", len);
                     self.clear();
                     return None;
@@ -91,15 +95,17 @@ impl<T: Logger> FrameBuffer<T> {
                 let Some(ClockingFrameUnit::SuteraHeader(sutera_header)) = self.get_into(0) else {
                     return None;
                 };
-                let Ok(sutera_status) = (if author == MessageAuthor::Client { Ok(None) } else {
+                let Ok(sutera_status) = (if author == MessageAuthor::Client {
+                    Ok(None)
+                } else {
                     match self.get_into(1) {
-                        Some(ClockingFrameUnit::SuteraStatus(sutera_status)) => Ok(Some(sutera_status)),
-                        _ => {
-                            Err(())
+                        Some(ClockingFrameUnit::SuteraStatus(sutera_status)) => {
+                            Ok(Some(sutera_status))
                         }
+                        _ => Err(()),
                     }
                 }) else {
-                    return None
+                    return None;
                 };
                 match self.get_into(match author {
                     MessageAuthor::Client => 1,
@@ -115,10 +121,10 @@ impl<T: Logger> FrameBuffer<T> {
                         info!(self.logger, "Receive: {:?}", &request);
                         self.clear();
                         return Some(request);
-                    },
+                    }
                     Some(_) | None => {
                         return None;
-                    },
+                    }
                 }
             }
             _ => {

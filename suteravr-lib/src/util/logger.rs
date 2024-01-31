@@ -8,7 +8,7 @@ pub trait Logger {
 
 #[macro_export]
 macro_rules! info {
-    ($logger:expr, $($arg:tt)+) => {    
+    ($logger:expr, $($arg:tt)+) => {
         (&$logger as &dyn $crate::util::logger::Logger).write_info(std::format!($($arg)+))
     }
 }

@@ -12,12 +12,12 @@ use crate::clocking::traits::ClockingFrame;
 
 use self::{oneshot_headers::OneshotHeader, sutera_status::SuteraStatus, traits::MessageAuthor};
 
+pub mod buffer;
 pub mod oneshot_headers;
 pub mod schema_snapshot;
 pub mod sutera_header;
 pub mod sutera_status;
 pub mod traits;
-pub mod buffer;
 
 #[derive(Error, Debug)]
 pub enum ClockingFramingError {
