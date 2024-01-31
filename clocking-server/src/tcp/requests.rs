@@ -82,7 +82,7 @@ impl OneshotRequest {
             },
             sutera_status: SuteraStatus::Ok,
             oneshot_header: OneshotHeader {
-                step: OneshotStep::Request,
+                step: OneshotStep::Response,
                 message_type: self.oneshot_header.message_type,
                 message_id: self.oneshot_header.message_id,
             },
@@ -98,7 +98,7 @@ impl OneshotRequest {
             },
             sutera_status: fail_status,
             oneshot_header: OneshotHeader {
-                step: OneshotStep::Request,
+                step: OneshotStep::Response,
                 message_type: self.oneshot_header.message_type,
                 message_id: self.oneshot_header.message_id,
             },

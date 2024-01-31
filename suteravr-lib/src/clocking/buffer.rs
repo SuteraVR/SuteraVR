@@ -62,7 +62,7 @@ impl<T: Logger> FrameBuffer<T> {
         author: MessageAuthor,
     ) -> Option<ReceivePayload> {
         match payload {
-            ClockingFrameUnit::SuteraStatus(_) => {
+            ClockingFrameUnit::SuteraStatus(_) if author == MessageAuthor::Client => {
                 error!(
                     self.logger,
                     "Unexpected SuteraStatus of ClockingConnection!"

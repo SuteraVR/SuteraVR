@@ -1,12 +1,21 @@
 pub mod allow_unknown_cert;
+pub mod error;
 
 use std::sync::Arc;
 
 use futures::executor::block_on;
 use godot::{engine::notify::NodeNotification, prelude::*};
-use suteravr_lib::{info, warn};
+use suteravr_lib::{
+    clocking::{
+        buffer::FrameBuffer,
+        oneshot_headers::{OneshotHeader, OneshotStep, OneshotTypes},
+        sutera_header::SuteraHeader,
+        traits::MessageAuthor,
+        ClockingConnection, ClockingFrameUnit,
+    },
+    info, warn, SCHEMA_VERSION,
+};
 use tokio::{
-    io::AsyncWriteExt,
     net::TcpStream,
     sync::oneshot,
     task::{JoinError, JoinHandle},
@@ -17,7 +26,9 @@ use tokio_rustls::{
 };
 
 use crate::{
-    async_driver::tokio, logger::GodotLogger, tcp::allow_unknown_cert::AllowUnknownCertVerifier,
+    async_driver::tokio,
+    logger::GodotLogger,
+    tcp::{allow_unknown_cert::AllowUnknownCertVerifier, error::TcpServerError},
 };
 
 #[derive(Debug)]
@@ -67,7 +78,7 @@ impl INode for ClockerConnection {
     fn ready(&mut self) {
         info!(self.logger, "Making connection...");
 
-        let (shutdown_tx, shutdown_rx) = oneshot::channel::<ShutdownReason>();
+        let (shutdown_tx, mut shutdown_rx) = oneshot::channel::<ShutdownReason>();
         self.shutdown_tx = Some(shutdown_tx);
 
         let logger = self.logger();
@@ -87,11 +98,61 @@ impl INode for ClockerConnection {
             let connector = TlsConnector::from(Arc::new(config));
             let dnsname = ServerName::try_from(name).unwrap();
 
-            let stream = TcpStream::connect(&addr).await?;
-            let mut stream = connector.connect(dnsname, stream).await?;
-            shutdown_rx.await.unwrap();
-            stream.shutdown().await?;
-            Ok::<(), std::io::Error>(())
+            let stream = TcpStream::connect(&addr)
+                .await
+                .map_err(TcpServerError::ConnectingError)?;
+
+            let stream = connector
+                .connect(dnsname, stream)
+                .await
+                .map_err(TcpServerError::ConnectingError)?;
+
+            info!(logger, "Connection established!");
+
+            let mut connection = ClockingConnection::new(stream, MessageAuthor::Server);
+            let mut frame_buffer = FrameBuffer::new(logger.clone());
+
+            connection
+                .write_frame(&ClockingFrameUnit::SuteraHeader(SuteraHeader {
+                    version: SCHEMA_VERSION,
+                }))
+                .await?;
+            connection
+                .write_frame(&ClockingFrameUnit::OneshotHeaders(OneshotHeader {
+                    step: OneshotStep::Request,
+                    message_type: OneshotTypes::Connection_HealthCheck_Pull,
+                    message_id: 0x123,
+                }))
+                .await?;
+            connection
+                .write_frame(&ClockingFrameUnit::Content(vec![]))
+                .await?;
+
+            loop {
+                tokio::select! {
+                    read = connection.read_frame() => {
+                        match read {
+                            Ok(Some(payload)) => {
+                                if let Some(_received) = frame_buffer.append(payload, MessageAuthor::Server) {
+                                }
+                            }
+                            Ok(None) => {
+                                break;
+                            }
+                            Err(e)=> {
+                                warn!(logger, "{}", e);
+                                break;
+                            }
+                        }
+                    },
+                    _shutdown = &mut shutdown_rx => {
+                        break;
+                    }
+                }
+            }
+
+            connection.shutdown_stream().await?;
+            Ok::<(), TcpServerError>(())
         };
 
         let logger = self.logger();

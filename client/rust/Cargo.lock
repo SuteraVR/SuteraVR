@@ -602,6 +602,7 @@ dependencies = [
  "futures",
  "godot",
  "suteravr-lib",
+ "thiserror",
  "tokio",
  "tokio-rustls",
  "webpki-roots",
