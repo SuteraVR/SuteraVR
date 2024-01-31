@@ -1,4 +1,9 @@
+//! Godotと他のサーバー郡(env_logger)のログを統一して扱うためのモジュール
+//!
+//! うまくやれば、`log`クレートでどうにでもなりそうなんだけど、一時しのぎでこんな感じにしている
+
 use log;
+
 pub trait Logger {
     fn write_info(&self, data: String);
     fn write_warn(&self, data: String);
