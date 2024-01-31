@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://w4x133wmjuv"]
+[gd_scene load_steps=17 format=3 uid="uid://w4x133wmjuv"]
 
 [ext_resource type="Script" path="res://scenes/Player.gd" id="1_0pp0e"]
 [ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="2_u5fih"]
@@ -8,7 +8,10 @@
 [ext_resource type="PackedScene" uid="uid://b6bk2pj8vbj28" path="res://addons/godot-xr-tools/functions/movement_turn.tscn" id="6_ecl7u"]
 [ext_resource type="PackedScene" uid="uid://c2q5phg8w08o" path="res://addons/godot-xr-tools/functions/movement_jump.tscn" id="7_7hxx1"]
 [ext_resource type="PackedScene" uid="uid://diyu06cw06syv" path="res://addons/godot-xr-tools/player/player_body.tscn" id="8_62am2"]
+[ext_resource type="Script" path="res://scenes/keyboard_jump.gd" id="8_poryf"]
 [ext_resource type="PackedScene" uid="uid://bm6yri2k540dt" path="res://scenes/3dmodels/Shapell.tscn" id="9_go32e"]
+[ext_resource type="Script" path="res://scenes/keyboard_direct.gd" id="9_y2nx7"]
+[ext_resource type="Script" path="res://scenes/mouse_capture.gd" id="10_rl716"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_qh65e"]
 size = Vector2(1.6, 0.9)
@@ -59,6 +62,18 @@ tracker = &"right_hand"
 turn_mode = 2
 
 [node name="MovementJump" parent="XROrigin3D/RightHand" instance=ExtResource("7_7hxx1")]
+
+[node name="Keyboard" type="XRController3D" parent="XROrigin3D"]
+
+[node name="KeyboardJump" parent="XROrigin3D/Keyboard" instance=ExtResource("7_7hxx1")]
+script = ExtResource("8_poryf")
+
+[node name="KeyboardDirect" parent="XROrigin3D/Keyboard" instance=ExtResource("4_4hnfv")]
+script = ExtResource("9_y2nx7")
+strafe = true
+
+[node name="MouseCapture" type="Node" parent="XROrigin3D/Keyboard"]
+script = ExtResource("10_rl716")
 
 [node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("8_62am2")]
 
