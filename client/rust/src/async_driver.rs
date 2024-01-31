@@ -1,7 +1,10 @@
 use futures::Future;
 use godot::{engine::Engine, prelude::*};
 use suteravr_lib::info;
-use tokio::runtime::{Builder, Runtime};
+use tokio::{
+    runtime::{Builder, Runtime},
+    task::JoinHandle,
+};
 
 use crate::logger::GodotLogger;
 
@@ -34,9 +37,13 @@ impl INode for AsyncExecutorDriver {
 
 impl AsyncExecutorDriver {
     /// Spawns a new task on the runtime.
-    pub fn spawn(&self, name: &str, f: impl Future<Output = ()> + Send + 'static) {
+    pub fn spawn<T: Send + 'static>(
+        &self,
+        name: &str,
+        f: impl Future<Output = T> + Send + 'static,
+    ) -> JoinHandle<T> {
         info!(self.logger, "Spawning task: {}", name);
-        self.runtime.spawn(f);
+        self.runtime.spawn(f)
     }
 }
 
