@@ -1,4 +1,7 @@
-extends CharacterBody3D
+@tool
+class_name LookingAround
+extends XRToolsMovementProvider
+
 
 const SPEED = 2
 const TILT_LOWER_LIMIT := deg_to_rad(-90.0)
@@ -14,7 +17,7 @@ var mouse_raw: Vector2
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	CAMERA_CONTROLLER = $XROrigin3D/XRCamera3D
+	pass
 
 
 func _unhandled_input(event):
@@ -23,18 +26,9 @@ func _unhandled_input(event):
 		mouse_raw = Vector2(-event.relative.y, -event.relative.x)
 
 
-func _update_camera(delta):
+func physics_movement(delta: float, player_body: XRToolsPlayerBody, _disabled: bool):
 	mouse_rotation += mouse_raw * delta * SENSITIVITY
-	mouse_rotation.x = clamp(mouse_rotation.x, TILT_LOWER_LIMIT, TILT_UPPER_LIMIT)
-	# mouse_rotation.y = fmod(mouse_rotation.y, 2*PI)
+	# mouse_rotation.x = clamp(mouse_rotation.x, TILT_LOWER_LIMIT, TILT_UPPER_LIMIT)
+	mouse_rotation.y = fmod(mouse_rotation.y, 2*PI)
 	
-	CAMERA_CONTROLLER.transform.basis = Basis.from_euler(
-		Vector3(mouse_rotation.x, 0, 0)
-	)
-	CAMERA_CONTROLLER.rotation.z = 0.0
-	
-	mouse_raw = Vector2.ZERO
-
-
-func _physics_process(delta):
-	_update_camera(delta)
+	# player_body.rotate_player(delta * mouse_rotation.y)

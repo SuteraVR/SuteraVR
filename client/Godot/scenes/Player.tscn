@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://w4x133wmjuv"]
+[gd_scene load_steps=18 format=3 uid="uid://w4x133wmjuv"]
 
 [ext_resource type="Script" path="res://scenes/Player.gd" id="1_0pp0e"]
 [ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="2_u5fih"]
@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://bm6yri2k540dt" path="res://scenes/3dmodels/Shapell.tscn" id="9_go32e"]
 [ext_resource type="Script" path="res://scenes/keyboard_direct.gd" id="9_y2nx7"]
 [ext_resource type="Script" path="res://scenes/mouse_capture.gd" id="10_rl716"]
+[ext_resource type="Script" path="res://scenes/looking_around.gd" id="11_u7dw0"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_qh65e"]
 size = Vector2(1.6, 0.9)
@@ -74,6 +75,9 @@ strafe = true
 
 [node name="MouseCapture" type="Node" parent="XROrigin3D/Keyboard"]
 script = ExtResource("10_rl716")
+
+[node name="LookingAround" parent="XROrigin3D/Keyboard" instance=ExtResource("6_ecl7u")]
+script = ExtResource("11_u7dw0")
 
 [node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("8_62am2")]
 
