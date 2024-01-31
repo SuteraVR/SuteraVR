@@ -20,13 +20,12 @@ pub trait ClockingFrame: Sized + Send + Sync + Debug + PartialEq {
     /// フレームの解析を行います。
     ///
     /// フレームが解析可能であれば、`Some(Self)`を返し、そうでない場合は`None`を返します。
-    #[allow(async_fn_in_trait)]
     #[inline]
-    async fn parse_frame(cursor: &mut Cursor<&[u8]>, ctx: &Self::Context) -> Option<Self> {
+    fn parse_frame(cursor: &mut Cursor<&[u8]>, ctx: &Self::Context) -> Option<Self> {
         if cursor.remaining() < Self::MIN_FRAME_SIZE {
             return None;
         }
-        Self::parse_frame_unchecked(cursor, ctx).await
+        Self::parse_frame_unchecked(cursor, ctx)
     }
 
     /// フレームの解析を行います。
@@ -45,9 +44,7 @@ pub trait ClockingFrame: Sized + Send + Sync + Debug + PartialEq {
     ///
     /// この関数が呼び出された時点で、`cursor`は少なくとも `Self::MIN_FRAME_SIZE` バイトのデータを保持していることが保証されるので、  
     /// それに配慮する必要ありません。
-    #[allow(async_fn_in_trait)]
-    async fn parse_frame_unchecked(cursor: &mut Cursor<&[u8]>, ctx: &Self::Context)
-        -> Option<Self>;
+    fn parse_frame_unchecked(cursor: &mut Cursor<&[u8]>, ctx: &Self::Context) -> Option<Self>;
 
     /// フレームの書き込みを行います。
     #[allow(async_fn_in_trait)]
@@ -82,7 +79,7 @@ pub mod test_util {
         ctx: &T::Context,
     ) -> (Option<T>, Cursor<&'a [u8]>) {
         let mut cursor = std::io::Cursor::new(buf);
-        (T::parse_frame(&mut cursor, ctx).await, cursor)
+        (T::parse_frame(&mut cursor, ctx), cursor)
     }
 
     /// あるペイロードを、フレームに変換して、そのフレームを解析した結果が、元のペイロードと一致することを確認します。

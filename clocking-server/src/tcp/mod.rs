@@ -1,10 +1,13 @@
 pub mod certs;
+pub mod requests;
+pub mod stream;
 
 use log::error;
 use log::{info, warn};
 use std::{io, net::SocketAddr, sync::Arc};
+use suteravr_lib::clocking::oneshot_headers::OneshotTypes;
+use suteravr_lib::clocking::sutera_status::{SuteraStatus, SuteraStatusError};
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
     sync::{broadcast, mpsc::Receiver},
     task::JoinSet,
@@ -13,6 +16,8 @@ use tokio_rustls::{rustls::ServerConfig, TlsAcceptor};
 
 use crate::errors::TcpServerError;
 use crate::shutdown::ShutdownReason;
+use crate::tcp::requests::Request;
+use crate::tcp::stream::ClientMessageStream;
 
 #[derive(Debug)]
 pub enum TcpServerSignal {
@@ -53,7 +58,7 @@ pub async fn tcp_server(
         }
     };
 
-    if !connections.is_empty() {
+    if shutdown_tx.receiver_count() > 0 {
         info!("Waiting for all connections to be closed...");
         match shutdown_tx.send(shutdown_reason) {
             Ok(_) => while (connections.join_next().await).is_some() {},
@@ -85,29 +90,36 @@ async fn connection_init(
     info!("Connection from {}...", peer_addr);
 
     let fut = async move {
-        let mut stream = acceptor.accept(stream).await?;
+        let stream = acceptor
+            .accept(stream)
+            .await
+            .map_err(TcpServerError::AcceptError)?;
         info!("Connection from {} is established.", peer_addr);
 
-        let mut buf = vec![0; 1024];
+        let (mut message, mut stream_handle) = ClientMessageStream::new(stream, peer_addr)?;
         loop {
             tokio::select! {
-                Ok(n) = stream.read(&mut buf) => {
-                    if n == 0 {
-                        break;
+                Some(request) = message.recv() => {
+                    match request {
+                        Request::Oneshot(request) if request.oneshot_header.message_type == OneshotTypes::Connection_HealthCheck_Pull => {
+                            request.send_reply(Vec::new()).await?;
+                        }
+                        Request::Oneshot(request) => {
+                            request.send_reply_failed(SuteraStatus::Error(SuteraStatusError::Unimplemented)).await?;
+                        }
                     }
-                    let string = String::from_utf8_lossy(&buf[..n]);
-                    info!("Received from {}: {}", peer_addr, string.trim_end());
-                    stream
-                        .write_all(format!("Received: {}", string).as_bytes())
-                        .await?;
                 },
-                Ok(_) = shutdown_rx.recv() => {
-                    stream.shutdown().await?;
+                _ = &mut stream_handle => {
+                    break;
+                },
+                Ok(reason) = shutdown_rx.recv() => {
+                    message.shutdown(reason).await?;
+                    stream_handle.await??;
+                    break;
                 }
             }
         }
-
-        io::Result::Ok(())
+        Ok::<(), TcpServerError>(())
     };
 
     join_set

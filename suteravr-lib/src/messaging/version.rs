@@ -16,7 +16,7 @@ impl ClockingFrame for Version {
     type Context = ();
     const MIN_FRAME_SIZE: usize = size_of::<[u16; 3]>();
 
-    async fn parse_frame_unchecked(
+    fn parse_frame_unchecked(
         cursor: &mut std::io::Cursor<&[u8]>,
         _context: &Self::Context,
     ) -> Option<Self> {

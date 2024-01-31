@@ -1,3 +1,5 @@
+pub mod logger;
+
 use enum_map::{EnumArray, EnumMap};
 
 #[inline]
