@@ -1,5 +1,4 @@
 pub mod async_driver;
-pub mod async_tester;
 pub mod logger;
 pub mod tcp;
 

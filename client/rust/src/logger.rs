@@ -1,17 +1,21 @@
-#[macro_export]
-macro_rules! log {
-    ($fmt:literal $(, $args:expr)* $(,)?) => {
-        godot::log::godot_print!(
-            "[{}] {}",
-            LOGGER_CONTEXT,
-            format!($fmt $(, $args)*)
-        )
-    };
+use godot::log::godot_print;
+use suteravr_lib::util::logger::Logger;
+
+pub struct GodotLogger {
+    pub target: String
 }
 
-#[macro_export]
-macro_rules! set_logger_target {
-    ($target:expr) => {
-        pub const LOGGER_CONTEXT: &str = $target;
-    };
+impl Logger for GodotLogger {
+    fn write_debug(&self, data: String) {
+        godot_print!("[DEBUG {}] {}", self.target, data);
+    }
+    fn write_info(&self, data: String) {
+        godot_print!("[INFO  {}] {}", self.target, data);
+    }
+    fn write_warn(&self, data: String) {
+        godot_print!("[WARN  {}] {}", self.target, data);
+    }
+    fn write_error(&self, data: String) {
+        godot_print!("[ERROR {}] {}", self.target, data);
+    }
 }

@@ -1,24 +1,27 @@
 use futures::Future;
 use godot::{engine::Engine, prelude::*};
+use suteravr_lib::info;
 use tokio::runtime::{Builder, Runtime};
 
-use crate::{log, set_logger_target};
+use crate::logger::GodotLogger;
 
-set_logger_target!("AsyncExecutorDriver");
 
 #[derive(GodotClass)]
 #[class(base=Node)]
 pub struct AsyncExecutorDriver {
     runtime: Runtime,
+    logger: GodotLogger,
     base: Base<Node>,
 }
 
 #[godot_api]
 impl INode for AsyncExecutorDriver {
     fn init(base: Base<Node>) -> Self {
-        log!("Runtime initialized.");
+        let logger = GodotLogger { target: "AsyncDriver".to_string() };
+        info!(logger, "Runtime initialized.");
         Self {
             base,
+            logger,
             runtime: Builder::new_multi_thread()
                 .worker_threads(1)
                 .enable_all()
@@ -31,7 +34,7 @@ impl INode for AsyncExecutorDriver {
 impl AsyncExecutorDriver {
     /// Spawns a new task on the runtime.
     pub fn spawn(&self, name: &str, f: impl Future<Output = ()> + Send + 'static) {
-        log!("Spawning task: {}", name);
+        info!(self.logger, "Spawning task: {}", name);
         self.runtime.spawn(f);
     }
 }
