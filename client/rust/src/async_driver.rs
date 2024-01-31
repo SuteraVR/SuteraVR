@@ -5,7 +5,6 @@ use tokio::runtime::{Builder, Runtime};
 
 use crate::logger::GodotLogger;
 
-
 #[derive(GodotClass)]
 #[class(base=Node)]
 pub struct AsyncExecutorDriver {
@@ -17,7 +16,9 @@ pub struct AsyncExecutorDriver {
 #[godot_api]
 impl INode for AsyncExecutorDriver {
     fn init(base: Base<Node>) -> Self {
-        let logger = GodotLogger { target: "AsyncDriver".to_string() };
+        let logger = GodotLogger {
+            target: "AsyncDriver".to_string(),
+        };
         info!(logger, "Runtime initialized.");
         Self {
             base,
