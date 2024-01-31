@@ -2,7 +2,7 @@ use crate::tcp::allow_unknown_cert::AllowUnknownCertVerifier;
 use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio_rustls::rustls::pki_types::ServerName;
-use tokio_rustls::rustls::{ClientConfig, RootCertStore};
+use tokio_rustls::rustls::ClientConfig;
 use tokio_rustls::TlsConnector;
 mod tcp;
 

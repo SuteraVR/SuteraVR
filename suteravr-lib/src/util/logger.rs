@@ -8,32 +8,28 @@ pub trait Logger {
 
 #[macro_export]
 macro_rules! info {
-    ($logger:expr, $($arg:tt)+) => {
-        use $crate::util::logger::Logger;
-        $logger.write_info(std::format!($($arg)+))
+    ($logger:expr, $($arg:tt)+) => {    
+        (&$logger as &dyn $crate::util::logger::Logger).write_info(std::format!($($arg)+))
     }
 }
 #[macro_export]
 macro_rules! warn {
     ($logger:expr, $($arg:tt)+) => {
-        use $crate::util::logger::Logger;
-        $logger.write_warn(std::format!($($arg)+))
+        (&$logger as &dyn $crate::util::logger::Logger).write_warn(std::format!($($arg)+))
     }
 }
 
 #[macro_export]
 macro_rules! error {
     ($logger:expr, $($arg:tt)+) => {
-        use $crate::util::logger::Logger;
-        $logger.write_warn(std::format!($($arg)+))
+        (&$logger as &dyn $crate::util::logger::Logger).write_error(std::format!($($arg)+))
     }
 }
 
 #[macro_export]
 macro_rules! debug {
     ($logger:expr, $($arg:tt)+) => {
-        use $crate::util::logger::Logger;
-        $logger.write_warn(std::format!($($arg)+))
+        (&$logger as &dyn $crate::util::logger::Logger).write_debug(std::format!($($arg)+))
     }
 }
 

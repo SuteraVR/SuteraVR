@@ -1,52 +1,14 @@
 use std::net::SocketAddr;
-
-use log::{debug, error, info, warn};
-use suteravr_lib::clocking::{traits::MessageAuthor, ClockingConnection, ClockingFrameUnit};
+use suteravr_lib::{clocking::{buffer::FrameBuffer, traits::MessageAuthor, ClockingConnection, ClockingFrameUnit}, util::logger::EnvLogger, warn};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
-    sync::{mpsc, oneshot},
+    sync::{mpsc::{self}, oneshot},
     task::{Builder, JoinHandle},
 };
 
-use crate::{errors::TcpServerError, shutdown::ShutdownReason, tcp::requests::OneshotRequest};
+use crate::{errors::TcpServerError, shutdown::ShutdownReason};
 
 use super::requests::{Request, Response};
-
-struct FrameBuffer {
-    pub buffer: Vec<ClockingFrameUnit>,
-    peer_addr: SocketAddr,
-}
-
-impl FrameBuffer {
-    #[inline]
-    fn new(peer_addr: SocketAddr) -> Self {
-        Self {
-            buffer: Vec::with_capacity(4),
-            peer_addr,
-        }
-    }
-
-    #[inline]
-    fn push(&mut self, unit: ClockingFrameUnit) {
-        debug!("Frame from {}: {:?}", &self.peer_addr, unit);
-        self.buffer.push(unit);
-    }
-
-    #[inline]
-    fn len(&self) -> usize {
-        self.buffer.len()
-    }
-
-    #[inline]
-    fn clear(&mut self) {
-        self.buffer.clear()
-    }
-
-    #[inline]
-    fn get_into(&self, index: usize) -> Option<ClockingFrameUnit> {
-        self.buffer.get(index).cloned()
-    }
-}
 
 pub struct ClientMessageStream {
     _peer_addr: SocketAddr,
@@ -70,66 +32,16 @@ impl ClientMessageStream {
         let (receive_tx, receive_rx) = mpsc::channel::<Request>(32);
         let (send_tx, send_rx) = mpsc::channel::<Response>(32);
         let reply = send_tx.clone();
+        let logger = EnvLogger { target: format!("stream {}", peer_addr) };
 
         let handle = Builder::new()
             .name(format!("Stream of {}", peer_addr).as_str())
             .spawn(async move {
                 let connection = &mut connection;
                 let mut shutdown = shutdown_rx;
-                let mut frame_buffer = FrameBuffer::new(peer_addr);
+                let mut frame_buffer = FrameBuffer::new(logger.clone());
                 let receive = receive_tx;
                 let mut send = send_rx;
-                let mut add_frame_buffer = |payload: ClockingFrameUnit| -> Option<Request> {
-                    match payload {
-                        ClockingFrameUnit::SuteraStatus(_) => {
-                            error!("Unexpected SuteraStatus of ClockingConnection! ({})", peer_addr);
-                            unreachable!();
-                        }
-                        ClockingFrameUnit::SuteraHeader(_) => {
-                            let len = frame_buffer.len();
-                            if frame_buffer.len() != 0 {
-                                warn!("Frame from {}: Skipped {} frame(s).", peer_addr, len);
-                                frame_buffer.clear();
-
-                            }
-                            frame_buffer.push(payload);
-                        },
-                        ClockingFrameUnit::Unfragmented(c) => {
-                            warn!("Frame from {}: Receive {} unfragmented byte(s)", peer_addr, c.len());
-                        },
-                        ClockingFrameUnit::Content(payload) => {
-                            let len = frame_buffer.len();
-                            if len != 2 {
-                                warn!("Frame from {}: Unexpected content, Skipped {} frame(s).", peer_addr, len);
-                                frame_buffer.clear();
-                                return None;
-                            }
-                            let Some(ClockingFrameUnit::SuteraHeader(sutera_header)) = frame_buffer.get_into(0) else {
-                                return None;
-                            };
-                            match frame_buffer.get_into(1) {
-                                Some(ClockingFrameUnit::OneshotHeaders(oneshot_header)) => {
-                                    let request = OneshotRequest::new(
-                                        sutera_header,
-                                        oneshot_header,
-                                        payload,
-                                        reply.clone(),
-                                    );
-                                    info!("Request from {}: {:?}", peer_addr, &request);
-                                    frame_buffer.clear();
-                                    return Some(Request::Oneshot(request));
-                                },
-                                Some(_) | None => {
-                                    return None;
-                                },
-                            }
-                        }
-                        _ => {
-                            frame_buffer.push(payload);
-                        }
-                    }
-                    None
-                };
 
                 loop {
                     tokio::select! {
@@ -146,7 +58,7 @@ impl ClientMessageStream {
                         read = connection.read_frame() => {
                             match read {
                                 Ok(Some(payload)) => {
-                                    if let Some(request) = add_frame_buffer(payload) {
+                                    if let Some(request) = frame_buffer.append(payload, MessageAuthor::Client) {
                                         receive.send(request).await.map_err(TcpServerError::CannotSendRequest)?;
                                     }
                                 }
@@ -154,7 +66,7 @@ impl ClientMessageStream {
                                     break;
                                 }
                                 Err(e)=> {
-                                    warn!("{}: {}", peer_addr, e);
+                                    warn!(logger, "{}", e);
                                     break;
                                 }
                             }
