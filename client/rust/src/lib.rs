@@ -1,6 +1,7 @@
 pub mod async_driver;
 pub mod async_tester;
 pub mod logger;
+pub mod tcp;
 
 use async_driver::AsyncExecutorDriver;
 use godot::{engine::Engine, prelude::*};
