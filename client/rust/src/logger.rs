@@ -1,6 +1,6 @@
 use godot::log::godot_print;
 use suteravr_lib::util::logger::Logger;
-
+#[derive(Clone)]
 pub struct GodotLogger {
     pub target: String
 }
