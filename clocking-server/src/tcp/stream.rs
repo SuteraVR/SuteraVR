@@ -1,12 +1,23 @@
 use std::net::SocketAddr;
-use suteravr_lib::{clocking::{buffer::FrameBuffer, traits::MessageAuthor, ClockingConnection, ClockingFrameUnit}, util::logger::EnvLogger, warn};
+use suteravr_lib::{
+    clocking::{
+        buffer::{ContentHeader, FrameBuffer},
+        traits::MessageAuthor,
+        ClockingConnection, ClockingFrameUnit,
+    },
+    util::logger::EnvLogger,
+    warn,
+};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
-    sync::{mpsc::{self}, oneshot},
+    sync::{
+        mpsc::{self},
+        oneshot,
+    },
     task::{Builder, JoinHandle},
 };
 
-use crate::{errors::TcpServerError, shutdown::ShutdownReason};
+use crate::{errors::TcpServerError, shutdown::ShutdownReason, tcp::requests::OneshotRequest};
 
 use super::requests::{Request, Response};
 
@@ -32,7 +43,9 @@ impl ClientMessageStream {
         let (receive_tx, receive_rx) = mpsc::channel::<Request>(32);
         let (send_tx, send_rx) = mpsc::channel::<Response>(32);
         let reply = send_tx.clone();
-        let logger = EnvLogger { target: format!("stream {}", peer_addr) };
+        let logger = EnvLogger {
+            target: format!("stream {}", peer_addr),
+        };
 
         let handle = Builder::new()
             .name(format!("Stream of {}", peer_addr).as_str())
@@ -58,8 +71,22 @@ impl ClientMessageStream {
                         read = connection.read_frame() => {
                             match read {
                                 Ok(Some(payload)) => {
-                                    if let Some(request) = frame_buffer.append(payload, MessageAuthor::Client) {
-                                        receive.send(request).await.map_err(TcpServerError::CannotSendRequest)?;
+                                    if let Some(received) = frame_buffer.append(payload, MessageAuthor::Client) {
+                                        if received.sutera_status.is_some() {
+                                            panic!("Received message contains sutera_header! (Maybe frame_buffer has bugs.)")
+                                        }
+                                        match received.content_header {
+                                            ContentHeader::Oneshot(oneshot_header) => {
+                                                receive.send(
+                                                    Request::Oneshot(OneshotRequest::new(
+                                                        received.sutera_header,
+                                                        oneshot_header,
+                                                        received.payload,
+                                                        reply.clone()
+                                                    ))
+                                                ).await.map_err(TcpServerError::CannotSendRequest)?;
+                                            },
+                                        }
                                     }
                                 }
                                 Ok(None) => {

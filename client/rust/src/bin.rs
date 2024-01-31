@@ -19,6 +19,6 @@ async fn main() -> std::io::Result<()> {
     let dnsname = ServerName::try_from("localhost").unwrap();
 
     let stream = TcpStream::connect(&addr).await?;
-    let mut stream = connector.connect(dnsname, stream).await?;
+    let _stream = connector.connect(dnsname, stream).await?;
     Ok(())
 }

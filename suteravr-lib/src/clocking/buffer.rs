@@ -28,7 +28,6 @@ pub struct ReceivePayload {
 impl<T: Logger> FrameBuffer<T> {
     #[inline]
     pub fn new(logger: T) -> Self {
-        (&logger as &dyn Logger).write_debug("data".to_string());
         Self {
             buffer: Vec::with_capacity(4),
             logger,
