@@ -22,7 +22,6 @@ use crate::{errors::TcpServerError, shutdown::ShutdownReason, tcp::requests::One
 use super::requests::{Request, Response};
 
 pub struct ClientMessageStream {
-    _peer_addr: SocketAddr,
     shutdown_tx: oneshot::Sender<ShutdownReason>,
 
     // サーバー側が自発的にリクエストを生成することが今はあんまりない
@@ -110,7 +109,6 @@ impl ClientMessageStream {
 
         Ok((
             Self {
-                _peer_addr: peer_addr,
                 shutdown_tx,
                 receive_rx,
                 send_tx,

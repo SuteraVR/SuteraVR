@@ -39,6 +39,7 @@ pub struct OneshotResponse {
 }
 
 impl OneshotRequest {
+    #[inline]
     pub fn new(
         sutera_header: SuteraHeader,
         oneshot_header: OneshotHeader,
