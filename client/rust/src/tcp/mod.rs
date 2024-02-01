@@ -2,7 +2,7 @@ pub mod allow_unknown_cert;
 pub mod error;
 pub mod requests;
 
-use std::sync::Arc;
+use std::sync::{atomic::AtomicU64, Arc};
 
 use futures::executor::block_on;
 use godot::{engine::notify::NodeNotification, prelude::*};
@@ -30,8 +30,9 @@ use crate::{
     async_driver::tokio,
     logger::GodotLogger,
     tcp::{
-        allow_unknown_cert::AllowUnknownCertVerifier, error::TcpServerError,
-        requests::OneshotRequest,
+        allow_unknown_cert::AllowUnknownCertVerifier,
+        error::TcpServerError,
+        requests::{OneshotRequest, OneshotResponse},
     },
 };
 
@@ -51,6 +52,7 @@ struct ClockerConnection {
     receive_rx: Option<mpsc::Receiver<Request>>,
     send_tx: Option<mpsc::Sender<Response>>,
     handle: Option<JoinHandle<()>>,
+    message_id_dispatch: AtomicU64,
 }
 
 impl ClockerConnection {
@@ -70,6 +72,36 @@ impl ClockerConnection {
 }
 
 #[godot_api]
+impl ClockerConnection {
+    #[func]
+    fn join_instance(&mut self, joinToken: u64) {
+        let logger = self.logger();
+        let send_tx = self.send_tx.clone().unwrap();
+        let id = self
+            .message_id_dispatch
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        tokio().bind().spawn("join_instance", async move {
+            info!(logger, "Joining instance with token: {}", joinToken);
+            send_tx
+                .send(Response::Oneshot(OneshotResponse {
+                    sutera_header: SuteraHeader {
+                        version: SCHEMA_VERSION,
+                    },
+                    oneshot_header: OneshotHeader {
+                        step: OneshotStep::Request,
+                        message_type: OneshotTypes::Authentication_Login_Pull,
+                        message_id: id,
+                    },
+
+                    payload: Vec::new(),
+                }))
+                .await
+                .unwrap();
+        });
+    }
+}
+
+#[godot_api]
 impl INode for ClockerConnection {
     fn init(base: Base<Node>) -> Self {
         let logger = GodotLogger {
@@ -82,6 +114,7 @@ impl INode for ClockerConnection {
             shutdown_tx: None,
             receive_rx: None,
             send_tx: None,
+            message_id_dispatch: AtomicU64::new(0),
         }
     }
 
@@ -130,22 +163,6 @@ impl INode for ClockerConnection {
 
             let receive = receive_tx;
             let reply = send_tx.clone();
-
-            connection
-                .write_frame(&ClockingFrameUnit::SuteraHeader(SuteraHeader {
-                    version: SCHEMA_VERSION,
-                }))
-                .await?;
-            connection
-                .write_frame(&ClockingFrameUnit::OneshotHeaders(OneshotHeader {
-                    step: OneshotStep::Request,
-                    message_type: OneshotTypes::Connection_HealthCheck_Pull,
-                    message_id: 0x123,
-                }))
-                .await?;
-            connection
-                .write_frame(&ClockingFrameUnit::Content(vec![]))
-                .await?;
 
             loop {
                 tokio::select! {
