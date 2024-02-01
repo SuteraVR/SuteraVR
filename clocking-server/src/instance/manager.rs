@@ -49,12 +49,12 @@ pub async fn launch_instance_manager(
     };
     let mut mng = InstanceManager::new()?;
     info!(logger, "Manager spawned. Ready!");
-    loop {
+    let reason = 'reason: loop {
         tokio::select! {
             Some(command) = command_receiver.recv() => {
                 match command {
-                    InstancesControl::Shutdown(_) => {
-                        break;
+                    InstancesControl::Shutdown(reason) => {
+                        break 'reason reason;
                     },
                     InstancesControl::SpawnNew { id, world, reply } => {
                         let instance_connection = if let hash_map::Entry::Vacant(o) = mng.instances.entry(id) {
@@ -81,7 +81,14 @@ pub async fn launch_instance_manager(
                 }
             }
         }
+    };
+    info!(logger, "Waiting for all instances to be closed...");
+    for tx in mng.instances.values() {
+        tx.send(InstanceControl::Shutdown(reason))
+            .await
+            .map_err(|e| ClockingServerError::CannotSendShutdown(e.into()))?;
     }
+    while (mng.handles.join_next().await).is_some() {}
     info!(logger, "Shutting down...");
     Ok::<(), ClockingServerError>(())
 }

@@ -134,5 +134,7 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
     instance_manager.await??;
     signal.await??;
 
+    info!("Shutdown completed successfully. Bye!");
+
     Ok(())
 }

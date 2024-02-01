@@ -59,6 +59,7 @@ pub async fn launch_instance(
     let _instance = Instance::new(id, world, Vec::new(), Vec::new(), logger.clone());
     info!(logger, "Instance started.");
 
+    #[warn(clippy::never_loop)]
     loop {
         tokio::select! {
             Some(command) = command_receiver.recv() => {
@@ -70,5 +71,6 @@ pub async fn launch_instance(
             }
         }
     }
+    info!(logger, "Instance stopping...");
     Ok::<(), InstanceError>(())
 }
