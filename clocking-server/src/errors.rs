@@ -12,9 +12,12 @@ pub enum ClockingServerError {
     IoError(#[from] std::io::Error),
 
     TcpServerError(#[from] TcpServerError),
-    InstanceManagerError(InstanceError),
+    InstanceError(#[from] InstanceError),
 
     CannotSendShutdown(anyhow::Error),
+
+    #[error("The oneshot reply cannot be sent.")]
+    CannotSendReply
 }
 
 #[derive(Debug, Error)]
