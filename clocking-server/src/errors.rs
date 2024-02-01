@@ -12,6 +12,9 @@ pub enum ClockingServerError {
     IoError(#[from] std::io::Error),
 
     TcpServerError(#[from] TcpServerError),
+    InstanceManagerError(InstanceError),
+
+    CannotSendShutdown(anyhow::Error),
 }
 
 #[derive(Debug, Error)]
@@ -39,6 +42,4 @@ pub enum TcpServerError {
 }
 
 #[derive(Debug, Error)]
-pub enum InstanceError {
-
-}
+pub enum InstanceError {}

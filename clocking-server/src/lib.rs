@@ -16,6 +16,7 @@ use tokio::{
 use tokio_rustls::rustls::ServerConfig;
 
 use crate::{
+    instance::manager::{InstanceManager, InstancesControl},
     shutdown::ShutdownReason,
     signal::listen_signal,
     tcp::{certs::SingleCerts, tcp_server, TcpServerSignal},
@@ -23,10 +24,10 @@ use crate::{
 
 mod consts;
 pub mod errors;
+pub mod instance;
 mod shutdown;
 mod signal;
 mod tcp;
-pub mod instance;
 
 pub async fn clocking_server() -> Result<(), ClockingServerError> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
@@ -65,7 +66,10 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
     let addr = SocketAddr::from(([127, 0, 0, 1], *consts::PORT));
 
     let (tcp_tx, tcp_rx) = mpsc::channel::<TcpServerSignal>(32);
+    let (instances_tx, instances_rx) = mpsc::channel::<InstancesControl>(32);
     let (shutdown_tx, shutdown) = oneshot::channel::<ShutdownReason>();
+
+    let instance_manager = InstanceManager::new(instances_rx)?;
 
     let server = task::Builder::new()
         .name("TCP server")
@@ -88,13 +92,28 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
         }
     };
 
-    let _ = tcp_tx
+    tcp_tx
         .send(TcpServerSignal::Shutdown(reason))
         .await
-        .map_err(|_| error!("Failed to send shutdown signal to TCP server"));
+        .map_err(|e| {
+            error!("Failed to send shutdown signal to TCP server");
+            ClockingServerError::CannotSendShutdown(e.into())
+        })?;
+
+    instances_tx
+        .send(InstancesControl::Shutdown(reason))
+        .await
+        .map_err(|e| {
+            error!("Failed to send shutdown signal to Instances manager");
+            ClockingServerError::CannotSendShutdown(e.into())
+        })?;
 
     server.await??;
     signal.await??;
+    instance_manager
+        .handle
+        .await?
+        .map_err(ClockingServerError::InstanceManagerError)?;
 
     Ok(())
 }

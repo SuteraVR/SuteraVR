@@ -1,9 +1,12 @@
-use suteravr_lib::{clocking::schemas::chat_entry::ChatEntry, messaging::id::{InstanceId, WorldId}};
+use suteravr_lib::{
+    clocking::schemas::chat_entry::ChatEntry,
+    messaging::id::{InstanceId, WorldId},
+};
 
 use self::player::Player;
 
-pub mod player;
 pub mod manager;
+pub mod player;
 
 #[derive(Debug)]
 pub struct Instance {
