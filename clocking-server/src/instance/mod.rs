@@ -2,20 +2,17 @@ use derivative::Derivative;
 use suteravr_lib::{
     clocking::schemas::chat_entry::ChatEntry,
     info,
-    messaging::id::{InstanceId, WorldId},
+    messaging::id::{InstanceId, PlayerId, WorldId},
     util::logger::EnvLogger,
 };
 use tokio::sync::mpsc;
 
 use crate::{errors::InstanceError, shutdown::ShutdownReason};
 
-use self::player::Player;
-
 pub mod manager;
-pub mod player;
-
 pub enum InstanceControl {
     Shutdown(ShutdownReason),
+    Join(PlayerId),
 }
 
 #[derive(Derivative)]
@@ -23,7 +20,7 @@ pub enum InstanceControl {
 pub struct Instance {
     pub id: InstanceId,
     pub world: WorldId,
-    pub players: Vec<Player>,
+    pub players: Vec<PlayerId>,
     pub chat_history: Vec<ChatEntry>,
 
     #[derivative(Debug = "ignore")]
@@ -34,7 +31,7 @@ impl Instance {
     fn new(
         id: InstanceId,
         world: WorldId,
-        players: Vec<Player>,
+        players: Vec<PlayerId>,
         chat_history: Vec<ChatEntry>,
         logger: EnvLogger,
     ) -> Self {
@@ -56,10 +53,9 @@ pub async fn launch_instance(
     let logger = EnvLogger {
         target: format!("instance-{:?}", id),
     };
-    let _instance = Instance::new(id, world, Vec::new(), Vec::new(), logger.clone());
+    let mut instance = Instance::new(id, world, Vec::new(), Vec::new(), logger.clone());
     info!(logger, "Instance started.");
 
-    #[warn(clippy::never_loop)]
     loop {
         tokio::select! {
             Some(command) = command_receiver.recv() => {
@@ -67,6 +63,10 @@ pub async fn launch_instance(
                     InstanceControl::Shutdown(_) => {
                         break;
                     },
+                    InstanceControl::Join(player_id) => {
+                        instance.players.push(player_id);
+                        info!(logger, "Player joined: {:?}", player_id);
+                    }
                 }
             }
         }

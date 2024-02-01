@@ -2,7 +2,10 @@ use suteravr_lib::clocking::ClockingFramingError;
 use thiserror::Error;
 use tokio::sync::{mpsc::error::SendError, oneshot};
 
-use crate::tcp::requests::{Request, Response};
+use crate::{
+    instance::manager::InstancesControl,
+    tcp::requests::{Request, Response},
+};
 
 #[derive(Debug, Error)]
 #[error(transparent)]
@@ -42,6 +45,10 @@ pub enum TcpServerError {
     SpawnError(std::io::Error),
     #[error(transparent)]
     JoinError(#[from] tokio::task::JoinError),
+    #[error(transparent)]
+    CannotSendToInstanceManager(#[from] SendError<InstancesControl>),
+    #[error(transparent)]
+    CannotReceiveFromInstanceManager(oneshot::error::RecvError),
 }
 
 #[derive(Debug, Error)]

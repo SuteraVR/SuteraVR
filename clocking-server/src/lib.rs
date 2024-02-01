@@ -74,7 +74,7 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
 
     let server = task::Builder::new()
         .name("TCP server")
-        .spawn(tcp_server(cfg, addr, tcp_rx))
+        .spawn(tcp_server(cfg, addr, tcp_rx, instances_tx.clone()))
         .map_err(ClockingServerError::SpawnError)?;
 
     let signal = task::Builder::new()

@@ -1,9 +1,10 @@
+use alkahest::{serialize_to_vec, Formula, Serialize};
 use derivative::Derivative;
 use suteravr_lib::{
     clocking::{
         oneshot_headers::{OneshotHeader, OneshotStep},
         sutera_header::SuteraHeader,
-        sutera_status::SuteraStatus,
+        sutera_status::{SuteraStatus, SuteraStatusError},
     },
     SCHEMA_VERSION,
 };
@@ -55,6 +56,17 @@ impl OneshotRequest {
     }
 
     #[inline]
+    pub async fn serialize_and_send_reply<T: Formula + Serialize<T>>(
+        self,
+        payload: T,
+    ) -> Result<(), TcpServerError> {
+        let mut data = Vec::<u8>::new();
+        let (size, _) = serialize_to_vec::<T, T>(payload, &mut data);
+        data.truncate(size);
+        self.send_reply(data).await
+    }
+
+    #[inline]
     pub async fn send_reply(self, payload: Vec<u8>) -> Result<(), TcpServerError> {
         let response = self.to_reply(payload);
         self.reply
@@ -72,6 +84,12 @@ impl OneshotRequest {
             .await
             .map_err(TcpServerError::CannotSendResponse)?;
         Ok(())
+    }
+
+    #[inline]
+    pub async fn send_reply_bad_request(self) -> Result<(), TcpServerError> {
+        self.send_reply_failed(SuteraStatus::Error(SuteraStatusError::BadRequest))
+            .await
     }
 
     #[inline]
