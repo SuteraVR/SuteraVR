@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=27 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_6f5eg"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
@@ -9,8 +9,9 @@
 [ext_resource type="PackedScene" uid="uid://diyu06cw06syv" path="res://addons/godot-xr-tools/player/player_body.tscn" id="5_qr1t1"]
 [ext_resource type="PackedScene" uid="uid://raeeicvvindd" path="res://addons/godot-xr-tools/hands/scenes/highpoly/right_hand.tscn" id="5_vd56b"]
 [ext_resource type="PackedScene" uid="uid://bm6yri2k540dt" path="res://scenes/3dmodels/Shapell.tscn" id="8_icga1"]
-[ext_resource type="Script" path="res://scenes/Control.gd" id="10_d5cup"]
+[ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
 [ext_resource type="FontFile" uid="uid://cqol00xok5gdi" path="res://font/mplus-1c-regular.ttf" id="10_igx2x"]
+[ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
@@ -207,7 +208,7 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 1154.0
 offset_bottom = 649.0
-script = ExtResource("10_d5cup")
+script = ExtResource("10_7j42d")
 
 [node name="Panel" type="Panel" parent="Control"]
 layout_mode = 0
@@ -217,18 +218,21 @@ offset_right = 1460.0
 offset_bottom = 630.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_5hww7")
 
-[node name="LineEdit" type="LineEdit" parent="Control/Panel"]
-layout_mode = 0
-offset_left = 15.0
-offset_top = 98.0
-offset_right = 985.0
-offset_bottom = 241.0
-placeholder_text = "ここに文章を入力してね"
-language = "ja_JP"
-
 [node name="Label" type="Label" parent="Control/Panel"]
 layout_mode = 0
 offset_right = 512.0
 offset_bottom = 114.0
 text = "テキストチャット"
 label_settings = SubResource("LabelSettings_mtb2j")
+
+[node name="LineEdit" type="LineEdit" parent="Control/Panel"]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 98.0
+offset_right = 985.0
+offset_bottom = 241.0
+theme_override_fonts/font = ExtResource("10_igx2x")
+theme_override_font_sizes/font_size = 41
+placeholder_text = "ここに文章を入力してね"
+language = "ja_JP"
+script = ExtResource("12_xih1r")
