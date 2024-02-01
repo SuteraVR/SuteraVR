@@ -17,7 +17,7 @@ pub enum ClockingServerError {
     CannotSendShutdown(anyhow::Error),
 
     #[error("The oneshot reply cannot be sent.")]
-    CannotSendReply
+    CannotSendReply,
 }
 
 #[derive(Debug, Error)]

@@ -16,7 +16,10 @@ use tokio::{
 use tokio_rustls::rustls::ServerConfig;
 
 use crate::{
-    instance::{manager::{launch_instance_manager, InstancesControl}, InstanceControl},
+    instance::{
+        manager::{launch_instance_manager, InstancesControl},
+        InstanceControl,
+    },
     shutdown::ShutdownReason,
     signal::listen_signal,
     tcp::{certs::SingleCerts, tcp_server, TcpServerSignal},
@@ -69,8 +72,6 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
     let (instances_tx, instances_rx) = mpsc::channel::<InstancesControl>(32);
     let (shutdown_tx, shutdown) = oneshot::channel::<ShutdownReason>();
 
-   
-
     let server = task::Builder::new()
         .name("TCP server")
         .spawn(tcp_server(cfg, addr, tcp_rx))
@@ -88,8 +89,16 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
 
     // Pre-run ------
 
-    let (instance_1_tx, instance_1_rx) = oneshot::channel::<Option<mpsc::Sender<InstanceControl>>>();
-    instances_tx.send(InstancesControl::SpawnNew { id: 0x01, world: 0x01, reply: instance_1_tx }).await.unwrap();
+    let (instance_1_tx, instance_1_rx) =
+        oneshot::channel::<Option<mpsc::Sender<InstanceControl>>>();
+    instances_tx
+        .send(InstancesControl::SpawnNew {
+            id: 0x01,
+            world: 0x01,
+            reply: instance_1_tx,
+        })
+        .await
+        .unwrap();
     let _instance_1_control = instance_1_rx.await.unwrap();
 
     // Shutdown -----

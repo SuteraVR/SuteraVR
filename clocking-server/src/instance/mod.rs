@@ -1,6 +1,9 @@
 use derivative::Derivative;
 use suteravr_lib::{
-    clocking::schemas::chat_entry::ChatEntry, info, messaging::id::{InstanceId, WorldId}, util::logger::EnvLogger
+    clocking::schemas::chat_entry::ChatEntry,
+    info,
+    messaging::id::{InstanceId, WorldId},
+    util::logger::EnvLogger,
 };
 use tokio::sync::mpsc;
 
@@ -15,7 +18,6 @@ pub enum InstanceControl {
     Shutdown(ShutdownReason),
 }
 
-
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct Instance {
@@ -24,7 +26,7 @@ pub struct Instance {
     pub players: Vec<Player>,
     pub chat_history: Vec<ChatEntry>,
 
-    #[derivative(Debug="ignore")]
+    #[derivative(Debug = "ignore")]
     pub logger: EnvLogger,
 }
 
@@ -33,11 +35,15 @@ impl Instance {
         id: InstanceId,
         world: WorldId,
         players: Vec<Player>,
-        chat_history: Vec<ChatEntry>,  
-        logger: EnvLogger,  
+        chat_history: Vec<ChatEntry>,
+        logger: EnvLogger,
     ) -> Self {
         Self {
-            id, world, players, chat_history, logger,
+            id,
+            world,
+            players,
+            chat_history,
+            logger,
         }
     }
 }
@@ -47,14 +53,10 @@ pub async fn launch_instance(
     world: WorldId,
     mut command_receiver: mpsc::Receiver<InstanceControl>,
 ) -> Result<(), InstanceError> {
-    let logger = EnvLogger { target: format!("instance-{:?}", id)  };
-    let _instance = Instance::new(
-        id,
-        world,
-        Vec::new(),
-        Vec::new(),
-        logger.clone(),
-    );
+    let logger = EnvLogger {
+        target: format!("instance-{:?}", id),
+    };
+    let _instance = Instance::new(id, world, Vec::new(), Vec::new(), logger.clone());
     info!(logger, "Instance started.");
 
     loop {
@@ -69,5 +71,4 @@ pub async fn launch_instance(
         }
     }
     Ok::<(), InstanceError>(())
-
 }

@@ -1,21 +1,30 @@
-use std::collections::{HashMap, hash_map};
+use std::collections::{hash_map, HashMap};
 
 use suteravr_lib::{
-    error, info, messaging::id::{InstanceId, WorldId}, util::logger::EnvLogger
+    error, info,
+    messaging::id::{InstanceId, WorldId},
+    util::logger::EnvLogger,
 };
 use tokio::{
-    sync::{mpsc, oneshot}, task::JoinSet}
-;
+    sync::{mpsc, oneshot},
+    task::JoinSet,
+};
 
 use crate::{
-    errors::{ClockingServerError, InstanceError}, instance::launch_instance, shutdown::ShutdownReason
+    errors::{ClockingServerError, InstanceError},
+    instance::launch_instance,
+    shutdown::ShutdownReason,
 };
 
 use super::InstanceControl;
 
 pub enum InstancesControl {
     Shutdown(ShutdownReason),
-    SpawnNew { id: InstanceId, world: WorldId, reply: oneshot::Sender<Option<mpsc::Sender<InstanceControl>>> },
+    SpawnNew {
+        id: InstanceId,
+        world: WorldId,
+        reply: oneshot::Sender<Option<mpsc::Sender<InstanceControl>>>,
+    },
 }
 
 pub struct InstanceManager {
@@ -23,10 +32,8 @@ pub struct InstanceManager {
     handles: JoinSet<Result<(), InstanceError>>,
 }
 
-
 impl InstanceManager {
-    pub fn new(
-    ) -> Result<Self, ClockingServerError> {
+    pub fn new() -> Result<Self, ClockingServerError> {
         Ok(Self {
             instances: HashMap::new(),
             handles: JoinSet::new(),
@@ -35,7 +42,7 @@ impl InstanceManager {
 }
 
 pub async fn launch_instance_manager(
-    mut command_receiver: mpsc::Receiver<InstancesControl>
+    mut command_receiver: mpsc::Receiver<InstancesControl>,
 ) -> Result<(), ClockingServerError> {
     let logger = EnvLogger {
         target: "instance-manager".to_string(),
@@ -49,7 +56,7 @@ pub async fn launch_instance_manager(
                     InstancesControl::Shutdown(_) => {
                         break;
                     },
-                    InstancesControl::SpawnNew { id, world, reply } => {    
+                    InstancesControl::SpawnNew { id, world, reply } => {
                         let instance_connection = if let hash_map::Entry::Vacant(o) = mng.instances.entry(id) {
                             let (instance_tx, instance_rx) = mpsc::channel::<InstanceControl>(32);
                             o.insert(instance_tx.clone());
@@ -66,7 +73,7 @@ pub async fn launch_instance_manager(
                             Some(instance_tx)
                         } else {
                             error!(logger, "Failed to spawn the instance {:?}. Hashmap had been occupied.", id);
-                            None  
+                            None
                         };
                         reply.send(instance_connection)
                             .map_err(|_| ClockingServerError::CannotSendReply)?;
@@ -77,5 +84,4 @@ pub async fn launch_instance_manager(
     }
     info!(logger, "Shutting down...");
     Ok::<(), ClockingServerError>(())
-
 }
