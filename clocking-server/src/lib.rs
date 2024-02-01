@@ -16,7 +16,7 @@ use tokio::{
 use tokio_rustls::rustls::ServerConfig;
 
 use crate::{
-    instance::manager::{InstanceManager, InstancesControl},
+    instance::manager::{launch_instance_manager, InstancesControl},
     shutdown::ShutdownReason,
     signal::listen_signal,
     tcp::{certs::SingleCerts, tcp_server, TcpServerSignal},
@@ -69,7 +69,7 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
     let (instances_tx, instances_rx) = mpsc::channel::<InstancesControl>(32);
     let (shutdown_tx, shutdown) = oneshot::channel::<ShutdownReason>();
 
-    let instance_manager = InstanceManager::new(instances_rx)?;
+   
 
     let server = task::Builder::new()
         .name("TCP server")
@@ -80,6 +80,12 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
         .name("Signal listener")
         .spawn(listen_signal(shutdown_tx))
         .map_err(ClockingServerError::SpawnError)?;
+
+    let instance_manager = task::Builder::new()
+        .name("Instance manager")
+        .spawn(launch_instance_manager(instances_rx))
+        .map_err(ClockingServerError::SpawnError)?;
+
 
     let reason = match shutdown.await {
         Ok(reason) => {
@@ -109,11 +115,8 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
         })?;
 
     server.await??;
+    instance_manager.await??;
     signal.await??;
-    instance_manager
-        .handle
-        .await?
-        .map_err(ClockingServerError::InstanceManagerError)?;
 
     Ok(())
 }
