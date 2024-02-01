@@ -37,3 +37,8 @@ pub enum TcpServerError {
     #[error(transparent)]
     JoinError(#[from] tokio::task::JoinError),
 }
+
+#[derive(Debug, Error)]
+pub enum InstanceError {
+
+}

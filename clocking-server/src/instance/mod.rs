@@ -3,6 +3,7 @@ use suteravr_lib::{clocking::schemas::chat_entry::ChatEntry, messaging::id::{Ins
 use self::player::Player;
 
 pub mod player;
+pub mod manager;
 
 #[derive(Debug)]
 pub struct Instance {
