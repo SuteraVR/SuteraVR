@@ -18,6 +18,7 @@ pub mod schema_snapshot;
 pub mod sutera_header;
 pub mod sutera_status;
 pub mod traits;
+pub mod schemas;
 
 #[derive(Error, Debug)]
 pub enum ClockingFramingError {

@@ -26,6 +26,7 @@ pub mod errors;
 mod shutdown;
 mod signal;
 mod tcp;
+pub mod instance;
 
 pub async fn clocking_server() -> Result<(), ClockingServerError> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
