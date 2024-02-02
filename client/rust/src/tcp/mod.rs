@@ -85,86 +85,7 @@ impl ClockerConnection {
 #[godot_api]
 impl ClockerConnection {
     #[func]
-    fn join_instance(&mut self, join_token: u64) {
-        let _logger = self.logger();
-        let _send_tx = self.send_tx.clone().unwrap();
-        let id = self.get_message_id();
-
-        let logger = self.logger();
-        let send = self.send_tx.clone().unwrap();
-        tokio().bind().spawn("join_instance", async move {
-            info!(logger, "Joining instance with token: {}", join_token);
-            let login_result = Self::create_oneshot_p(
-                logger.clone(),
-                send,
-                OneshotResponse {
-                    sutera_header: SuteraHeader {
-                        version: SCHEMA_VERSION,
-                    },
-                    oneshot_header: OneshotHeader {
-                        step: OneshotStep::Request,
-                        message_type: OneshotTypes::Authentication_Login_Pull,
-                        message_id: id,
-                    },
-
-                    payload: serialize_to_new_vec(LoginRequest { join_token }),
-                },
-            )
-            .await?;
-            let result = deserialize::<LoginResponse, LoginResponse>(&login_result.payload)?;
-            info!(logger, "Instance Joined: {:?}", result);
-            Ok::<(), TcpServerError>(())
-        });
-    }
-}
-impl ClockerConnection {
-    async fn create_oneshot_p(
-        logger: GodotLogger,
-        send: mpsc::Sender<Response>,
-        response: OneshotResponse,
-    ) -> Result<OneshotRequest, TcpServerError> {
-        let message_id = response.oneshot_header.message_id;
-        let (tx, rx) = oneshot::channel::<Request>();
-        send.send(Response::OneshotWithReply(response, tx))
-            .await
-            .map_err(TcpServerError::CannotSendResponse)?;
-
-        // TODO: そのうちRequestにOneshot以外が実装されるので、irrefutable_let_patternsは解消されるはず
-        #[allow(irrefutable_let_patterns)]
-        let Request::Oneshot(oneshot) = rx.await?
-        else {
-            error!(
-                logger,
-                "rx of messageId {:?} not received Oneshot!", message_id
-            );
-            panic!();
-        };
-        Ok(oneshot)
-    }
-    fn get_message_id(&mut self) -> MessageId {
-        self.message_id_dispatch
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed) as MessageId
-    }
-}
-
-#[godot_api]
-impl INode for ClockerConnection {
-    fn init(base: Base<Node>) -> Self {
-        let logger = GodotLogger {
-            target: "ClockerConnection".to_string(),
-        };
-        Self {
-            base,
-            logger,
-            handle: None,
-            shutdown_tx: None,
-            receive_rx: None,
-            send_tx: None,
-            message_id_dispatch: AtomicU64::new(0),
-        }
-    }
-
-    fn ready(&mut self) {
+    fn connect_sutera_clocking_without_certverify(&mut self, name: String, addr: String) {
         info!(self.logger, "Making connection...");
 
         let (shutdown_tx, mut shutdown_rx) = oneshot::channel::<ShutdownReason>();
@@ -178,9 +99,6 @@ impl INode for ClockerConnection {
 
         let logger = self.logger();
         let server = async move {
-            let name = "localhost";
-            let addr = "127.0.0.1:3501";
-
             let mut reply_senders = HashMap::<MessageId, oneshot::Sender<Request>>::new();
 
             info!(logger, "Connecting to {}({}) ...", name, addr);
@@ -290,6 +208,86 @@ impl INode for ClockerConnection {
                 Err(e) => warn!(logger, "Connection failed: {}", e),
             }
         }));
+    }
+
+    #[func]
+    fn join_instance(&mut self, join_token: u64) {
+        let _logger = self.logger();
+        let _send_tx = self.send_tx.clone().unwrap();
+        let id = self.get_message_id();
+
+        let logger = self.logger();
+        let send = self.send_tx.clone().unwrap();
+        tokio().bind().spawn("join_instance", async move {
+            info!(logger, "Joining instance with token: {}", join_token);
+            let login_result = Self::create_oneshot_p(
+                logger.clone(),
+                send,
+                OneshotResponse {
+                    sutera_header: SuteraHeader {
+                        version: SCHEMA_VERSION,
+                    },
+                    oneshot_header: OneshotHeader {
+                        step: OneshotStep::Request,
+                        message_type: OneshotTypes::Authentication_Login_Pull,
+                        message_id: id,
+                    },
+
+                    payload: serialize_to_new_vec(LoginRequest { join_token }),
+                },
+            )
+            .await?;
+            let result = deserialize::<LoginResponse, LoginResponse>(&login_result.payload)?;
+            info!(logger, "Instance Joined: {:?}", result);
+            Ok::<(), TcpServerError>(())
+        });
+    }
+}
+impl ClockerConnection {
+    async fn create_oneshot_p(
+        logger: GodotLogger,
+        send: mpsc::Sender<Response>,
+        response: OneshotResponse,
+    ) -> Result<OneshotRequest, TcpServerError> {
+        let message_id = response.oneshot_header.message_id;
+        let (tx, rx) = oneshot::channel::<Request>();
+        send.send(Response::OneshotWithReply(response, tx))
+            .await
+            .map_err(TcpServerError::CannotSendResponse)?;
+
+        // TODO: そのうちRequestにOneshot以外が実装されるので、irrefutable_let_patternsは解消されるはず
+        #[allow(irrefutable_let_patterns)]
+        let Request::Oneshot(oneshot) = rx.await?
+        else {
+            error!(
+                logger,
+                "rx of messageId {:?} not received Oneshot!", message_id
+            );
+            panic!();
+        };
+        Ok(oneshot)
+    }
+    fn get_message_id(&mut self) -> MessageId {
+        self.message_id_dispatch
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed) as MessageId
+    }
+}
+
+#[godot_api]
+impl INode for ClockerConnection {
+    fn init(base: Base<Node>) -> Self {
+        let logger = GodotLogger {
+            target: "ClockerConnection".to_string(),
+        };
+        Self {
+            base,
+            logger,
+            handle: None,
+            shutdown_tx: None,
+            receive_rx: None,
+            send_tx: None,
+            message_id_dispatch: AtomicU64::new(0),
+        }
     }
 
     fn on_notification(&mut self, what: NodeNotification) {

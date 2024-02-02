@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=35 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_6f5eg"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
 [ext_resource type="FontFile" uid="uid://cqol00xok5gdi" path="res://font/mplus-1c-regular.ttf" id="10_igx2x"]
 [ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
+[ext_resource type="Script" path="res://scenes/ClockerConnection_debug.gd" id="13_xry0m"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
@@ -319,6 +320,7 @@ material_override = SubResource("StandardMaterial3D_pywo7")
 mesh = SubResource("PlaneMesh_1vcv5")
 
 [node name="ClockerConnection" type="ClockerConnection" parent="."]
+script = ExtResource("13_xry0m")
 
 [node name="InstanceAnchor" type="Node" parent="ClockerConnection"]
 script = ExtResource("3_sapx3")
