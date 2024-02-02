@@ -7,7 +7,7 @@ use chrono::Local;
 use log::error;
 use log::{info, warn};
 use std::{io, net::SocketAddr, sync::Arc};
-use suteravr_lib::clocking::event_headers::{EventResponse, EventTypes};
+use suteravr_lib::clocking::event_headers::EventTypes;
 use suteravr_lib::clocking::oneshot_headers::OneshotTypes;
 use suteravr_lib::clocking::schemas::oneshot::chat_entry::{
     ChatEntry, SendChatMessageRequest, SendChatMessageResponse, SendableChatEntry,
@@ -16,7 +16,7 @@ use suteravr_lib::clocking::schemas::oneshot::login::{LoginRequest, LoginRespons
 use suteravr_lib::clocking::sutera_status::{SuteraStatus, SuteraStatusError};
 use suteravr_lib::messaging::id::PlayerId;
 use tokio::sync::{mpsc, oneshot};
-use tokio::time::Instant;
+
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::{broadcast, mpsc::Receiver},
@@ -28,7 +28,7 @@ use crate::errors::TcpServerError;
 use crate::instance::manager::InstancesControl;
 use crate::instance::{InstanceControl, PlayerControl};
 use crate::shutdown::ShutdownReason;
-use crate::tcp::requests::{Request, Response};
+use crate::tcp::requests::Request;
 use crate::tcp::stream::ClientMessageStream;
 
 #[derive(Debug)]
