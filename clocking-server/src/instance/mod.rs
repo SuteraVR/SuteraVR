@@ -1,6 +1,6 @@
 use derivative::Derivative;
 use suteravr_lib::{
-    clocking::schemas::chat_entry::ChatEntry,
+    clocking::schemas::oneshot::chat_entry::ChatEntry,
     info,
     messaging::id::{InstanceId, PlayerId, WorldId},
     util::logger::EnvLogger,
@@ -14,6 +14,7 @@ pub enum InstanceControl {
     Shutdown(ShutdownReason),
     Join(PlayerId),
     Leave(PlayerId),
+    ChatMesasge(ChatEntry),
 }
 
 #[derive(Derivative)]
@@ -71,6 +72,10 @@ pub async fn launch_instance(
                     InstanceControl::Leave(player_id) => {
                         instance.players.retain(|&id| id != player_id);
                         info!(logger, "Player left: (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
+                    },
+                    InstanceControl::ChatMesasge(chat_entry) => {
+                        info!(logger, "TextChat: {:?}", chat_entry);
+                        instance.chat_history.push(chat_entry);
                     },
 
                 }

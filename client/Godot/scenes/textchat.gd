@@ -1,8 +1,11 @@
 extends LineEdit
+var CLOCKER: ClockerConnection
+func _ready():
+	CLOCKER = %Clocker
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_ENTER:
 			select()
-			print(get_selected_text())
+			CLOCKER.oneshot_send_chat_message(get_selected_text())
 			clear()

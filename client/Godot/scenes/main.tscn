@@ -319,8 +319,9 @@ transform = Transform3D(-0.382, -3.71547e-08, 6.49633e-16, 0, -1.85773e-08, -0.1
 material_override = SubResource("StandardMaterial3D_pywo7")
 mesh = SubResource("PlaneMesh_1vcv5")
 
-[node name="ClockerConnection" type="ClockerConnection" parent="."]
+[node name="Clocker" type="ClockerConnection" parent="."]
+unique_name_in_owner = true
 script = ExtResource("13_xry0m")
 
-[node name="InstanceAnchor" type="Node" parent="ClockerConnection"]
+[node name="InstanceAnchor" type="Node" parent="Clocker"]
 script = ExtResource("3_sapx3")

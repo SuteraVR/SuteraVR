@@ -7,10 +7,14 @@ use log::error;
 use log::{info, warn};
 use std::{io, net::SocketAddr, sync::Arc};
 use suteravr_lib::clocking::oneshot_headers::OneshotTypes;
+use suteravr_lib::clocking::schemas::oneshot::chat_entry::{
+    ChatEntry, SendChatMessageRequest, SendChatMessageResponse,
+};
 use suteravr_lib::clocking::schemas::oneshot::login::{LoginRequest, LoginResponse};
 use suteravr_lib::clocking::sutera_status::{SuteraStatus, SuteraStatusError};
 use suteravr_lib::messaging::id::PlayerId;
 use tokio::sync::{mpsc, oneshot};
+use tokio::time::Instant;
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::{broadcast, mpsc::Receiver},
@@ -126,6 +130,26 @@ async fn connection_init(
                             } else {
                                 request.serialize_and_send_reply(LoginResponse::BadToken).await?;
                             }
+                        }
+                        Request::Oneshot(request) if request.oneshot_header.message_type == OneshotTypes::TextChat_SendMessage_Pull => {
+                            let Ok(payload) = deserialize::<SendChatMessageRequest, SendChatMessageRequest>(&request.payload) else {
+                                request.send_reply_bad_request().await?;
+                                continue;
+                            };
+                            let Some((player_id, instance_tx)) = &login_status else {
+                                request.send_reply_unauthorized().await?;
+                                continue;
+                            };
+
+                            let entry = ChatEntry {
+                                send_at: Instant::now(),
+                                sender: *player_id,
+                                message: payload.content,
+                            };
+
+                            instance_tx.send(InstanceControl::ChatMesasge(entry)).await?;
+                            request.serialize_and_send_reply(SendChatMessageResponse::Ok).await?;
+
                         }
                         Request::Oneshot(request) => {
                             request.send_reply_failed(SuteraStatus::Error(SuteraStatusError::Unimplemented)).await?;

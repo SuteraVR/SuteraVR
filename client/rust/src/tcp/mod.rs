@@ -8,7 +8,10 @@ use std::{
     sync::{atomic::AtomicU64, Arc},
 };
 use suteravr_lib::{
-    clocking::schemas::oneshot::login::{LoginRequest, LoginResponse},
+    clocking::schemas::oneshot::{
+        chat_entry::SendChatMessageRequest,
+        login::{LoginRequest, LoginResponse},
+    },
     error,
     util::serialize_to_new_vec,
 };
@@ -211,14 +214,40 @@ impl ClockerConnection {
     }
 
     #[func]
-    fn join_instance(&mut self, join_token: u64) {
-        let _logger = self.logger();
-        let _send_tx = self.send_tx.clone().unwrap();
+    fn oneshot_send_chat_message(&mut self, content: String) {
         let id = self.get_message_id();
-
         let logger = self.logger();
         let send = self.send_tx.clone().unwrap();
-        tokio().bind().spawn("join_instance", async move {
+        tokio().bind().spawn("clocking_request", async move {
+            let login_result = Self::create_oneshot_p(
+                logger.clone(),
+                send,
+                OneshotResponse {
+                    sutera_header: SuteraHeader {
+                        version: SCHEMA_VERSION,
+                    },
+                    oneshot_header: OneshotHeader {
+                        step: OneshotStep::Request,
+                        message_type: OneshotTypes::TextChat_SendMessage_Pull,
+                        message_id: id,
+                    },
+
+                    payload: serialize_to_new_vec(SendChatMessageRequest { content }),
+                },
+            )
+            .await?;
+            let result = deserialize::<LoginResponse, LoginResponse>(&login_result.payload)?;
+            info!(logger, "ChatMessage sent: {:?}", result);
+            Ok::<(), TcpServerError>(())
+        });
+    }
+
+    #[func]
+    fn join_instance(&mut self, join_token: u64) {
+        let id = self.get_message_id();
+        let logger = self.logger();
+        let send = self.send_tx.clone().unwrap();
+        tokio().bind().spawn("clocking_request", async move {
             info!(logger, "Joining instance with token: {}", join_token);
             let login_result = Self::create_oneshot_p(
                 logger.clone(),

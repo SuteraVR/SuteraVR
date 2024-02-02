@@ -89,6 +89,11 @@ impl OneshotRequest {
         self.send_reply_failed(SuteraStatus::Error(SuteraStatusError::BadRequest))
             .await
     }
+    #[inline]
+    pub async fn send_reply_unauthorized(self) -> Result<(), TcpServerError> {
+        self.send_reply_failed(SuteraStatus::Error(SuteraStatusError::Unauthorized))
+            .await
+    }
 
     #[inline]
     pub fn to_reply(&self, payload: Vec<u8>) -> OneshotResponse {
