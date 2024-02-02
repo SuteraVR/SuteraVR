@@ -1,5 +1,6 @@
 [gd_scene load_steps=33 format=3 uid="uid://ce61dcahc8n1t"]
 
+
 [ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_6f5eg"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="PackedScene" uid="uid://njx823gyk04n" path="res://addons/godot-xr-tools/hands/scenes/highpoly/left_hand.tscn" id="2_gpcb0"]
@@ -12,6 +13,7 @@
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
 [ext_resource type="FontFile" uid="uid://cqol00xok5gdi" path="res://font/mplus-1c-regular.ttf" id="10_igx2x"]
 [ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
+[ext_resource type="Script" path="res://scenes/join_instance.gd" id="3_sapx3"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
@@ -306,3 +308,4 @@ mesh = SubResource("PlaneMesh_1vcv5")
 transform = Transform3D(-0.382, -3.71547e-08, 6.49633e-16, 0, -1.85773e-08, -0.17, 3.33955e-08, -0.425, 7.43094e-09, 0, 1.60353, 0.0376808)
 material_override = SubResource("StandardMaterial3D_pywo7")
 mesh = SubResource("PlaneMesh_1vcv5")
+
