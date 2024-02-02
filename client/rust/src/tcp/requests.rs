@@ -7,7 +7,7 @@ use suteravr_lib::{
     },
     SCHEMA_VERSION,
 };
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 
 use super::error::TcpServerError;
 
@@ -17,6 +17,7 @@ pub enum Request {
 
 pub enum Response {
     Oneshot(OneshotResponse),
+    OneshotWithReply(OneshotResponse, oneshot::Sender<Request>)
 }
 
 #[derive(Derivative)]
@@ -26,9 +27,6 @@ pub struct OneshotRequest {
     pub sutera_status: SuteraStatus,
     pub oneshot_header: OneshotHeader,
     pub payload: Vec<u8>,
-
-    #[derivative(Debug = "ignore")]
-    reply: mpsc::Sender<Response>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -45,38 +43,11 @@ impl OneshotRequest {
         sutera_status: SuteraStatus,
         oneshot_header: OneshotHeader,
         payload: Vec<u8>,
-        reply: mpsc::Sender<Response>,
     ) -> Self {
         Self {
             sutera_header,
             sutera_status,
             oneshot_header,
-            payload,
-            reply,
-        }
-    }
-
-    #[inline]
-    pub async fn send_reply(self, payload: Vec<u8>) -> Result<(), TcpServerError> {
-        let response = self.to_reply(payload);
-        self.reply
-            .send(Response::Oneshot(response))
-            .await
-            .map_err(TcpServerError::CannotSendResponse)?;
-        Ok(())
-    }
-
-    #[inline]
-    pub fn to_reply(&self, payload: Vec<u8>) -> OneshotResponse {
-        OneshotResponse {
-            sutera_header: SuteraHeader {
-                version: SCHEMA_VERSION,
-            },
-            oneshot_header: OneshotHeader {
-                step: OneshotStep::Response,
-                message_type: self.oneshot_header.message_type,
-                message_id: self.oneshot_header.message_id,
-            },
             payload,
         }
     }

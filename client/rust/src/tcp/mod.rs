@@ -2,7 +2,8 @@ pub mod allow_unknown_cert;
 pub mod error;
 pub mod requests;
 
-use std::sync::{atomic::AtomicU64, Arc};
+use suteravr_lib::error;
+use std::{collections::{hash_map::{Entry}, HashMap}, sync::{atomic::AtomicU64, Arc}};
 
 use futures::executor::block_on;
 use godot::{engine::notify::NodeNotification, prelude::*};
@@ -13,8 +14,7 @@ use suteravr_lib::{
         sutera_header::SuteraHeader,
         traits::MessageAuthor,
         ClockingConnection, ClockingFrameUnit,
-    },
-    info, warn, SCHEMA_VERSION,
+    }, info, messaging::id::MessageId, warn, SCHEMA_VERSION
 };
 use tokio::{
     net::TcpStream,
@@ -55,6 +55,10 @@ struct ClockerConnection {
     message_id_dispatch: AtomicU64,
 }
 
+struct Control {
+
+}
+
 impl ClockerConnection {
     fn logger(&self) -> GodotLogger {
         self.logger.clone()
@@ -80,26 +84,45 @@ impl ClockerConnection {
         let id = self
             .message_id_dispatch
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+
+        let logger = self.logger();
+        let send = self.send_tx.clone().unwrap();
         tokio().bind().spawn("join_instance", async move {
             info!(logger, "Joining instance with token: {}", joinToken);
-            send_tx
-                .send(Response::Oneshot(OneshotResponse {
-                    sutera_header: SuteraHeader {
-                        version: SCHEMA_VERSION,
-                    },
-                    oneshot_header: OneshotHeader {
-                        step: OneshotStep::Request,
-                        message_type: OneshotTypes::Authentication_Login_Pull,
-                        message_id: id,
-                    },
-
-                    payload: Vec::new(),
-                }))
-                .await
-                .unwrap();
+            Self::create_oneshot_p(logger, send, OneshotResponse {
+                sutera_header: SuteraHeader {
+                    version: SCHEMA_VERSION,
+                },
+                oneshot_header: OneshotHeader {
+                    step: OneshotStep::Request,
+                    message_type: OneshotTypes::Authentication_Login_Pull,
+                    message_id: id,
+                },
+    
+                payload: Vec::new(),
+            }).await.unwrap();
         });
     }
 }
+impl ClockerConnection {
+    async fn create_oneshot_p(logger: GodotLogger, send: mpsc::Sender<Response>, response: OneshotResponse) -> Result<OneshotRequest, TcpServerError> {
+        let message_id = response.oneshot_header.message_id;
+        let (tx, rx) = oneshot::channel::<Request>();
+        send.send(Response::OneshotWithReply(response, tx)).await.map_err(TcpServerError::CannotSendResponse)?;
+
+        // TODO: そのうちRequestにOneshot以外が実装されるので、irrefutable_let_patternsは解消されるはず
+        #[allow(irrefutable_let_patterns)]
+        let Request::Oneshot(oneshot) = rx.await? else {
+            error!(logger, "rx of messageId {:?} not received Oneshot!", message_id);
+            panic!();
+        };
+        Ok(oneshot)
+    }
+    fn get_message_id(&mut self) -> MessageId {
+        self.message_id_dispatch.fetch_add(1, std::sync::atomic::Ordering::Relaxed) as MessageId
+    }
+}
+
 
 #[godot_api]
 impl INode for ClockerConnection {
@@ -118,6 +141,7 @@ impl INode for ClockerConnection {
         }
     }
 
+
     fn ready(&mut self) {
         info!(self.logger, "Making connection...");
 
@@ -134,6 +158,8 @@ impl INode for ClockerConnection {
         let server = async move {
             let name = "localhost";
             let addr = "127.0.0.1:3501";
+
+            let mut reply_senders = HashMap::<MessageId, oneshot::Sender<Request>>::new();
 
             info!(logger, "Connecting to {}({}) ...", name, addr);
 
@@ -173,6 +199,16 @@ impl INode for ClockerConnection {
                                 connection.write_frame(&ClockingFrameUnit::OneshotHeaders(oneshot.oneshot_header)).await?;
                                 connection.write_frame(&ClockingFrameUnit::Content(oneshot.payload)).await?;
                             },
+                            Response::OneshotWithReply(oneshot, sender) => {
+                                let Entry::Vacant(o) = reply_senders.entry(oneshot.oneshot_header.message_id) else { 
+                                    error!(logger, "MessageId {:?} is already occupied!", oneshot.oneshot_header.message_id);
+                                    panic!();
+                                };
+                                o.insert(sender);
+                                connection.write_frame(&ClockingFrameUnit::SuteraHeader(oneshot.sutera_header)).await?;
+                                connection.write_frame(&ClockingFrameUnit::OneshotHeaders(oneshot.oneshot_header)).await?;
+                                connection.write_frame(&ClockingFrameUnit::Content(oneshot.payload)).await?;
+                            }
                         }
                     },
                     read = connection.read_frame() => {
@@ -184,13 +220,13 @@ impl INode for ClockerConnection {
                                         }
                                         match received.content_header {
                                             ContentHeader::Oneshot(oneshot_header) => {
+                                                // FIXME: Push型かPull型かチェックしてあげないといけない
                                                 receive.send(
                                                     Request::Oneshot(OneshotRequest::new(
                                                         received.sutera_header,
                                                         received.sutera_status.unwrap(),
                                                         oneshot_header,
                                                         received.payload,
-                                                        reply.clone()
                                                     ))
                                                 ).await.map_err(TcpServerError::CannotSendRequest)?;
                                             },

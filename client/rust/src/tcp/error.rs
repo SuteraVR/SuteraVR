@@ -6,6 +6,8 @@ use super::requests::{Request, Response};
 
 #[derive(Debug, Error)]
 pub enum TcpServerError {
+    #[error("ClockingConnection is not initialized or already closed.")]
+    ConnectionNotFound,
     #[error("The request cannot be sent.")]
     CannotSendRequest(SendError<Request>),
     #[error("The response cannot be sent.")]
