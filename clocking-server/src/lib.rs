@@ -93,7 +93,7 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
         oneshot::channel::<Option<mpsc::Sender<InstanceControl>>>();
     instances_tx
         .send(InstancesControl::SpawnNew {
-            id: 0x01,
+            id: 0x02,
             world: 0x01,
             reply: instance_1_tx,
         })

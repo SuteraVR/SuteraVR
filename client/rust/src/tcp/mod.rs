@@ -2,11 +2,16 @@ pub mod allow_unknown_cert;
 pub mod error;
 pub mod requests;
 
+use alkahest::deserialize;
 use std::{
     collections::{hash_map::Entry, HashMap},
     sync::{atomic::AtomicU64, Arc},
 };
-use suteravr_lib::error;
+use suteravr_lib::{
+    clocking::schemas::oneshot::login::{LoginRequest, LoginResponse},
+    error,
+    util::serialize_to_new_vec,
+};
 
 use futures::executor::block_on;
 use godot::{engine::notify::NodeNotification, prelude::*};
@@ -89,8 +94,8 @@ impl ClockerConnection {
         let send = self.send_tx.clone().unwrap();
         tokio().bind().spawn("join_instance", async move {
             info!(logger, "Joining instance with token: {}", join_token);
-            Self::create_oneshot_p(
-                logger,
+            let login_result = Self::create_oneshot_p(
+                logger.clone(),
                 send,
                 OneshotResponse {
                     sutera_header: SuteraHeader {
@@ -102,11 +107,13 @@ impl ClockerConnection {
                         message_id: id,
                     },
 
-                    payload: Vec::new(),
+                    payload: serialize_to_new_vec(LoginRequest { join_token }),
                 },
             )
-            .await
-            .unwrap();
+            .await?;
+            let result = deserialize::<LoginResponse, LoginResponse>(&login_result.payload)?;
+            info!(logger, "Instance Joined: {:?}", result);
+            Ok::<(), TcpServerError>(())
         });
     }
 }
@@ -236,14 +243,23 @@ impl INode for ClockerConnection {
                                         match received.content_header {
                                             ContentHeader::Oneshot(oneshot_header) => {
                                                 // FIXME: Push型かPull型かチェックしてあげないといけない
-                                                receive.send(
-                                                    Request::Oneshot(OneshotRequest::new(
+                                                if let Entry::Occupied(o) = reply_senders.entry(oneshot_header.message_id) {
+                                                    o.remove_entry().1.send(Request::Oneshot(OneshotRequest::new(
                                                         received.sutera_header,
                                                         received.sutera_status.unwrap(),
                                                         oneshot_header,
                                                         received.payload,
-                                                    ))
-                                                ).await.map_err(TcpServerError::CannotSendRequest)?;
+                                                    ))).map_err(|_| TcpServerError::CannotSendOneshotReply)?;
+                                                } else {
+                                                    receive.send(
+                                                        Request::Oneshot(OneshotRequest::new(
+                                                            received.sutera_header,
+                                                            received.sutera_status.unwrap(),
+                                                            oneshot_header,
+                                                            received.payload,
+                                                        ))
+                                                    ).await.map_err(TcpServerError::CannotSendRequest)?;
+                                                }
                                             },
                                         }
                                 }

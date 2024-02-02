@@ -1,6 +1,7 @@
 use crate::messaging::id::InstanceId;
 use alkahest::alkahest;
 
+#[derive(Debug)]
 #[alkahest(Formula, Serialize, Deserialize)]
 pub struct LoginRequest {
     // FIXME:
@@ -9,6 +10,7 @@ pub struct LoginRequest {
     pub join_token: InstanceId,
 }
 
+#[derive(Debug)]
 #[alkahest(Formula, Serialize, Deserialize)]
 pub enum LoginResponse {
     Ok,

@@ -642,6 +642,7 @@ dependencies = [
 name = "rust"
 version = "0.1.0"
 dependencies = [
+ "alkahest",
  "derivative",
  "futures",
  "godot",

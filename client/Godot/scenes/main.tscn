@@ -1,7 +1,8 @@
-[gd_scene load_steps=15 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=16 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" uid="uid://w4x133wmjuv" path="res://scenes/Player.tscn" id="1_bg4ug"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
+[ext_resource type="Script" path="res://scenes/join_instance.gd" id="3_sapx3"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
@@ -150,3 +151,6 @@ texture = ExtResource("1_wjwcn")
 expand_mode = 1
 
 [node name="ClockerConnection" type="ClockerConnection" parent="."]
+
+[node name="Node" type="Node" parent="ClockerConnection"]
+script = ExtResource("3_sapx3")

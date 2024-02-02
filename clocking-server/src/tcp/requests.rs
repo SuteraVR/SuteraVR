@@ -1,4 +1,4 @@
-use alkahest::{serialize_to_vec, Formula, Serialize};
+use alkahest::{Formula, Serialize};
 use derivative::Derivative;
 use suteravr_lib::{
     clocking::{
@@ -6,6 +6,7 @@ use suteravr_lib::{
         sutera_header::SuteraHeader,
         sutera_status::{SuteraStatus, SuteraStatusError},
     },
+    util::serialize_to_new_vec,
     SCHEMA_VERSION,
 };
 use tokio::sync::mpsc;
@@ -60,10 +61,7 @@ impl OneshotRequest {
         self,
         payload: T,
     ) -> Result<(), TcpServerError> {
-        let mut data = Vec::<u8>::new();
-        let (size, _) = serialize_to_vec::<T, T>(payload, &mut data);
-        data.truncate(size);
-        self.send_reply(data).await
+        self.send_reply(serialize_to_new_vec(payload)).await
     }
 
     #[inline]
