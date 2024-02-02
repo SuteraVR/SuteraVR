@@ -3,7 +3,7 @@ use thiserror::Error;
 use tokio::sync::{mpsc::error::SendError, oneshot};
 
 use crate::{
-    instance::manager::InstancesControl,
+    instance::{manager::InstancesControl, InstanceControl},
     tcp::requests::{Request, Response},
 };
 
@@ -47,6 +47,8 @@ pub enum TcpServerError {
     JoinError(#[from] tokio::task::JoinError),
     #[error(transparent)]
     CannotSendToInstanceManager(#[from] SendError<InstancesControl>),
+    #[error(transparent)]
+    CannotSendToInstance(#[from] SendError<InstanceControl>),
     #[error(transparent)]
     CannotReceiveFromInstanceManager(oneshot::error::RecvError),
 }

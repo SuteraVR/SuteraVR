@@ -103,7 +103,7 @@ async fn connection_init(
             .map_err(TcpServerError::AcceptError)?;
         info!("Connection from {} is established.", peer_addr);
 
-        let mut _login_status: Option<(PlayerId, mpsc::Sender<InstanceControl>)> = None;
+        let mut login_status: Option<(PlayerId, mpsc::Sender<InstanceControl>)> = None;
 
         let (mut message, mut stream_handle) = ClientMessageStream::new(stream, peer_addr)?;
         loop {
@@ -121,7 +121,7 @@ async fn connection_init(
                             let (reply, reply_recv) = oneshot::channel();
                             instances_tx.send(InstancesControl::JoinInstance { id: payload.join_token, reply }).await?;
                             if let Some(auth) = reply_recv.await.map_err(TcpServerError::CannotReceiveFromInstanceManager)? {
-                                _login_status = Some(auth);
+                                login_status = Some(auth);
                                 request.serialize_and_send_reply(LoginResponse::Ok).await?;
                             } else {
                                 request.serialize_and_send_reply(LoginResponse::BadToken).await?;
@@ -141,6 +141,10 @@ async fn connection_init(
                 }
             }
         }
+        if let Some((player_id, instance_tx)) = login_status {
+            instance_tx.send(InstanceControl::Leave(player_id)).await?;
+        }
+
         Ok::<(), TcpServerError>(())
     };
 

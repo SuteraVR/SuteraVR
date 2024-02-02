@@ -13,6 +13,7 @@ pub mod manager;
 pub enum InstanceControl {
     Shutdown(ShutdownReason),
     Join(PlayerId),
+    Leave(PlayerId),
 }
 
 #[derive(Derivative)]
@@ -65,8 +66,13 @@ pub async fn launch_instance(
                     },
                     InstanceControl::Join(player_id) => {
                         instance.players.push(player_id);
-                        info!(logger, "Player joined: {:?}", player_id);
-                    }
+                        info!(logger, "Player joined (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
+                    },
+                    InstanceControl::Leave(player_id) => {
+                        instance.players.retain(|&id| id != player_id);
+                        info!(logger, "Player left: (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
+                    },
+
                 }
             }
         }
