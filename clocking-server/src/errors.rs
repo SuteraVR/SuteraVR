@@ -3,7 +3,7 @@ use thiserror::Error;
 use tokio::sync::{mpsc::error::SendError, oneshot};
 
 use crate::{
-    instance::{manager::InstancesControl, InstanceControl},
+    instance::{manager::InstancesControl, InstanceControl, PlayerControl},
     tcp::requests::{Request, Response},
 };
 
@@ -54,4 +54,7 @@ pub enum TcpServerError {
 }
 
 #[derive(Debug, Error)]
-pub enum InstanceError {}
+pub enum InstanceError {
+    #[error(transparent)]
+    CannotSendToPlayer(#[from] SendError<PlayerControl>),
+}

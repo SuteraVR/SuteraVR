@@ -19,7 +19,7 @@ use crate::{
     shutdown::ShutdownReason,
 };
 
-use super::InstanceControl;
+use super::{InstanceControl, PlayerControl};
 
 pub enum InstancesControl {
     Shutdown(ShutdownReason),
@@ -32,6 +32,7 @@ pub enum InstancesControl {
     //        現状、インスタンスIDさえ分かれば、誰でもインスタンスに入れてしまうので、セキュリティ上の問題があります。
     JoinInstance {
         id: InstanceId,
+        control: mpsc::Sender<PlayerControl>,
         reply: oneshot::Sender<Option<(PlayerId, mpsc::Sender<InstanceControl>)>>,
     },
 }
@@ -89,10 +90,10 @@ pub async fn launch_instance_manager(
                         reply.send(instance_connection)
                             .map_err(|_| ClockingServerError::CannotSendReply)?;
                     },
-                    InstancesControl::JoinInstance { id, reply } => {
+                    InstancesControl::JoinInstance { id, reply, control } => {
                         let result = if let Some(tx) = mng.instances.get(&id) {
                             let player_id = mng.player_id_dispatch.fetch_add(1, std::sync::atomic::Ordering::Relaxed) as PlayerId;
-                            tx.send(InstanceControl::Join(player_id))
+                            tx.send(InstanceControl::Join(player_id, control))
                                 .await
                                 .map_err(|e| ClockingServerError::CannotSendShutdown(e.into()))?;
                             Some((player_id, tx.clone()))

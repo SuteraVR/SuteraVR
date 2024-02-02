@@ -3,12 +3,14 @@ pub mod requests;
 pub mod stream;
 
 use alkahest::deserialize;
+use chrono::Local;
 use log::error;
 use log::{info, warn};
 use std::{io, net::SocketAddr, sync::Arc};
+use suteravr_lib::clocking::event_headers::{EventResponse, EventTypes};
 use suteravr_lib::clocking::oneshot_headers::OneshotTypes;
 use suteravr_lib::clocking::schemas::oneshot::chat_entry::{
-    ChatEntry, SendChatMessageRequest, SendChatMessageResponse,
+    ChatEntry, SendChatMessageRequest, SendChatMessageResponse, SendableChatEntry,
 };
 use suteravr_lib::clocking::schemas::oneshot::login::{LoginRequest, LoginResponse};
 use suteravr_lib::clocking::sutera_status::{SuteraStatus, SuteraStatusError};
@@ -24,9 +26,9 @@ use tokio_rustls::{rustls::ServerConfig, TlsAcceptor};
 
 use crate::errors::TcpServerError;
 use crate::instance::manager::InstancesControl;
-use crate::instance::InstanceControl;
+use crate::instance::{InstanceControl, PlayerControl};
 use crate::shutdown::ShutdownReason;
-use crate::tcp::requests::Request;
+use crate::tcp::requests::{Request, Response};
 use crate::tcp::stream::ClientMessageStream;
 
 #[derive(Debug)]
@@ -108,10 +110,19 @@ async fn connection_init(
         info!("Connection from {} is established.", peer_addr);
 
         let mut login_status: Option<(PlayerId, mpsc::Sender<InstanceControl>)> = None;
+        let (control_tx, mut control) = mpsc::channel::<PlayerControl>(32);
 
         let (mut message, mut stream_handle) = ClientMessageStream::new(stream, peer_addr)?;
         loop {
             tokio::select! {
+                Some(control) = control.recv() => {
+                    match control {
+                        PlayerControl::NewChatMessage(entry) => {
+                            message.send_event_ok(EventTypes::TextChat_ReceiveChatMessage_Push,
+                            SendableChatEntry::from(entry)).await?;
+                        }
+                    }
+                },
                 Some(request) = message.recv() => {
                     match request {
                         Request::Oneshot(request) if request.oneshot_header.message_type == OneshotTypes::Connection_HealthCheck_Pull => {
@@ -123,7 +134,7 @@ async fn connection_init(
                                 continue;
                             };
                             let (reply, reply_recv) = oneshot::channel();
-                            instances_tx.send(InstancesControl::JoinInstance { id: payload.join_token, reply }).await?;
+                            instances_tx.send(InstancesControl::JoinInstance { id: payload.join_token, reply, control: control_tx.clone() }).await?;
                             if let Some(auth) = reply_recv.await.map_err(TcpServerError::CannotReceiveFromInstanceManager)? {
                                 login_status = Some(auth);
                                 request.serialize_and_send_reply(LoginResponse::Ok).await?;
@@ -142,7 +153,7 @@ async fn connection_init(
                             };
 
                             let entry = ChatEntry {
-                                send_at: Instant::now(),
+                                send_at: Local::now(),
                                 sender: *player_id,
                                 message: payload.content,
                             };

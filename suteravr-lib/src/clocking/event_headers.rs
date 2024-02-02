@@ -13,7 +13,9 @@ use super::traits::{ClockingFrame, MessageAuthor};
 
 #[derive(Enum, PartialEq, Debug, Clone, Copy)]
 #[allow(non_camel_case_types)]
-pub enum EventTypes {}
+pub enum EventTypes {
+    TextChat_ReceiveChatMessage_Push,
+}
 
 #[derive(Enum, PartialEq, Debug, Clone, Copy)]
 pub enum EventDirection {
@@ -23,11 +25,15 @@ pub enum EventDirection {
 
 static EVENT_TYPES_MAP: Lazy<EnumMap<EventTypes, [u8; EventHeader::MESSAGE_TYPE_DISTINCTOR_SIZE]>> =
     Lazy::new(|| {
-        enum_map! {}
+        enum_map! {
+            EventTypes::TextChat_ReceiveChatMessage_Push => [0x00, 0x03, 0x00, 0x01],
+        }
     });
 
 pub static EVENT_TYPES_DIRECTION_MAP: Lazy<EnumMap<EventTypes, EventDirection>> = Lazy::new(|| {
-    enum_map! {}
+    enum_map! {
+        EventTypes::TextChat_ReceiveChatMessage_Push => EventDirection::Push,
+    }
 });
 
 pub static EVENT_DIRECTION_MAP: Lazy<

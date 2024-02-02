@@ -1,13 +1,16 @@
+use alkahest::{Formula, Serialize};
 use std::net::SocketAddr;
 use suteravr_lib::{
     clocking::{
         buffer::{ContentHeader, FrameBuffer},
-        event_headers::EventRequest,
+        event_headers::{EventDirection, EventHeader, EventRequest, EventResponse, EventTypes},
+        sutera_header::SuteraHeader,
+        sutera_status::SuteraStatus,
         traits::MessageAuthor,
         ClockingConnection, ClockingFrameUnit,
     },
-    util::logger::EnvLogger,
-    warn,
+    util::{logger::EnvLogger, serialize_to_new_vec},
+    warn, SCHEMA_VERSION,
 };
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -25,11 +28,7 @@ use super::requests::{Request, Response};
 pub struct ClientMessageStream {
     shutdown_tx: oneshot::Sender<ShutdownReason>,
 
-    // サーバー側が自発的にリクエストを生成することが今はあんまりない
-    // そのうち実装します
-    #[allow(dead_code)]
     send_tx: mpsc::Sender<Response>,
-
     receive_rx: mpsc::Receiver<Request>,
 }
 
@@ -137,6 +136,30 @@ impl ClientMessageStream {
     #[inline]
     pub async fn recv(&mut self) -> Option<Request> {
         self.receive_rx.recv().await
+    }
+
+    #[inline]
+    pub async fn send_event_ok<T: Formula + Serialize<T>>(
+        &self,
+        event_type: EventTypes,
+        payload: T,
+    ) -> Result<(), TcpServerError> {
+        let response = EventResponse {
+            sutera_header: SuteraHeader {
+                version: SCHEMA_VERSION,
+            },
+            sutera_status: SuteraStatus::Ok,
+            event_header: EventHeader {
+                direction: EventDirection::Push,
+                message_type: event_type,
+            },
+            payload: serialize_to_new_vec(payload),
+        };
+        self.send_tx
+            .send(Response::Event(response))
+            .await
+            .map_err(TcpServerError::CannotSendResponse)?;
+        Ok(())
     }
 
     pub async fn shutdown(self, reason: ShutdownReason) -> Result<(), TcpServerError> {

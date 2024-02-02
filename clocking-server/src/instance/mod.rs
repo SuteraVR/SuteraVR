@@ -1,12 +1,12 @@
 use std::collections::{hash_map::Entry, HashMap};
 
 use derivative::Derivative;
-use log::warn;
 use suteravr_lib::{
     clocking::schemas::oneshot::chat_entry::ChatEntry,
     info,
     messaging::id::{InstanceId, PlayerId, WorldId},
     util::logger::EnvLogger,
+    warn,
 };
 use tokio::sync::mpsc;
 
@@ -77,7 +77,7 @@ pub async fn launch_instance(
                                 o.insert(sender);
                                 info!(logger, "Player joined (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
                             },
-                            Entry::Occupied(o) => {
+                            Entry::Occupied(mut o) => {
                                 o.insert(sender);
                                 warn!(logger, "Join request received but already in instance (id: {:?}).", player_id);
                             }
@@ -87,8 +87,11 @@ pub async fn launch_instance(
                         info!(logger, "Player left: (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
                     },
                     InstanceControl::ChatMesasge(chat_entry) => {
+                        instance.chat_history.push(chat_entry.clone());
                         info!(logger, "TextChat: {:?}", chat_entry);
-                        instance.chat_history.push(chat_entry);
+                        for (_, sender) in instance.players.iter() {
+                            sender.send(PlayerControl::NewChatMessage(chat_entry.clone())).await?;
+                        }
                     },
 
                 }
