@@ -61,7 +61,6 @@ struct ClockerConnection {
     message_id_dispatch: AtomicU64,
 }
 
-
 impl ClockerConnection {
     fn logger(&self) -> GodotLogger {
         self.logger.clone()
