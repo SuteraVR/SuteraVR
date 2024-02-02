@@ -1,10 +1,10 @@
-[gd_scene load_steps=33 format=3 uid="uid://ce61dcahc8n1t"]
-
+[gd_scene load_steps=34 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_6f5eg"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="PackedScene" uid="uid://njx823gyk04n" path="res://addons/godot-xr-tools/hands/scenes/highpoly/left_hand.tscn" id="2_gpcb0"]
 [ext_resource type="PackedScene" uid="uid://bl2nuu3qhlb5k" path="res://addons/godot-xr-tools/functions/movement_direct.tscn" id="3_0ksp0"]
+[ext_resource type="Script" path="res://scenes/join_instance.gd" id="3_sapx3"]
 [ext_resource type="PackedScene" uid="uid://c2q5phg8w08o" path="res://addons/godot-xr-tools/functions/movement_jump.tscn" id="4_6akak"]
 [ext_resource type="PackedScene" uid="uid://b6bk2pj8vbj28" path="res://addons/godot-xr-tools/functions/movement_turn.tscn" id="4_35vsx"]
 [ext_resource type="PackedScene" uid="uid://diyu06cw06syv" path="res://addons/godot-xr-tools/player/player_body.tscn" id="5_qr1t1"]
@@ -13,7 +13,6 @@
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
 [ext_resource type="FontFile" uid="uid://cqol00xok5gdi" path="res://font/mplus-1c-regular.ttf" id="10_igx2x"]
 [ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
-[ext_resource type="Script" path="res://scenes/join_instance.gd" id="3_sapx3"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
@@ -79,7 +78,7 @@ bg_color = Color(0.584314, 0.513726, 1, 1)
 [sub_resource type="LabelSettings" id="LabelSettings_mtb2j"]
 line_spacing = 1.635
 font = ExtResource("10_igx2x")
-font_size = 64
+font_size = 48
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cbvqx"]
 bg_color = Color(0.211765, 0.54902, 1, 1)
@@ -224,7 +223,6 @@ texture = ExtResource("1_wjwcn")
 expand_mode = 1
 
 [node name="Control" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchors_preset = 0
 offset_right = 1154.0
@@ -232,26 +230,35 @@ offset_bottom = 649.0
 script = ExtResource("10_7j42d")
 
 [node name="Panel" type="Panel" parent="Control"]
-layout_mode = 0
-offset_left = 460.0
-offset_top = 350.0
-offset_right = 1460.0
-offset_bottom = 630.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -100.0
+offset_right = 500.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_5hww7")
 
 [node name="Label" type="Label" parent="Control/Panel"]
 layout_mode = 0
-offset_right = 512.0
-offset_bottom = 114.0
+offset_left = 10.0
+offset_top = 16.0
+offset_right = 522.0
+offset_bottom = 130.0
 text = "テキストチャット"
 label_settings = SubResource("LabelSettings_mtb2j")
 
 [node name="LineEdit" type="LineEdit" parent="Control/Panel"]
 layout_mode = 0
-offset_left = 15.0
+offset_left = 10.0
 offset_top = 98.0
-offset_right = 985.0
-offset_bottom = 241.0
+offset_right = 980.0
+offset_bottom = 188.0
 theme_override_fonts/font = ExtResource("10_igx2x")
 theme_override_font_sizes/font_size = 41
 placeholder_text = "ここに文章を入力してね"
@@ -267,12 +274,14 @@ offset_bottom = 200.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_cbvqx")
 
 [node name="Panel" type="Panel" parent="Nameplate/Panel"]
+layout_mode = 0
 offset_top = 200.0
 offset_right = 900.0
 offset_bottom = 400.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_yb0jc")
 
 [node name="Panel" type="Panel" parent="Nameplate/Panel/Panel"]
+layout_mode = 0
 offset_top = -10.0
 offset_right = 900.0
 offset_bottom = 10.0
@@ -309,3 +318,7 @@ transform = Transform3D(-0.382, -3.71547e-08, 6.49633e-16, 0, -1.85773e-08, -0.1
 material_override = SubResource("StandardMaterial3D_pywo7")
 mesh = SubResource("PlaneMesh_1vcv5")
 
+[node name="ClockerConnection" type="ClockerConnection" parent="."]
+
+[node name="InstanceAnchor" type="Node" parent="ClockerConnection"]
+script = ExtResource("3_sapx3")
