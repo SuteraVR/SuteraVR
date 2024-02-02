@@ -153,7 +153,11 @@ async fn connection_init(
                         }
                         Request::Oneshot(request) => {
                             request.send_reply_failed(SuteraStatus::Error(SuteraStatusError::Unimplemented)).await?;
+                        },
+                        Request::Event(event) => {
+                            error!("Received unexpected event: {:?}, skipping...", event);
                         }
+
                     }
                 },
                 _ = &mut stream_handle => {

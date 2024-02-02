@@ -46,7 +46,7 @@ use crate::{
     tcp::{
         allow_unknown_cert::AllowUnknownCertVerifier,
         error::TcpServerError,
-        requests::{OneshotRequest, OneshotResponse},
+        requests::{EventMessage, OneshotRequest, OneshotResponse},
     },
 };
 
@@ -158,31 +158,40 @@ impl ClockerConnection {
                         match read {
                             Ok(Some(payload)) => {
                                 if let Some(received) = frame_buffer.append(payload, MessageAuthor::Server) {
-                                        if received.sutera_status.is_none() {
-                                            panic!("Received message doesn't contain sutera_header! (Maybe frame_buffer has bugs.)")
+                                    if received.sutera_status.is_none() {
+                                        panic!("Received message doesn't contain sutera_header! (Maybe frame_buffer has bugs.)")
+                                    }
+                                    match received.content_header {
+                                        ContentHeader::Event(event_header) => {
+                                            receive.send(
+                                                Request::Event(EventMessage::new(
+                                                    received.sutera_header,
+                                                    event_header,
+                                                    received.payload,
+                                                ))
+                                            ).await.map_err(TcpServerError::CannotSendRequest)?;
                                         }
-                                        match received.content_header {
-                                            ContentHeader::Oneshot(oneshot_header) => {
-                                                // FIXME: Push型かPull型かチェックしてあげないといけない
-                                                if let Entry::Occupied(o) = reply_senders.entry(oneshot_header.message_id) {
-                                                    o.remove_entry().1.send(Request::Oneshot(OneshotRequest::new(
+                                        ContentHeader::Oneshot(oneshot_header) => {
+                                            // FIXME: Push型かPull型かチェックしてあげないといけない
+                                            if let Entry::Occupied(o) = reply_senders.entry(oneshot_header.message_id) {
+                                                o.remove_entry().1.send(Request::Oneshot(OneshotRequest::new(
+                                                    received.sutera_header,
+                                                    received.sutera_status.unwrap(),
+                                                    oneshot_header,
+                                                    received.payload,
+                                                ))).map_err(|_| TcpServerError::CannotSendOneshotReply)?;
+                                            } else {
+                                                receive.send(
+                                                    Request::Oneshot(OneshotRequest::new(
                                                         received.sutera_header,
                                                         received.sutera_status.unwrap(),
                                                         oneshot_header,
                                                         received.payload,
-                                                    ))).map_err(|_| TcpServerError::CannotSendOneshotReply)?;
-                                                } else {
-                                                    receive.send(
-                                                        Request::Oneshot(OneshotRequest::new(
-                                                            received.sutera_header,
-                                                            received.sutera_status.unwrap(),
-                                                            oneshot_header,
-                                                            received.payload,
-                                                        ))
-                                                    ).await.map_err(TcpServerError::CannotSendRequest)?;
-                                                }
-                                            },
-                                        }
+                                                    ))
+                                                ).await.map_err(TcpServerError::CannotSendRequest)?;
+                                            }
+                                        },
+                                    }
                                 }
                             }
                             Ok(None) => {

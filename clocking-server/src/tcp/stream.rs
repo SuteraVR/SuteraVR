@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 use suteravr_lib::{
     clocking::{
         buffer::{ContentHeader, FrameBuffer},
+        event_headers::EventRequest,
         traits::MessageAuthor,
         ClockingConnection, ClockingFrameUnit,
     },
@@ -65,6 +66,12 @@ impl ClientMessageStream {
                                     connection.write_frame(&ClockingFrameUnit::OneshotHeaders(oneshot.oneshot_header)).await?;
                                     connection.write_frame(&ClockingFrameUnit::Content(oneshot.payload)).await?;
                                 },
+                                Response::Event(event) => {
+                                    connection.write_frame(&ClockingFrameUnit::SuteraHeader(event.sutera_header)).await?;
+                                    connection.write_frame(&ClockingFrameUnit::SuteraStatus(event.sutera_status)).await?;
+                                    connection.write_frame(&ClockingFrameUnit::EventHeader(event.event_header)).await?;
+                                    connection.write_frame(&ClockingFrameUnit::Content(event.payload)).await?;
+                                },
                             }
                         },
                         read = connection.read_frame() => {
@@ -85,6 +92,16 @@ impl ClientMessageStream {
                                                     ))
                                                 ).await.map_err(TcpServerError::CannotSendRequest)?;
                                             },
+                                            ContentHeader::Event(event_header) => {
+                                                receive.send(
+                                                    Request::Event(EventRequest::new(
+                                                        received.sutera_header,
+                                                        event_header,
+                                                        received.payload
+                                                    ))
+                                                ).await.map_err(TcpServerError::CannotSendRequest)?;
+                                            },
+
                                         }
                                     }
                                 }

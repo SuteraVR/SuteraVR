@@ -337,6 +337,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive-new"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d150dea618e920167e5973d70ae6ece4385b7164e0d799fe7c122dd0a5d912ad"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
+]
+
+[[package]]
 name = "either"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1181,6 +1192,8 @@ version = "0.1.0"
 dependencies = [
  "alkahest",
  "bytes",
+ "derivative",
+ "derive-new",
  "enum-map",
  "env_logger",
  "futures",

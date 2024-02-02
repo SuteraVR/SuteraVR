@@ -2,6 +2,7 @@ use alkahest::{Formula, Serialize};
 use derivative::Derivative;
 use suteravr_lib::{
     clocking::{
+        event_headers::{EventRequest, EventResponse},
         oneshot_headers::{OneshotHeader, OneshotStep},
         sutera_header::SuteraHeader,
         sutera_status::{SuteraStatus, SuteraStatusError},
@@ -15,10 +16,12 @@ use crate::errors::TcpServerError;
 
 pub enum Request {
     Oneshot(OneshotRequest),
+    Event(EventRequest),
 }
 
 pub enum Response {
     Oneshot(OneshotResponse),
+    Event(EventResponse),
 }
 
 #[derive(Derivative)]
