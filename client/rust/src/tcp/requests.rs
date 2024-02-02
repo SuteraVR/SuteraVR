@@ -1,15 +1,8 @@
 use derivative::Derivative;
-use suteravr_lib::{
-    clocking::{
-        oneshot_headers::{OneshotHeader, OneshotStep},
-        sutera_header::SuteraHeader,
-        sutera_status::SuteraStatus,
-    },
-    SCHEMA_VERSION,
+use suteravr_lib::clocking::{
+    oneshot_headers::OneshotHeader, sutera_header::SuteraHeader, sutera_status::SuteraStatus,
 };
-use tokio::sync::{mpsc, oneshot};
-
-use super::error::TcpServerError;
+use tokio::sync::oneshot;
 
 pub enum Request {
     Oneshot(OneshotRequest),
@@ -17,7 +10,7 @@ pub enum Request {
 
 pub enum Response {
     Oneshot(OneshotResponse),
-    OneshotWithReply(OneshotResponse, oneshot::Sender<Request>)
+    OneshotWithReply(OneshotResponse, oneshot::Sender<Request>),
 }
 
 #[derive(Derivative)]
