@@ -84,6 +84,7 @@ pub async fn launch_instance(
                         }
                     },
                     InstanceControl::Leave(player_id) => {
+                        instance.players.remove(&player_id);
                         info!(logger, "Player left: (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
                     },
                     InstanceControl::ChatMesasge(chat_entry) => {

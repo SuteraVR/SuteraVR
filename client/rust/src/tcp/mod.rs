@@ -8,16 +8,19 @@ use std::{
     sync::{atomic::AtomicU64, Arc},
 };
 use suteravr_lib::{
-    clocking::schemas::oneshot::{
-        chat_entry::SendChatMessageRequest,
-        login::{LoginRequest, LoginResponse},
+    clocking::{
+        event_headers::EventTypes,
+        schemas::oneshot::{
+            chat_entry::{SendChatMessageRequest, SendableChatEntry},
+            login::{LoginRequest, LoginResponse},
+        },
     },
     error,
     util::serialize_to_new_vec,
 };
 
 use futures::executor::block_on;
-use godot::{engine::notify::NodeNotification, prelude::*};
+use godot::{engine::notify::NodeNotification, obj::WithBaseField, prelude::*};
 use suteravr_lib::{
     clocking::{
         buffer::{ContentHeader, FrameBuffer},
@@ -43,6 +46,7 @@ use tokio_rustls::{
 use crate::{
     async_driver::tokio,
     logger::GodotLogger,
+    signal_names::SIGNAL_NEW_TEXTCHAT_MESSAGE,
     tcp::{
         allow_unknown_cert::AllowUnknownCertVerifier,
         error::TcpServerError,
@@ -88,6 +92,11 @@ impl ClockerConnection {
 #[godot_api]
 impl ClockerConnection {
     #[func]
+    fn signal_new_textchat_message(&mut self) -> String {
+        SIGNAL_NEW_TEXTCHAT_MESSAGE.to_string()
+    }
+
+    #[func]
     fn connect_sutera_clocking_without_certverify(&mut self, name: String, addr: String) {
         info!(self.logger, "Making connection...");
 
@@ -101,6 +110,12 @@ impl ClockerConnection {
         self.send_tx = Some(send_tx.clone());
 
         let logger = self.logger();
+
+        // FIXME: it is panicable
+        let id = self.base().instance_id();
+        let gd = Gd::<ClockerConnection>::from_instance_id(id).cast::<ClockerConnection>();
+        let id = gd.instance_id();
+
         let server = async move {
             let mut reply_senders = HashMap::<MessageId, oneshot::Sender<Request>>::new();
 
@@ -162,6 +177,17 @@ impl ClockerConnection {
                                         panic!("Received message doesn't contain sutera_header! (Maybe frame_buffer has bugs.)")
                                     }
                                     match received.content_header {
+                                        ContentHeader::Event(event_header) if event_header.message_type == EventTypes::TextChat_ReceiveChatMessage_Push => {
+                                            let chat_message = deserialize::<SendableChatEntry, SendableChatEntry>(&received.payload)?; Gd::<ClockerConnection>::from_instance_id(id).cast::<ClockerConnection>().call_deferred(
+                                                "emit_signal".into(),
+                                                &[
+                                                    Variant::from(SIGNAL_NEW_TEXTCHAT_MESSAGE.into_godot()),
+                                                    Variant::from(chat_message.sender.into_godot()),
+                                                    Variant::from(chat_message.message.into_godot()),
+                                                ] ,
+                                            );
+
+                                        }
                                         ContentHeader::Event(event_header) => {
                                             receive.send(
                                                 Request::Event(EventMessage::new(
@@ -326,6 +352,11 @@ impl INode for ClockerConnection {
             send_tx: None,
             message_id_dispatch: AtomicU64::new(0),
         }
+    }
+
+    fn ready(&mut self) {
+        self.base_mut()
+            .add_user_signal(SIGNAL_NEW_TEXTCHAT_MESSAGE.into());
     }
 
     fn on_notification(&mut self, what: NodeNotification) {
