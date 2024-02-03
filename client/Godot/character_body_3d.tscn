@@ -9,6 +9,11 @@
 [ext_resource type="PackedScene" uid="uid://diyu06cw06syv" path="res://addons/godot-xr-tools/player/player_body.tscn" id="7_y60sy"]
 [ext_resource type="PackedScene" uid="uid://bm6yri2k540dt" path="res://scenes/3dmodels/Shapell.tscn" id="8_3dlk8"]
 
+[ext_resource type="Script" path="res://scenes/keyboard_jump.gd" id="8_poryf"]
+[ext_resource type="Script" path="res://scenes/keyboard_direct.gd" id="9_y2nx7"]
+[ext_resource type="Script" path="res://scenes/mouse_capture.gd" id="10_rl716"]
+[ext_resource type="Script" path="res://scenes/looking_around.gd" id="11_u7dw0"]
+
 [sub_resource type="QuadMesh" id="QuadMesh_qh65e"]
 size = Vector2(1.6, 0.9)
 
@@ -58,6 +63,21 @@ turn_mode = 2
 
 [node name="MovementJump" parent="XROrigin3D/RightHand" instance=ExtResource("6_8spm5")]
 
+[node name="Keyboard" type="XRController3D" parent="XROrigin3D"]
+
+[node name="KeyboardJump" parent="XROrigin3D/Keyboard" instance=ExtResource("6_8spm5")]
+script = ExtResource("8_poryf")
+
+[node name="KeyboardDirect" parent="XROrigin3D/Keyboard" instance=ExtResource("3_ls3qk")]
+script = ExtResource("9_y2nx7")
+strafe = true
+
+[node name="MouseCapture" type="Node" parent="XROrigin3D/Keyboard"]
+script = ExtResource("10_rl716")
+
+[node name="LookingAround" parent="XROrigin3D/Keyboard" instance=ExtResource("5_leniv")]
+script = ExtResource("11_u7dw0")
+
 [node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("7_y60sy")]
 
 [node name="Shapell" parent="XROrigin3D/PlayerBody" instance=ExtResource("8_3dlk8")]
@@ -66,3 +86,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.00168823)
 [node name="_CollisionShape3D_20927" type="CollisionShape3D" parent="XROrigin3D/PlayerBody"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("CapsuleShape3D_217kt")
+
