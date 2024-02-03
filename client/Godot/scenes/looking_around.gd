@@ -10,6 +10,7 @@ const SENSITIVITY = 0.3
 
 
 var CAMERA_CONTROLLER: XRCamera3D
+@export var order = 9
 
 var mouse_input = false
 var mouse_rotation: Vector2

@@ -170,6 +170,11 @@ var _collision_node : CollisionShape3D
 
 ## Function to sort movement providers by order
 func sort_by_order(a, b) -> bool:
+	
+	print("a:", a)
+	print("b:", b)
+	print("a_order:", a.order)
+	print("b_order:", b.order)
 	return true if a.order < b.order else false
 
 
