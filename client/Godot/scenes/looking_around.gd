@@ -36,6 +36,8 @@ func _update_camera(delta):
 	mouse_rotation.y = fmod(mouse_rotation.y, 2*PI)
 	camera_node.rotation.x = mouse_rotation.x
 	origin_node.rotation.y = mouse_rotation.y
+	camera_node.transform = camera_node.transform.orthonormalized()
+	origin_node.transform = origin_node.transform.orthonormalized()
 	mouse_raw = Vector2.ZERO
 
 
