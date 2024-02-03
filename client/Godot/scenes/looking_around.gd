@@ -20,6 +20,9 @@ var mouse_raw: Vector2
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	var initial_transform = Transform3D.IDENTITY
+	initial_transform.origin.y = 1.191
+	camera_node.transform = initial_transform
 	pass
 
 
