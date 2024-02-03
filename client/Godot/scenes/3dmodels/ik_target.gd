@@ -1,7 +1,7 @@
 extends Marker3D
 
 @export var step_target: Node3D
-@export var step_distance: float = 3.0
+@export var step_distance: float = 0.5
 @export var adjacent_target: Node3D
 
 var is_stepping = false
@@ -16,6 +16,6 @@ func step():
 	is_stepping = true
 	
 	var t = get_tree().create_tween()
-	t.tween_property(self,"global_position", half_way+owner.basis.y,0.01)
-	t.tween_property(self,"global_position", target_pos, 0.01)
+	t.tween_property(self,"global_position", half_way+owner.basis.y,0.003)
+	t.tween_property(self,"global_position", target_pos, 0.003)
 	t.tween_callback(func(): is_stepping = false)
