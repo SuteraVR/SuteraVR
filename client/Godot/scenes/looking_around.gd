@@ -2,6 +2,8 @@
 class_name LookingAround
 extends XRToolsMovementProvider
 
+## Movement provider order
+@export var order : int = 5
 
 const SPEED = 2
 const TILT_LOWER_LIMIT := deg_to_rad(-90.0)
