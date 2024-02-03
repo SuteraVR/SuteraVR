@@ -78,7 +78,7 @@ script = ExtResource("10_rl716")
 
 [node name="LookingAround" parent="XROrigin3D/Keyboard" instance=ExtResource("6_ecl7u")]
 script = ExtResource("11_u7dw0")
-order = null
+order = 9
 
 [node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("8_62am2")]
 
