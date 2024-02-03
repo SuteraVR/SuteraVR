@@ -8,8 +8,13 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
-
 [dependencies]
 futures = "0.3.30"
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
 tokio = { version = "1.35.1", features = ["full"] }
+tokio-rustls = "0.25.0"
+webpki-roots = "0.26.0"
+suteravr-lib = { path = "../../suteravr-lib" }
+thiserror = "1.0.56"
+derivative = "2.2.0"
+alkahest = "0.3.0"

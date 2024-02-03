@@ -69,7 +69,7 @@ pub static ONESHOT_STEP_MAP: Lazy<
     }
 });
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct OneshotHeader {
     pub step: OneshotStep,
     pub message_type: OneshotTypes,
@@ -88,7 +88,7 @@ impl ClockingFrame for OneshotHeader {
         + size_of::<MessageId>()
         + Self::MESSAGE_TYPE_DISTINCTOR_SIZE;
 
-    async fn parse_frame_unchecked(
+    fn parse_frame_unchecked(
         cursor: &mut std::io::Cursor<&[u8]>,
         ctx: &Self::Context,
     ) -> Option<Self> {

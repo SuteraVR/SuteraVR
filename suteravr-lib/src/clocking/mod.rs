@@ -1,16 +1,25 @@
-use std::{io::Cursor, mem::size_of};
+use std::{
+    io::{self, Cursor},
+    mem::size_of,
+};
 
-use async_recursion::async_recursion;
 use bytes::{Buf, BytesMut};
+use futures::{future::BoxFuture, FutureExt};
 use thiserror::Error;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use crate::clocking::traits::ClockingFrame;
 
-use self::{oneshot_headers::OneshotHeader, sutera_status::SuteraStatus, traits::MessageAuthor};
+use self::{
+    event_headers::EventHeader, oneshot_headers::OneshotHeader, sutera_status::SuteraStatus,
+    traits::MessageAuthor,
+};
 
+pub mod buffer;
+pub mod event_headers;
 pub mod oneshot_headers;
 pub mod schema_snapshot;
+pub mod schemas;
 pub mod sutera_header;
 pub mod sutera_status;
 pub mod traits;
@@ -31,22 +40,23 @@ enum ConnectionContext {
     WaitContent,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ClockingFrameUnit {
     SuteraHeader(sutera_header::SuteraHeader),
     SuteraStatus(sutera_status::SuteraStatus),
     OneshotHeaders(oneshot_headers::OneshotHeader),
+    EventHeader(event_headers::EventHeader),
     Content(Vec<u8>),
     Unfragmented(Vec<u8>),
 }
 
-pub struct ClockingConnection<W: AsyncReadExt + AsyncWriteExt + Unpin> {
+pub struct ClockingConnection<W: AsyncReadExt + AsyncWriteExt + Unpin + Send> {
     stream: W,
     buffer: BytesMut,
     author: MessageAuthor,
     context: ConnectionContext,
 }
-impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
+impl<W: AsyncReadExt + AsyncWriteExt + Unpin + Send> ClockingConnection<W> {
     /// 既存のストリームから新しいClockingConnectionを作成します。
     ///
     /// **authorには、名前の通り「メッセージの送信者」が格納されることに注意してください。**
@@ -58,6 +68,10 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
             buffer: BytesMut::with_capacity(4096),
             context: ConnectionContext::None,
         }
+    }
+
+    pub async fn shutdown_stream(&mut self) -> io::Result<()> {
+        self.stream.shutdown().await
     }
 
     pub async fn write_frame(
@@ -74,6 +88,9 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
             ClockingFrameUnit::OneshotHeaders(header) => {
                 header.write_frame(&mut self.stream, &self.author).await?;
             }
+            ClockingFrameUnit::EventHeader(header) => {
+                header.write_frame(&mut self.stream, &self.author).await?;
+            }
             ClockingFrameUnit::Content(content) => {
                 self.stream.write_u64(content.len() as u64).await?;
                 self.stream.write_u64(content.len() as u64).await?;
@@ -87,25 +104,33 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
         Ok(())
     }
 
-    pub async fn read_frame(&mut self) -> Result<Option<ClockingFrameUnit>, ClockingFramingError> {
-        loop {
-            if let Some(frame) = self.parse_frame().await? {
-                return Ok(Some(frame));
-            }
+    /// フレームを読み込みます。
+    ///
+    ///this function is cancellation safe.
+    pub fn read_frame(
+        &mut self,
+    ) -> BoxFuture<'_, Result<Option<ClockingFrameUnit>, ClockingFramingError>> {
+        async {
+            loop {
+                if let Some(frame) = self.parse_frame()? {
+                    return Ok(Some(frame));
+                }
 
-            if self.stream.read_buf(&mut self.buffer).await? == 0 {
-                if self.buffer.is_empty() {
-                    return Ok(None);
-                } else {
-                    return Err(ClockingFramingError::ConnectionReset);
+                // read_buf is cancellation safe.
+                if self.stream.read_buf(&mut self.buffer).await? == 0 {
+                    if self.buffer.is_empty() {
+                        return Ok(None);
+                    } else {
+                        return Err(ClockingFramingError::ConnectionReset);
+                    }
                 }
             }
         }
+        .boxed()
     }
 
-    #[async_recursion(?Send)]
     #[inline]
-    async fn parse_frame(&mut self) -> Result<Option<ClockingFrameUnit>, ClockingFramingError> {
+    fn parse_frame(&mut self) -> Result<Option<ClockingFrameUnit>, ClockingFramingError> {
         let mut buf = Cursor::new(&self.buffer[..]);
         match self.context {
             ConnectionContext::None => {
@@ -120,7 +145,7 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
                 // 先頭からSuteraHeaderが成立していれば文句なしでOK
                 buf.set_position(0);
                 if let Some(header) =
-                    sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &()).await
+                    sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &())
                 {
                     self.buffer.advance(buf.position() as usize);
                     self.context = match self.author {
@@ -140,7 +165,7 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
                 // ただ、一応次にどこかでSuteraHeaderが来るかもしれないので、
                 // バッファのどこかにSuteraHeaderを検知できたらそれまでのところをUnfragmentedとする
                 self.context = ConnectionContext::Unfragmented(1);
-                self.parse_frame().await
+                self.parse_frame()
             }
             ConnectionContext::Unfragmented(checked_length) => {
                 let remaining = buf.remaining();
@@ -154,13 +179,15 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
                 let last_possible_index = remaining - sutera_header::SuteraHeader::MIN_FRAME_SIZE;
                 for i in checked_length..=last_possible_index {
                     buf.set_position(i as u64);
-                    if (sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &()).await)
-                        .is_some()
-                    {
+                    if sutera_header::SuteraHeader::parse_frame_unchecked(&mut buf, &()).is_some() {
                         self.context = ConnectionContext::None;
-                        return Ok(Some(ClockingFrameUnit::Unfragmented(
-                            self.buffer.copy_to_bytes(i).to_vec(),
-                        )));
+                        if i == 0 {
+                            return self.parse_frame();
+                        } else {
+                            return Ok(Some(ClockingFrameUnit::Unfragmented(
+                                self.buffer.copy_to_bytes(i).to_vec(),
+                            )));
+                        }
                     }
                 }
 
@@ -178,7 +205,7 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
             }
             ConnectionContext::WaitStatus => {
                 buf.set_position(0);
-                if let Some(status) = SuteraStatus::parse_frame(&mut buf, &()).await {
+                if let Some(status) = SuteraStatus::parse_frame(&mut buf, &()) {
                     self.context = ConnectionContext::WaitMessageType;
                     self.buffer.advance(buf.position() as usize);
                     return Ok(Some(ClockingFrameUnit::SuteraStatus(status)));
@@ -189,17 +216,23 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
                 let max_parsable_size = SuteraStatus::MAX_FRAME_SIZE;
                 if remaining >= max_parsable_size {
                     self.context = ConnectionContext::Unfragmented(0);
-                    return self.parse_frame().await;
+                    return self.parse_frame();
                 }
 
                 Ok(None)
             }
             ConnectionContext::WaitMessageType => {
                 buf.set_position(0);
-                if let Some(header) = OneshotHeader::parse_frame(&mut buf, &self.author).await {
+                if let Some(header) = OneshotHeader::parse_frame(&mut buf, &self.author) {
                     self.context = ConnectionContext::WaitContent;
                     self.buffer.advance(buf.position() as usize);
                     return Ok(Some(ClockingFrameUnit::OneshotHeaders(header)));
+                }
+                buf.set_position(0);
+                if let Some(header) = EventHeader::parse_frame(&mut buf, &self.author) {
+                    self.context = ConnectionContext::WaitContent;
+                    self.buffer.advance(buf.position() as usize);
+                    return Ok(Some(ClockingFrameUnit::EventHeader(header)));
                 }
 
                 buf.set_position(0);
@@ -207,7 +240,7 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
                 let max_parsable_size = OneshotHeader::MAX_FRAME_SIZE;
                 if remaining >= max_parsable_size {
                     self.context = ConnectionContext::Unfragmented(0);
-                    return self.parse_frame().await;
+                    return self.parse_frame();
                 }
                 Ok(None)
             }
@@ -221,13 +254,13 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin> ClockingConnection<W> {
                 // 同じものの場合のみ入力を受け付け、違うものの場合Contentを読んでいないと考えUnfragmentedに
                 let content_length = buf.get_u64();
                 let remaining = buf.remaining();
-                if remaining <= size_of::<u64>() {
+                if remaining < size_of::<u64>() {
                     return if buf.copy_to_bytes(remaining)
                         != content_length.to_be_bytes()[0..remaining]
                     {
                         // 与えられた入力が違う場合はその時点で却下
                         self.context = ConnectionContext::Unfragmented(0);
-                        self.parse_frame().await
+                        self.parse_frame()
                     } else {
                         // 二回目の長さが最後まで届いていないが、届いていたところまではあっている場合
                         // 続きを待つ

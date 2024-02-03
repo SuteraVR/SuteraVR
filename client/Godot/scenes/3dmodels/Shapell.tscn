@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://bm6yri2k540dt"]
+[gd_scene load_steps=4 format=3 uid="uid://bm6yri2k540dt"]
 
 [ext_resource type="PackedScene" uid="uid://cgdn6uudh6bjr" path="res://scenes/3dmodels/Shapell.glb" id="1_2ns3s"]
+[ext_resource type="Script" path="res://HandIK.gd" id="2_sdw6w"]
 
 [sub_resource type="GDScript" id="GDScript_icr5d"]
 script/source = "extends Marker3D
@@ -27,6 +28,7 @@ root_bone = &"UpperArm.R"
 tip_bone = &"Hand.R"
 use_magnet = true
 target_node = NodePath("../../RightMarker3D")
+script = ExtResource("2_sdw6w")
 
 [node name="LeftHand" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="2"]
 process_priority = 1
@@ -34,6 +36,7 @@ root_bone = &"UpperArm.L"
 tip_bone = &"Hand.L"
 use_magnet = true
 target_node = NodePath("../../LeftMarker3D")
+script = ExtResource("2_sdw6w")
 
 [node name="RightMarker3D" type="Marker3D" parent="Armature" index="1"]
 transform = Transform3D(4.37114e-08, 1, 8.74228e-08, 1, -4.37114e-08, 0, 3.82137e-15, 8.74228e-08, -1, 0.458487, 1.03683, 0.0335046)
