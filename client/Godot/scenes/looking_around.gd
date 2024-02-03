@@ -3,7 +3,7 @@ class_name LookingAround
 extends XRToolsMovementProvider
 
 ## Movement provider order
-@export var order : int = 5
+@export var order : int = 30
 
 const SPEED = 2
 const TILT_LOWER_LIMIT := deg_to_rad(-90.0)
@@ -20,7 +20,6 @@ var mouse_raw: Vector2
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	var origin = get_parent().get_parent()
 	pass
 
 
