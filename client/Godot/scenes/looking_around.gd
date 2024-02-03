@@ -22,6 +22,10 @@ var mouse_raw: Vector2
 func _ready():
 	pass
 
+# Add support for is_xr_class on XRTools classes
+func is_xr_class(name : String) -> bool:
+	return name == "XRToolsMovementTurn" or super(name)
+
 
 func _unhandled_input(event):
 	mouse_input = event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
@@ -29,7 +33,7 @@ func _unhandled_input(event):
 		mouse_raw = Vector2(-event.relative.y, -event.relative.x)
 
 
-func _update_camera(delta):
+func _update_camera(delta: float):
 	mouse_rotation += mouse_raw * delta * SENSITIVITY
 	mouse_rotation.x = clamp(mouse_rotation.x, TILT_LOWER_LIMIT, TILT_UPPER_LIMIT)
 	mouse_rotation.y = fmod(mouse_rotation.y, 2*PI)
@@ -38,5 +42,16 @@ func _update_camera(delta):
 	mouse_raw = Vector2.ZERO
 
 
-func _physics_process(delta):
+func physics_movement(delta: float, _player_body: XRToolsPlayerBody, _disabled: bool):
 	_update_camera(delta)
+	
+# This method verifies the movement provider has a valid configuration.
+func _get_configuration_warnings() -> PackedStringArray:
+	var warnings := super()
+
+	# Check the controller node
+	if !XRHelpers.get_xr_controller(self):
+		warnings.append("This node must be within a branch of an XRController3D node")
+
+	# Return warnings
+	return warnings
