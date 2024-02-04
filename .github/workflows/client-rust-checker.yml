@@ -25,3 +25,13 @@ jobs:
         uses: ./.github/actions/cargo-clippy
         with:
           directory: "client/rust"
+
+  cargo-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: cargo-test
+        uses: ./.github/actions/cargo-test
+        with:
+          directory: "client/rust"
