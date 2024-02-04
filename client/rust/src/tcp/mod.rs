@@ -11,7 +11,7 @@ use suteravr_lib::{
         chat_entry::SendChatMessageRequest,
         login::{LoginRequest, LoginResponse},
     },
-    error,
+    debug, error,
     util::serialize_to_new_vec,
 };
 
@@ -191,7 +191,7 @@ impl ClockerConnection {
             )
             .await?;
             let result = deserialize::<LoginResponse, LoginResponse>(&login_result.payload)?;
-            info!(logger, "ChatMessage sent: {:?}", result);
+            debug!(logger, "ChatMessage sent: {:?}", result);
             Ok::<(), TcpServerError>(())
         });
     }
