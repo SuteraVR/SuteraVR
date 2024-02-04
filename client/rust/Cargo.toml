@@ -18,3 +18,5 @@ suteravr-lib = { path = "../../suteravr-lib" }
 thiserror = "1.0.56"
 derivative = "2.2.0"
 alkahest = "0.3.0"
+rustls-native-certs = "0.7.0"
+hickory-resolver = "0.24.0"

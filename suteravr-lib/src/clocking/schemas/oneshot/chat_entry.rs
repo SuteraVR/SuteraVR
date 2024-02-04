@@ -1,18 +1,23 @@
 use alkahest::alkahest;
 use chrono::{DateTime, Local};
+use derivative::Derivative;
 
 use crate::messaging::id::PlayerId;
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Derivative)]
+#[derivative(Debug)]
 pub struct ChatEntry {
+    #[derivative(Debug = "ignore")]
     pub send_at: DateTime<Local>,
     pub sender: PlayerId,
     pub message: String,
 }
 
-#[derive(Debug)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 #[alkahest(Formula, Serialize, Deserialize)]
 pub struct SendableChatEntry {
+    #[derivative(Debug = "ignore")]
     pub send_at: String,
     pub sender: PlayerId,
     pub message: String,

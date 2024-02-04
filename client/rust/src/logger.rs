@@ -6,8 +6,8 @@ pub struct GodotLogger {
 }
 
 impl Logger for GodotLogger {
-    fn write_debug(&self, data: String) {
-        godot_print!("[DEBUG {}] {}", self.target, data);
+    fn write_debug(&self, _data: String) {
+        // godot_print!("[DEBUG {}] {}", self.target, data);
     }
     fn write_info(&self, data: String) {
         godot_print!("[INFO  {}] {}", self.target, data);
