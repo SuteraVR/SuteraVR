@@ -13,6 +13,8 @@ script/source = "extends Node3D
 
 var xr_interface: XRInterface
 
+const PATH_SCENE = \"user://test.txt\"
+
 func _ready():
 	xr_interface = XRServer.find_interface(\"OpenXR\")
 	if xr_interface and xr_interface.is_initialized():
@@ -25,6 +27,15 @@ func _ready():
 		get_viewport().use_xr = true
 	else:
 		print(\"OpenXR not initialized, please check if your headset is connected\")
+
+	if FileAccess.file_exists(PATH_SCENE) == false:
+		print(\"failed to load an external file\")
+		return
+	
+	var f = FileAccess.open(PATH_SCENE, FileAccess.READ)
+	print(f.get_as_text())
+	
+	f.close()
 "
 
 [sub_resource type="Environment" id="Environment_jscir"]
