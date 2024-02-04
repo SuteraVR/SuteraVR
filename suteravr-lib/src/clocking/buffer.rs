@@ -2,6 +2,7 @@ use crate::clocking::ClockingFrameUnit;
 use crate::util::logger::Logger;
 use crate::{debug, error, info, warn};
 
+use super::event_headers::EventHeader;
 use super::oneshot_headers::OneshotHeader;
 use super::sutera_header::SuteraHeader;
 use super::sutera_status::SuteraStatus;
@@ -15,6 +16,7 @@ pub struct FrameBuffer<T: Logger> {
 #[derive(Debug, Clone)]
 pub enum ContentHeader {
     Oneshot(OneshotHeader),
+    Event(EventHeader),
 }
 
 #[derive(Debug, Clone)]
@@ -116,6 +118,17 @@ impl<T: Logger> FrameBuffer<T> {
                             sutera_header,
                             sutera_status,
                             content_header: ContentHeader::Oneshot(oneshot_header),
+                            payload,
+                        };
+                        info!(self.logger, "Receive: {:?}", &request);
+                        self.clear();
+                        return Some(request);
+                    }
+                    Some(ClockingFrameUnit::EventHeader(event_header)) => {
+                        let request = ReceivePayload {
+                            sutera_header,
+                            sutera_status,
+                            content_header: ContentHeader::Event(event_header),
                             payload,
                         };
                         info!(self.logger, "Receive: {:?}", &request);
