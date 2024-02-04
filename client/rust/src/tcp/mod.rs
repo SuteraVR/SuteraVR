@@ -98,6 +98,11 @@ impl ClockerConnection {
 
     #[func]
     fn connect_to_localhost(&mut self) {
+        self.connect_without_certification_verifying("localhost".into(), "127.0.0.1:3501".into())
+    }
+
+    #[func]
+    fn connect_without_certification_verifying(&mut self, name: String, addr: String) {
         let config = ClientConfig::builder()
             .dangerous()
             .with_custom_certificate_verifier(AllowUnknownCertVerifier::new())
@@ -107,7 +112,7 @@ impl ClockerConnection {
             self.logger,
             "Ensure you are connecting to the right server!"
         );
-        self.connect(config, "localhost", "127.0.0.1:3501")
+        self.connect(config, name, addr)
     }
 
     fn connect<T: Into<String> + Send + 'static>(
