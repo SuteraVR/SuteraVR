@@ -3,9 +3,10 @@ pub mod error;
 pub mod requests;
 
 use alkahest::deserialize;
+use srv_rs::{resolver::libresolv::LibResolv, SrvClient};
 use std::{
     collections::{hash_map::Entry, HashMap},
-    sync::{atomic::AtomicU64, Arc},
+    sync::{atomic::AtomicU64, Arc, Mutex},
 };
 use suteravr_lib::{
     clocking::{
@@ -66,11 +67,15 @@ enum ShutdownReason {
 struct ClockerConnection {
     base: Base<Node>,
     logger: GodotLogger,
-    shutdown_tx: Option<oneshot::Sender<ShutdownReason>>,
-    receive_rx: Option<mpsc::Receiver<Request>>,
-    send_tx: Option<mpsc::Sender<Response>>,
-    handle: Option<JoinHandle<()>>,
+    connection: Arc<Mutex<Option<Connection>>>,
     message_id_dispatch: AtomicU64,
+}
+
+struct Connection {
+    shutdown_tx: oneshot::Sender<ShutdownReason>,
+    _receive_rx: mpsc::Receiver<Request>,
+    send_tx: mpsc::Sender<Response>,
+    handle: JoinHandle<()>,
 }
 
 impl ClockerConnection {
@@ -79,81 +84,40 @@ impl ClockerConnection {
     }
 
     async fn shutdown(&mut self) -> Result<(), JoinError> {
-        if let Some(tx) = self.shutdown_tx.take() {
-            tx.send(ShutdownReason::GameExit).unwrap();
-        }
-        if let Some(handle) = self.handle.take() {
-            handle.await?;
+        let taken_connection = { self.connection.lock().unwrap().take() };
+        if let Some(connection) = taken_connection {
+            connection
+                .shutdown_tx
+                .send(ShutdownReason::GameExit)
+                .unwrap();
+            connection.handle.await?;
         }
         Ok(())
     }
 }
 
-#[godot_api]
-impl ClockerConnection {
-    #[func]
-    fn signal_new_textchat_message(&mut self) -> String {
-        SIGNAL_NEW_TEXTCHAT_MESSAGE.to_string()
-    }
-
-    #[func]
-    fn connect_by_srv(&mut self, domain: String) {}
-
-    #[func]
-    fn connect_to_localhost(&mut self) {
-        self.connect_to_localhost_with_port(3501)
-    }
-
-    #[func]
-    fn connect_to_localhost_with_port(&mut self, port: u16) {
-        self.connect_without_certification_verifying(
-            "localhost".into(),
-            format!("127.0.0.1:{}", port),
-        )
-    }
-
-    #[func]
-    fn connect_without_certification_verifying(&mut self, name: String, addr: String) {
-        let config = ClientConfig::builder()
-            .dangerous()
-            .with_custom_certificate_verifier(AllowUnknownCertVerifier::new())
-            .with_no_client_auth();
-        warn!(self.logger, "Allowing unknown certificates.");
-        warn!(
-            self.logger,
-            "Ensure you are connecting to the right server!"
-        );
-        self.connect(config, name, addr)
-    }
-
-    fn connect<T: Into<String> + Send + 'static>(
-        &mut self,
+impl Connection {
+    fn new<T: Into<String> + Send + 'static>(
+        logger: GodotLogger,
+        instance_id: InstanceId,
         config: ClientConfig,
         name: T,
         addr: T,
-    ) {
-        info!(self.logger, "Making connection...");
+    ) -> Self {
+        info!(logger, "Making connection...");
 
         let (shutdown_tx, mut shutdown_rx) = oneshot::channel::<ShutdownReason>();
-        self.shutdown_tx = Some(shutdown_tx);
-
         let (receive_tx, receive_rx) = mpsc::channel::<Request>(32);
-        self.receive_rx = Some(receive_rx);
-
         let (send_tx, mut send_rx) = mpsc::channel::<Response>(32);
-        self.send_tx = Some(send_tx.clone());
 
-        let logger = self.logger();
-
-        // FIXME: it is panicable
-        let id = self.base().instance_id();
-        let gd = Gd::<ClockerConnection>::from_instance_id(id).cast::<ClockerConnection>();
-        let id = gd.instance_id();
+        let server_logger = logger.clone();
+        let _reply = send_tx.clone();
 
         let server = async move {
             let mut reply_senders = HashMap::<MessageId, oneshot::Sender<Request>>::new();
             let name = name.into();
             let addr = addr.into();
+            let logger = server_logger;
 
             info!(logger, "Connecting to {}({}) ...", name, addr);
 
@@ -175,7 +139,6 @@ impl ClockerConnection {
             let mut frame_buffer = FrameBuffer::new(logger.clone());
 
             let receive = receive_tx;
-            let _reply = send_tx.clone();
 
             loop {
                 tokio::select! {
@@ -207,7 +170,7 @@ impl ClockerConnection {
                                     }
                                     match received.content_header {
                                         ContentHeader::Event(event_header) if event_header.message_type == EventTypes::TextChat_ReceiveChatMessage_Push => {
-                                            let chat_message = deserialize::<SendableChatEntry, SendableChatEntry>(&received.payload)?; Gd::<ClockerConnection>::from_instance_id(id).cast::<ClockerConnection>().call_deferred(
+                                            let chat_message = deserialize::<SendableChatEntry, SendableChatEntry>(&received.payload)?; Gd::<ClockerConnection>::from_instance_id(instance_id).cast::<ClockerConnection>().call_deferred(
                                                 "emit_signal".into(),
                                                 &[
                                                     Variant::from(SIGNAL_NEW_TEXTCHAT_MESSAGE.into_godot()),
@@ -268,20 +231,97 @@ impl ClockerConnection {
             Ok::<(), TcpServerError>(())
         };
 
-        let logger = self.logger();
-        self.handle = Some(tokio().bind().spawn("clocker_connection", async move {
+        let handle_logger = logger.clone();
+        let handle = tokio().bind().spawn("clocker_connection", async move {
             match server.await {
-                Ok(_) => info!(logger, "Connection successfully finished."),
-                Err(e) => warn!(logger, "Connection failed: {}", e),
+                Ok(_) => info!(handle_logger, "Connection successfully finished."),
+                Err(e) => warn!(handle_logger, "Connection failed: {}", e),
             }
-        }));
+        });
+
+        Self {
+            shutdown_tx,
+            _receive_rx: receive_rx,
+            send_tx,
+            handle,
+        }
+    }
+}
+
+#[godot_api]
+impl ClockerConnection {
+    #[func]
+    fn signal_new_textchat_message(&mut self) -> String {
+        SIGNAL_NEW_TEXTCHAT_MESSAGE.to_string()
+    }
+
+    #[func]
+    fn connect_by_srv(&mut self, domain: String) {
+        let instance_id = self.base().instance_id();
+        let logger = self.logger();
+        let connection = self.connection.clone();
+        tokio().bind().spawn("connect_by_srv", async move {
+            let client = SrvClient::<LibResolv>::new(format!("_suteravr-clocker._tls.{}", domain));
+            let srv = client
+                .execute(srv_rs::Execution::Concurrent, |address| async move {
+                    Ok::<_, std::convert::Infallible>(address.authority().map(|v| v.to_string()))
+                })
+                .await;
+            if let Ok(Ok(Some(e))) = srv {
+                info!(logger, "SRV record resolved: {:?}", e);
+                let mut root_cert_store = tokio_rustls::rustls::RootCertStore::empty();
+                for cert in rustls_native_certs::load_native_certs().unwrap() {
+                    root_cert_store.add(cert).unwrap();
+                }
+                let config = ClientConfig::builder()
+                    .with_root_certificates(root_cert_store)
+                    .with_no_client_auth();
+                Self::connect(connection, logger, instance_id, config, domain, e)
+            } else {
+                error!(logger, "Failed to resolve SRV record: {}", srv.unwrap_err());
+            }
+        });
+    }
+
+    #[func]
+    fn connect_to_localhost(&mut self) {
+        self.connect_to_localhost_with_port(3501)
+    }
+
+    #[func]
+    fn connect_to_localhost_with_port(&mut self, port: u16) {
+        self.connect_without_certification_verifying(
+            "localhost".into(),
+            format!("127.0.0.1:{}", port),
+        )
+    }
+
+    #[func]
+    fn connect_without_certification_verifying(&mut self, name: String, addr: String) {
+        let config = ClientConfig::builder()
+            .dangerous()
+            .with_custom_certificate_verifier(AllowUnknownCertVerifier::new())
+            .with_no_client_auth();
+        warn!(self.logger, "Allowing unknown certificates.");
+        warn!(
+            self.logger,
+            "Ensure you are connecting to the right server!"
+        );
+        Self::connect(
+            self.connection.clone(),
+            self.logger.clone(),
+            self.base().instance_id(),
+            config,
+            name,
+            addr,
+        );
     }
 
     #[func]
     fn oneshot_send_chat_message(&mut self, content: String) {
         let id = self.get_message_id();
         let logger = self.logger();
-        let send = self.send_tx.clone().unwrap();
+        let send = self.send_tx();
         tokio().bind().spawn("clocking_request", async move {
             let login_result = Self::create_oneshot_p(
                 logger.clone(),
@@ -310,7 +350,7 @@ impl ClockerConnection {
     fn join_instance(&mut self, join_token: u64) {
         let id = self.get_message_id();
         let logger = self.logger();
-        let send = self.send_tx.clone().unwrap();
+        let send = self.send_tx();
         tokio().bind().spawn("clocking_request", async move {
             info!(logger, "Joining instance with token: {}", join_token);
             let login_result = Self::create_oneshot_p(
@@ -337,6 +377,29 @@ impl ClockerConnection {
     }
 }
 impl ClockerConnection {
+    fn send_tx(&self) -> mpsc::Sender<Response> {
+        return self
+            .connection
+            .lock()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .send_tx
+            .clone();
+    }
+
+    fn connect<T: Into<String> + Send + 'static>(
+        connection: Arc<Mutex<Option<Connection>>>,
+        logger: GodotLogger,
+        instance_id: InstanceId,
+        config: ClientConfig,
+        name: T,
+        addr: T,
+    ) {
+        *connection.lock().unwrap() =
+            Some(Connection::new(logger, instance_id, config, name, addr));
+    }
+
     async fn create_oneshot_p(
         logger: GodotLogger,
         send: mpsc::Sender<Response>,
@@ -375,10 +438,7 @@ impl INode for ClockerConnection {
         Self {
             base,
             logger,
-            handle: None,
-            shutdown_tx: None,
-            receive_rx: None,
-            send_tx: None,
+            connection: Arc::new(Mutex::new(None)),
             message_id_dispatch: AtomicU64::new(0),
         }
     }
