@@ -36,7 +36,7 @@ use crate::{
     signal_names::{SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE},
     tcp::{
         error::TcpServerError,
-        requests::{EventMessage, OneshotRequest},
+        requests::{EventMessage, OneshotResponse},
         ClockerConnection,
     },
 };
@@ -48,8 +48,8 @@ use super::{
 
 pub struct Connection {
     pub shutdown_tx: oneshot::Sender<ShutdownReason>,
-    pub _receive_rx: mpsc::Receiver<Request>,
-    pub send_tx: mpsc::Sender<Response>,
+    pub _receive_rx: mpsc::Receiver<Response>,
+    pub send_tx: mpsc::Sender<Request>,
     pub handle: JoinHandle<()>,
 }
 impl Connection {
@@ -63,14 +63,14 @@ impl Connection {
         info!(logger, "Making connection...");
 
         let (shutdown_tx, mut shutdown_rx) = oneshot::channel::<ShutdownReason>();
-        let (receive_tx, receive_rx) = mpsc::channel::<Request>(32);
-        let (send_tx, mut send_rx) = mpsc::channel::<Response>(32);
+        let (receive_tx, receive_rx) = mpsc::channel::<Response>(32);
+        let (send_tx, mut send_rx) = mpsc::channel::<Request>(32);
 
         let server_logger = logger.clone();
         let _reply = send_tx.clone();
 
         let server = async move {
-            let mut reply_senders = HashMap::<MessageId, oneshot::Sender<Request>>::new();
+            let mut reply_senders = HashMap::<MessageId, oneshot::Sender<Response>>::new();
             let name = name.into();
             let addr = addr.into();
             let logger = server_logger;
@@ -107,12 +107,12 @@ impl Connection {
                 tokio::select! {
                     Some(request) = send_rx.recv() => {
                         match request {
-                            Response::Oneshot(oneshot) => {
+                            Request::Oneshot(oneshot) => {
                                 connection.write_frame(&ClockingFrameUnit::SuteraHeader(oneshot.sutera_header)).await?;
                                 connection.write_frame(&ClockingFrameUnit::OneshotHeaders(oneshot.oneshot_header)).await?;
                                 connection.write_frame(&ClockingFrameUnit::Content(oneshot.payload)).await?;
                             },
-                            Response::OneshotWithReply(oneshot, sender) => {
+                            Request::OneshotWithReply(oneshot, sender) => {
                                 let Entry::Vacant(o) = reply_senders.entry(oneshot.oneshot_header.message_id) else {
                                     error!(logger, "MessageId {:?} is already occupied!", oneshot.oneshot_header.message_id);
                                     panic!();
@@ -145,17 +145,17 @@ impl Connection {
                                         }
                                         ContentHeader::Event(event_header) => {
                                             receive.send(
-                                                Request::Event(EventMessage::new(
+                                                Response::Event(EventMessage::new(
                                                     received.sutera_header,
                                                     event_header,
                                                     received.payload,
                                                 ))
-                                            ).await.map_err(TcpServerError::CannotSendRequest)?;
+                                            ).await.map_err(TcpServerError::CannotSendResponse)?;
                                         }
                                         ContentHeader::Oneshot(oneshot_header) => {
                                             // FIXME: Push型かPull型かチェックしてあげないといけない
                                             if let Entry::Occupied(o) = reply_senders.entry(oneshot_header.message_id) {
-                                                o.remove_entry().1.send(Request::Oneshot(OneshotRequest::new(
+                                                o.remove_entry().1.send(Response::Oneshot(OneshotResponse::new(
                                                     received.sutera_header,
                                                     received.sutera_status.unwrap(),
                                                     oneshot_header,
@@ -163,13 +163,13 @@ impl Connection {
                                                 ))).map_err(|_| TcpServerError::CannotSendOneshotReply)?;
                                             } else {
                                                 receive.send(
-                                                    Request::Oneshot(OneshotRequest::new(
+                                                    Response::Oneshot(OneshotResponse::new(
                                                         received.sutera_header,
                                                         received.sutera_status.unwrap(),
                                                         oneshot_header,
                                                         received.payload,
                                                     ))
-                                                ).await.map_err(TcpServerError::CannotSendRequest)?;
+                                                ).await.map_err(TcpServerError::CannotSendResponse)?;
                                             }
                                         },
                                     }

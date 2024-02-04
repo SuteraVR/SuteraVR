@@ -176,7 +176,7 @@ impl ClockerConnection {
             let login_result = Self::create_oneshot_p(
                 logger.clone(),
                 send,
-                OneshotResponse {
+                OneshotRequest {
                     sutera_header: SuteraHeader {
                         version: SCHEMA_VERSION,
                     },
@@ -206,7 +206,7 @@ impl ClockerConnection {
             let login_result = Self::create_oneshot_p(
                 logger.clone(),
                 send,
-                OneshotResponse {
+                OneshotRequest {
                     sutera_header: SuteraHeader {
                         version: SCHEMA_VERSION,
                     },
@@ -227,7 +227,7 @@ impl ClockerConnection {
     }
 }
 impl ClockerConnection {
-    fn send_tx(&self) -> mpsc::Sender<Response> {
+    fn send_tx(&self) -> mpsc::Sender<Request> {
         return self
             .connection
             .lock()
@@ -252,18 +252,18 @@ impl ClockerConnection {
 
     async fn create_oneshot_p(
         logger: GodotLogger,
-        send: mpsc::Sender<Response>,
-        response: OneshotResponse,
-    ) -> Result<OneshotRequest, TcpServerError> {
+        send: mpsc::Sender<Request>,
+        response: OneshotRequest,
+    ) -> Result<OneshotResponse, TcpServerError> {
         let message_id = response.oneshot_header.message_id;
-        let (tx, rx) = oneshot::channel::<Request>();
-        send.send(Response::OneshotWithReply(response, tx))
+        let (tx, rx) = oneshot::channel::<Response>();
+        send.send(Request::OneshotWithReply(response, tx))
             .await
-            .map_err(TcpServerError::CannotSendResponse)?;
+            .map_err(TcpServerError::CannotSendRequest)?;
 
         // TODO: そのうちRequestにOneshot以外が実装されるので、irrefutable_let_patternsは解消されるはず
         #[allow(irrefutable_let_patterns)]
-        let Request::Oneshot(oneshot) = rx.await?
+        let Response::Oneshot(oneshot) = rx.await?
         else {
             error!(
                 logger,

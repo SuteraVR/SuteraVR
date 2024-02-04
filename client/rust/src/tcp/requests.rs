@@ -5,14 +5,14 @@ use suteravr_lib::clocking::{
 };
 use tokio::sync::oneshot;
 
-pub enum Request {
-    Oneshot(OneshotRequest),
+pub enum Response {
+    Oneshot(OneshotResponse),
     Event(EventMessage),
 }
 
-pub enum Response {
-    Oneshot(OneshotResponse),
-    OneshotWithReply(OneshotResponse, oneshot::Sender<Request>),
+pub enum Request {
+    Oneshot(OneshotRequest),
+    OneshotWithReply(OneshotRequest, oneshot::Sender<Response>),
 }
 
 #[derive(Derivative)]
@@ -25,7 +25,7 @@ pub struct EventMessage {
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct OneshotRequest {
+pub struct OneshotResponse {
     pub sutera_header: SuteraHeader,
     pub sutera_status: SuteraStatus,
     pub oneshot_header: OneshotHeader,
@@ -33,13 +33,13 @@ pub struct OneshotRequest {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct OneshotResponse {
+pub struct OneshotRequest {
     pub sutera_header: SuteraHeader,
     pub oneshot_header: OneshotHeader,
     pub payload: Vec<u8>,
 }
 
-impl OneshotRequest {
+impl OneshotResponse {
     #[inline]
     pub fn new(
         sutera_header: SuteraHeader,
