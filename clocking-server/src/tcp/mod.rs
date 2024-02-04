@@ -6,16 +6,22 @@ use alkahest::deserialize;
 use chrono::Local;
 use log::error;
 use log::{info, warn};
+use std::sync::atomic::AtomicU64;
 use std::{io, net::SocketAddr, sync::Arc};
 use suteravr_lib::clocking::event_headers::EventTypes;
-use suteravr_lib::clocking::oneshot_headers::OneshotTypes;
+use suteravr_lib::clocking::oneshot_headers::{
+    OneshotDirection, OneshotHeader, OneshotStep, OneshotTypes, ONESHOT_DIRECTION_MAP,
+};
 use suteravr_lib::clocking::schemas::oneshot::chat_entry::{
     ChatEntry, SendChatMessageRequest, SendChatMessageResponse, SendableChatEntry,
 };
 use suteravr_lib::clocking::schemas::oneshot::login::{LoginRequest, LoginResponse};
+use suteravr_lib::clocking::sutera_header::SuteraHeader;
 use suteravr_lib::clocking::sutera_status::{SuteraStatus, SuteraStatusError};
 use suteravr_lib::messaging::id::PlayerId;
+use suteravr_lib::SCHEMA_VERSION;
 use tokio::sync::{mpsc, oneshot};
+use tokio::time;
 
 use tokio::{
     net::{TcpListener, TcpStream},
@@ -112,9 +118,37 @@ async fn connection_init(
         let mut login_status: Option<(PlayerId, mpsc::Sender<InstanceControl>)> = None;
         let (control_tx, mut control) = mpsc::channel::<PlayerControl>(32);
 
+        let mut healthcheck_missed_count = 0;
+
         let (mut message, mut stream_handle) = ClientMessageStream::new(stream, peer_addr)?;
+        let message_id_dispatcher = AtomicU64::new(0);
         loop {
             tokio::select! {
+                _ = time::sleep(std::time::Duration::from_secs(30)) => {
+                    healthcheck_missed_count += 1;
+                    if healthcheck_missed_count > 6 {
+                        warn!("{} Healthcheck missed {} times, maybe talking to a dead client, closing the connection...", peer_addr, healthcheck_missed_count);
+                        message.shutdown(ShutdownReason::SignalChannelClosed).await?;
+                        stream_handle.await??;
+                        break;
+                    }
+                    if healthcheck_missed_count > 1 {
+                        warn!("Healthcheck missed {} times.", healthcheck_missed_count);
+                    }
+                    message.send_oneshot(requests::OneshotResponse {
+                        sutera_header: SuteraHeader {
+                            version: SCHEMA_VERSION,
+                        },
+                        sutera_status: SuteraStatus::Ok,
+                        oneshot_header: OneshotHeader {
+                            step: OneshotStep::Request,
+                            message_type: OneshotTypes::Connection_HealthCheck_Push,
+                            message_id: message_id_dispatcher.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+                        },
+                        payload: Vec::new()
+                    }).await?;
+
+                },
                 Some(control) = control.recv() => {
                     match control {
                         PlayerControl::NewChatMessage(entry) => {
@@ -125,6 +159,14 @@ async fn connection_init(
                 },
                 Some(request) = message.recv() => {
                     match request {
+                        Request::Oneshot(request) if ONESHOT_DIRECTION_MAP[request.oneshot_header.message_type] == OneshotDirection::Push => {
+                            if request.oneshot_header.message_type == OneshotTypes::Connection_HealthCheck_Push {
+                                healthcheck_missed_count = 0;
+                                info!("{} Healthcheck!", peer_addr);
+                            }
+                            // TODO: Implement push message handling
+                            continue;
+                        },
                         Request::Oneshot(request) if request.oneshot_header.message_type == OneshotTypes::Connection_HealthCheck_Pull => {
                             request.send_reply(Vec::new()).await?;
                         }
