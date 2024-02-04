@@ -1,20 +1,15 @@
 pub mod allow_unknown_cert;
+pub mod conenction;
 pub mod error;
 pub mod requests;
 
 use alkahest::deserialize;
 use srv_rs::{resolver::libresolv::LibResolv, SrvClient};
-use std::{
-    collections::{hash_map::Entry, HashMap},
-    sync::{atomic::AtomicU64, Arc, Mutex},
-};
+use std::sync::{atomic::AtomicU64, Arc, Mutex};
 use suteravr_lib::{
-    clocking::{
-        event_headers::EventTypes,
-        schemas::oneshot::{
-            chat_entry::{SendChatMessageRequest, SendableChatEntry},
-            login::{LoginRequest, LoginResponse},
-        },
+    clocking::schemas::oneshot::{
+        chat_entry::SendChatMessageRequest,
+        login::{LoginRequest, LoginResponse},
     },
     error,
     util::serialize_to_new_vec,
@@ -24,25 +19,18 @@ use futures::executor::block_on;
 use godot::{engine::notify::NodeNotification, obj::WithBaseField, prelude::*};
 use suteravr_lib::{
     clocking::{
-        buffer::{ContentHeader, FrameBuffer},
         oneshot_headers::{OneshotHeader, OneshotStep, OneshotTypes},
         sutera_header::SuteraHeader,
-        traits::MessageAuthor,
-        ClockingConnection, ClockingFrameUnit,
     },
     info,
     messaging::id::MessageId,
     warn, SCHEMA_VERSION,
 };
 use tokio::{
-    net::TcpStream,
     sync::{mpsc, oneshot},
-    task::{JoinError, JoinHandle},
+    task::JoinError,
 };
-use tokio_rustls::{
-    rustls::{pki_types::ServerName, ClientConfig},
-    TlsConnector,
-};
+use tokio_rustls::rustls::ClientConfig;
 
 use crate::{
     async_driver::tokio,
@@ -51,14 +39,17 @@ use crate::{
     tcp::{
         allow_unknown_cert::AllowUnknownCertVerifier,
         error::TcpServerError,
-        requests::{EventMessage, OneshotRequest, OneshotResponse},
+        requests::{OneshotRequest, OneshotResponse},
     },
 };
 
-use self::requests::{Request, Response};
+use self::{
+    conenction::Connection,
+    requests::{Request, Response},
+};
 
 #[derive(Debug)]
-enum ShutdownReason {
+pub enum ShutdownReason {
     GameExit,
 }
 
@@ -69,13 +60,6 @@ struct ClockerConnection {
     logger: GodotLogger,
     connection: Arc<Mutex<Option<Connection>>>,
     message_id_dispatch: AtomicU64,
-}
-
-struct Connection {
-    shutdown_tx: oneshot::Sender<ShutdownReason>,
-    _receive_rx: mpsc::Receiver<Request>,
-    send_tx: mpsc::Sender<Response>,
-    handle: JoinHandle<()>,
 }
 
 impl ClockerConnection {
@@ -93,158 +77,6 @@ impl ClockerConnection {
             connection.handle.await?;
         }
         Ok(())
-    }
-}
-
-impl Connection {
-    fn new<T: Into<String> + Send + 'static>(
-        logger: GodotLogger,
-        instance_id: InstanceId,
-        config: ClientConfig,
-        name: T,
-        addr: T,
-    ) -> Self {
-        info!(logger, "Making connection...");
-
-        let (shutdown_tx, mut shutdown_rx) = oneshot::channel::<ShutdownReason>();
-        let (receive_tx, receive_rx) = mpsc::channel::<Request>(32);
-        let (send_tx, mut send_rx) = mpsc::channel::<Response>(32);
-
-        let server_logger = logger.clone();
-        let _reply = send_tx.clone();
-
-        let server = async move {
-            let mut reply_senders = HashMap::<MessageId, oneshot::Sender<Request>>::new();
-            let name = name.into();
-            let addr = addr.into();
-            let logger = server_logger;
-
-            info!(logger, "Connecting to {}({}) ...", name, addr);
-
-            let connector = TlsConnector::from(Arc::new(config));
-            let dnsname = ServerName::try_from(name).unwrap();
-
-            let stream = TcpStream::connect(&addr)
-                .await
-                .map_err(TcpServerError::ConnectingError)?;
-
-            let stream = connector
-                .connect(dnsname, stream)
-                .await
-                .map_err(TcpServerError::ConnectingError)?;
-
-            info!(logger, "Connection established!");
-
-            let mut connection = ClockingConnection::new(stream, MessageAuthor::Server);
-            let mut frame_buffer = FrameBuffer::new(logger.clone());
-
-            let receive = receive_tx;
-
-            loop {
-                tokio::select! {
-                    Some(request) = send_rx.recv() => {
-                        match request {
-                            Response::Oneshot(oneshot) => {
-                                connection.write_frame(&ClockingFrameUnit::SuteraHeader(oneshot.sutera_header)).await?;
-                                connection.write_frame(&ClockingFrameUnit::OneshotHeaders(oneshot.oneshot_header)).await?;
-                                connection.write_frame(&ClockingFrameUnit::Content(oneshot.payload)).await?;
-                            },
-                            Response::OneshotWithReply(oneshot, sender) => {
-                                let Entry::Vacant(o) = reply_senders.entry(oneshot.oneshot_header.message_id) else {
-                                    error!(logger, "MessageId {:?} is already occupied!", oneshot.oneshot_header.message_id);
-                                    panic!();
-                                };
-                                o.insert(sender);
-                                connection.write_frame(&ClockingFrameUnit::SuteraHeader(oneshot.sutera_header)).await?;
-                                connection.write_frame(&ClockingFrameUnit::OneshotHeaders(oneshot.oneshot_header)).await?;
-                                connection.write_frame(&ClockingFrameUnit::Content(oneshot.payload)).await?;
-                            }
-                        }
-                    },
-                    read = connection.read_frame() => {
-                        match read {
-                            Ok(Some(payload)) => {
-                                if let Some(received) = frame_buffer.append(payload, MessageAuthor::Server) {
-                                    if received.sutera_status.is_none() {
-                                        panic!("Received message doesn't contain sutera_header! (Maybe frame_buffer has bugs.)")
-                                    }
-                                    match received.content_header {
-                                        ContentHeader::Event(event_header) if event_header.message_type == EventTypes::TextChat_ReceiveChatMessage_Push => {
-                                            let chat_message = deserialize::<SendableChatEntry, SendableChatEntry>(&received.payload)?; Gd::<ClockerConnection>::from_instance_id(instance_id).cast::<ClockerConnection>().call_deferred(
-                                                "emit_signal".into(),
-                                                &[
-                                                    Variant::from(SIGNAL_NEW_TEXTCHAT_MESSAGE.into_godot()),
-                                                    Variant::from(chat_message.sender.into_godot()),
-                                                    Variant::from(chat_message.message.into_godot()),
-                                                ] ,
-                                            );
-
-                                        }
-                                        ContentHeader::Event(event_header) => {
-                                            receive.send(
-                                                Request::Event(EventMessage::new(
-                                                    received.sutera_header,
-                                                    event_header,
-                                                    received.payload,
-                                                ))
-                                            ).await.map_err(TcpServerError::CannotSendRequest)?;
-                                        }
-                                        ContentHeader::Oneshot(oneshot_header) => {
-                                            // FIXME: Push型かPull型かチェックしてあげないといけない
-                                            if let Entry::Occupied(o) = reply_senders.entry(oneshot_header.message_id) {
-                                                o.remove_entry().1.send(Request::Oneshot(OneshotRequest::new(
-                                                    received.sutera_header,
-                                                    received.sutera_status.unwrap(),
-                                                    oneshot_header,
-                                                    received.payload,
-                                                ))).map_err(|_| TcpServerError::CannotSendOneshotReply)?;
-                                            } else {
-                                                receive.send(
-                                                    Request::Oneshot(OneshotRequest::new(
-                                                        received.sutera_header,
-                                                        received.sutera_status.unwrap(),
-                                                        oneshot_header,
-                                                        received.payload,
-                                                    ))
-                                                ).await.map_err(TcpServerError::CannotSendRequest)?;
-                                            }
-                                        },
-                                    }
-                                }
-                            }
-                            Ok(None) => {
-                                break;
-                            }
-                            Err(e)=> {
-                                warn!(logger, "{}", e);
-                                break;
-                            }
-                        }
-                    },
-                    _shutdown = &mut shutdown_rx => {
-                        break;
-                    }
-                }
-            }
-
-            connection.shutdown_stream().await?;
-            Ok::<(), TcpServerError>(())
-        };
-
-        let handle_logger = logger.clone();
-        let handle = tokio().bind().spawn("clocker_connection", async move {
-            match server.await {
-                Ok(_) => info!(handle_logger, "Connection successfully finished."),
-                Err(e) => warn!(handle_logger, "Connection failed: {}", e),
-            }
-        });
-
-        Self {
-            shutdown_tx,
-            _receive_rx: receive_rx,
-            send_tx,
-            handle,
-        }
     }
 }
 
