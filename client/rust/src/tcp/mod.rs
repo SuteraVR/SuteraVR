@@ -97,7 +97,25 @@ impl ClockerConnection {
     }
 
     #[func]
-    fn connect_sutera_clocking_without_certverify(&mut self, name: String, addr: String) {
+    fn connect_to_localhost(&mut self) {
+        let config = ClientConfig::builder()
+            .dangerous()
+            .with_custom_certificate_verifier(AllowUnknownCertVerifier::new())
+            .with_no_client_auth();
+        warn!(self.logger, "Allowing unknown certificates.");
+        warn!(
+            self.logger,
+            "Ensure you are connecting to the right server!"
+        );
+        self.connect(config, "localhost", "127.0.0.1:3501")
+    }
+
+    fn connect<T: Into<String> + Send + 'static>(
+        &mut self,
+        config: ClientConfig,
+        name: T,
+        addr: T,
+    ) {
         info!(self.logger, "Making connection...");
 
         let (shutdown_tx, mut shutdown_rx) = oneshot::channel::<ShutdownReason>();
@@ -118,15 +136,10 @@ impl ClockerConnection {
 
         let server = async move {
             let mut reply_senders = HashMap::<MessageId, oneshot::Sender<Request>>::new();
+            let name = name.into();
+            let addr = addr.into();
 
             info!(logger, "Connecting to {}({}) ...", name, addr);
-
-            let config = ClientConfig::builder()
-                .dangerous()
-                .with_custom_certificate_verifier(AllowUnknownCertVerifier::new())
-                .with_no_client_auth();
-            warn!(logger, "Allowing unknown certificates.");
-            warn!(logger, "Ensure you are connecting to the right server!");
 
             let connector = TlsConnector::from(Arc::new(config));
             let dnsname = ServerName::try_from(name).unwrap();
