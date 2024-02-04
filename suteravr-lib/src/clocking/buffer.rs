@@ -1,6 +1,6 @@
 use crate::clocking::ClockingFrameUnit;
 use crate::util::logger::Logger;
-use crate::{debug, error, info, warn};
+use crate::{debug, error, warn};
 
 use super::event_headers::EventHeader;
 use super::oneshot_headers::OneshotHeader;
@@ -120,7 +120,7 @@ impl<T: Logger> FrameBuffer<T> {
                             content_header: ContentHeader::Oneshot(oneshot_header),
                             payload,
                         };
-                        info!(self.logger, "Receive: {:?}", &request);
+                        debug!(self.logger, "Receive: {:?}", &request);
                         self.clear();
                         return Some(request);
                     }
@@ -131,7 +131,7 @@ impl<T: Logger> FrameBuffer<T> {
                             content_header: ContentHeader::Event(event_header),
                             payload,
                         };
-                        info!(self.logger, "Receive: {:?}", &request);
+                        debug!(self.logger, "Receive: {:?}", &request);
                         self.clear();
                         return Some(request);
                     }
