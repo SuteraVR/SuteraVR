@@ -97,8 +97,19 @@ impl ClockerConnection {
     }
 
     #[func]
+    fn connect_by_srv(&mut self, domain: String) {}
+
+    #[func]
     fn connect_to_localhost(&mut self) {
-        self.connect_without_certification_verifying("localhost".into(), "127.0.0.1:3501".into())
+        self.connect_to_localhost_with_port(3501)
+    }
+
+    #[func]
+    fn connect_to_localhost_with_port(&mut self, port: u16) {
+        self.connect_without_certification_verifying(
+            "localhost".into(),
+            format!("127.0.0.1:{}", port),
+        )
     }
 
     #[func]
