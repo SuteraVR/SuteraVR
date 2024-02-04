@@ -4,7 +4,7 @@ pub mod error;
 pub mod requests;
 
 use alkahest::deserialize;
-use srv_rs::{resolver::libresolv::LibResolv, SrvClient};
+use hickory_resolver::TokioAsyncResolver;
 use std::sync::{atomic::AtomicU64, Arc, Mutex};
 use suteravr_lib::{
     clocking::schemas::oneshot::{
@@ -97,24 +97,38 @@ impl ClockerConnection {
         let logger = self.logger();
         let connection = self.connection.clone();
         tokio().bind().spawn("connect_by_srv", async move {
-            let client = SrvClient::<LibResolv>::new(format!("_suteravr-clocker._tls.{}", domain));
-            let srv = client
-                .execute(srv_rs::Execution::Concurrent, |address| async move {
-                    Ok::<_, std::convert::Infallible>(address.authority().map(|v| v.to_string()))
-                })
+            let resolver = TokioAsyncResolver::tokio_from_system_conf().unwrap();
+            let srv = resolver
+                .srv_lookup(format!("_suteravr-clocker._tls.{}", domain))
                 .await;
-            if let Ok(Ok(Some(e))) = srv {
-                info!(logger, "SRV record resolved: {:?}", e);
-                let mut root_cert_store = tokio_rustls::rustls::RootCertStore::empty();
-                for cert in rustls_native_certs::load_native_certs().unwrap() {
-                    root_cert_store.add(cert).unwrap();
+            match srv.map(|v| v.into_iter().next()) {
+                Ok(Some(e)) => {
+                    info!(logger, "SRV record resolved: {:?}", e);
+                    let mut root_cert_store = tokio_rustls::rustls::RootCertStore::empty();
+                    for cert in rustls_native_certs::load_native_certs().unwrap() {
+                        root_cert_store.add(cert).unwrap();
+                    }
+                    let config = ClientConfig::builder()
+                        .with_root_certificates(root_cert_store)
+                        .with_no_client_auth();
+                    Self::connect(
+                        connection,
+                        logger,
+                        instance_id,
+                        config,
+                        domain,
+                        format!("{}:{}", e.target(), e.port()),
+                    )
                 }
-                let config = ClientConfig::builder()
-                    .with_root_certificates(root_cert_store)
-                    .with_no_client_auth();
-                Self::connect(connection, logger, instance_id, config, domain, e)
-            } else {
-                error!(logger, "Failed to resolve SRV record: {}", srv.unwrap_err());
+                Ok(None) => {
+                    error!(
+                        logger,
+                        "Failed to resolve SRV record: SRV record not found."
+                    );
+                }
+                Err(e) => {
+                    error!(logger, "Failed to resolve SRV record: {:?}", e);
+                }
             }
         });
     }
