@@ -1,9 +1,18 @@
+use alkahest::{Formula, Serialize};
 use derivative::Derivative;
-use suteravr_lib::clocking::{
-    event_headers::EventHeader, oneshot_headers::OneshotHeader, sutera_header::SuteraHeader,
-    sutera_status::SuteraStatus,
+use suteravr_lib::{
+    clocking::{
+        event_headers::EventHeader,
+        oneshot_headers::{OneshotHeader, OneshotStep},
+        sutera_header::SuteraHeader,
+        sutera_status::SuteraStatus,
+    },
+    util::serialize_to_new_vec,
+    SCHEMA_VERSION,
 };
-use tokio::sync::oneshot;
+use tokio::sync::{mpsc, oneshot};
+
+use super::error::TcpServerError;
 
 pub enum Response {
     Oneshot(OneshotResponse),
@@ -39,6 +48,20 @@ pub struct OneshotRequest {
     pub payload: Vec<u8>,
 }
 
+impl OneshotRequest {
+    #[inline]
+    pub fn new(
+        sutera_header: SuteraHeader,
+        oneshot_header: OneshotHeader,
+        payload: Vec<u8>,
+    ) -> Self {
+        Self {
+            sutera_header,
+            oneshot_header,
+            payload,
+        }
+    }
+}
 impl OneshotResponse {
     #[inline]
     pub fn new(
@@ -65,4 +88,27 @@ impl EventMessage {
             payload,
         }
     }
+}
+
+pub async fn send_oneshot_response<T: Formula + Serialize<T>>(
+    response: OneshotResponse,
+    reply: mpsc::Sender<Request>,
+    payload: T,
+) -> Result<(), TcpServerError> {
+    let response = OneshotRequest {
+        sutera_header: SuteraHeader {
+            version: SCHEMA_VERSION,
+        },
+        oneshot_header: OneshotHeader {
+            step: OneshotStep::Response,
+            message_type: response.oneshot_header.message_type,
+            message_id: response.oneshot_header.message_id,
+        },
+        payload: serialize_to_new_vec(payload),
+    };
+    reply
+        .send(Request::Oneshot(response))
+        .await
+        .map_err(TcpServerError::CannotSendRequest)?;
+    Ok(())
 }

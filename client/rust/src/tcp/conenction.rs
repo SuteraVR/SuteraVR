@@ -5,8 +5,15 @@ use std::{
     sync::Arc,
 };
 use suteravr_lib::{
-    clocking::{event_headers::EventTypes, schemas::oneshot::chat_entry::SendableChatEntry},
-    error,
+    clocking::{
+        event_headers::EventTypes,
+        oneshot_headers::{
+            OneshotDirection, OneshotHeader, OneshotStep, OneshotTypes, ONESHOT_DIRECTION_MAP,
+        },
+        schemas::oneshot::chat_entry::SendableChatEntry,
+        sutera_header::SuteraHeader,
+    },
+    error, SCHEMA_VERSION,
 };
 
 use godot::prelude::*;
@@ -36,7 +43,7 @@ use crate::{
     signal_names::{SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE},
     tcp::{
         error::TcpServerError,
-        requests::{EventMessage, OneshotResponse},
+        requests::{EventMessage, OneshotRequest, OneshotResponse},
         ClockerConnection,
     },
 };
@@ -67,7 +74,7 @@ impl Connection {
         let (send_tx, mut send_rx) = mpsc::channel::<Request>(32);
 
         let server_logger = logger.clone();
-        let _reply = send_tx.clone();
+        let reply = send_tx.clone();
 
         let server = async move {
             let mut reply_senders = HashMap::<MessageId, oneshot::Sender<Response>>::new();
@@ -102,6 +109,57 @@ impl Connection {
                 );
 
             let receive = receive_tx;
+
+            async fn process_oneshot_response(
+                response: OneshotResponse,
+                reply: mpsc::Sender<Request>,
+                logger: GodotLogger,
+            ) -> Result<(), TcpServerError> {
+                match response.oneshot_header.message_type {
+                    OneshotTypes::Connection_HealthCheck_Push => {
+                        let response = OneshotRequest {
+                            sutera_header: SuteraHeader {
+                                version: SCHEMA_VERSION,
+                            },
+                            oneshot_header: OneshotHeader {
+                                step: OneshotStep::Response,
+                                message_type: response.oneshot_header.message_type,
+                                message_id: response.oneshot_header.message_id,
+                            },
+                            payload: Vec::new(),
+                        };
+                        reply
+                            .send(Request::Oneshot(response))
+                            .await
+                            .map_err(TcpServerError::CannotSendRequest)?;
+                    }
+                    _ => {
+                        error!(
+                            logger,
+                            "Unknown or unimplemented oneshot message type: {:?}",
+                            response.oneshot_header.message_type
+                        );
+                        // WARNING:
+                        // 現状クライアント側がUnimplementedを伝える手段が(スキーマ上)ないため、空のペイロードを返す
+                        let response = OneshotRequest {
+                            sutera_header: SuteraHeader {
+                                version: SCHEMA_VERSION,
+                            },
+                            oneshot_header: OneshotHeader {
+                                step: OneshotStep::Response,
+                                message_type: response.oneshot_header.message_type,
+                                message_id: response.oneshot_header.message_id,
+                            },
+                            payload: Vec::new(),
+                        };
+                        reply
+                            .send(Request::Oneshot(response))
+                            .await
+                            .map_err(TcpServerError::CannotSendRequest)?;
+                    }
+                }
+                Ok(())
+            }
 
             loop {
                 tokio::select! {
@@ -153,24 +211,33 @@ impl Connection {
                                             ).await.map_err(TcpServerError::CannotSendResponse)?;
                                         }
                                         ContentHeader::Oneshot(oneshot_header) => {
-                                            // FIXME: Push型かPull型かチェックしてあげないといけない
-                                            if let Entry::Occupied(o) = reply_senders.entry(oneshot_header.message_id) {
-                                                o.remove_entry().1.send(Response::Oneshot(OneshotResponse::new(
-                                                    received.sutera_header,
-                                                    received.sutera_status.unwrap(),
-                                                    oneshot_header,
-                                                    received.payload,
-                                                ))).map_err(|_| TcpServerError::CannotSendOneshotReply)?;
-                                            } else {
-                                                receive.send(
-                                                    Response::Oneshot(OneshotResponse::new(
+                                            if ONESHOT_DIRECTION_MAP[oneshot_header.message_type] == OneshotDirection::Pull {
+                                                if let Entry::Occupied(o) = reply_senders.entry(oneshot_header.message_id) {
+                                                    o.remove_entry().1.send(Response::Oneshot(OneshotResponse::new(
                                                         received.sutera_header,
                                                         received.sutera_status.unwrap(),
                                                         oneshot_header,
                                                         received.payload,
-                                                    ))
-                                                ).await.map_err(TcpServerError::CannotSendResponse)?;
+                                                    ))).map_err(|_| TcpServerError::CannotSendOneshotReply)?;
+                                                } else {
+                                                    receive.send(
+                                                        Response::Oneshot(OneshotResponse::new(
+                                                            received.sutera_header,
+                                                            received.sutera_status.unwrap(),
+                                                            oneshot_header,
+                                                            received.payload,
+                                                        ))
+                                                    ).await.map_err(TcpServerError::CannotSendResponse)?;
+                                                }
+                                                continue;
                                             }
+                                            let response = OneshotResponse::new(
+                                                    received.sutera_header,
+                                                    received.sutera_status.unwrap(),
+                                                    oneshot_header,
+                                                    received.payload,
+                                            );
+                                            process_oneshot_response(response, reply.clone(), logger.clone()).await?;
                                         },
                                     }
                                 }
