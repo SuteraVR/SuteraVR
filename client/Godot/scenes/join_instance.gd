@@ -5,10 +5,7 @@ extends Node
 func _ready():
 	var clocker = get_parent()
 	await(clocker.ready)
-	clocker.connect_sutera_clocking_without_certverify(
-		"localhost",
-		"localhost:3501"
-	)
+	clocker.connect_to_localhost()
 	clocker.join_instance(1)
 
 
