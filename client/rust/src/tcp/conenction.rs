@@ -33,7 +33,7 @@ use tokio_rustls::{
 use crate::{
     async_driver::tokio,
     logger::GodotLogger,
-    signal_names::SIGNAL_NEW_TEXTCHAT_MESSAGE,
+    signal_names::{SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE},
     tcp::{
         error::TcpServerError,
         requests::{EventMessage, OneshotRequest},
@@ -93,6 +93,13 @@ impl Connection {
 
             let mut connection = ClockingConnection::new(stream, MessageAuthor::Server);
             let mut frame_buffer = FrameBuffer::new(logger.clone());
+
+            Gd::<ClockerConnection>::from_instance_id(instance_id)
+                .cast::<ClockerConnection>()
+                .call_deferred(
+                    "emit_signal".into(),
+                    &[Variant::from(SIGNAL_CONNECTION_ESTABLISHED.into_godot())],
+                );
 
             let receive = receive_tx;
 

@@ -35,7 +35,7 @@ use tokio_rustls::rustls::ClientConfig;
 use crate::{
     async_driver::tokio,
     logger::GodotLogger,
-    signal_names::SIGNAL_NEW_TEXTCHAT_MESSAGE,
+    signal_names::{SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE},
     tcp::{
         allow_unknown_cert::AllowUnknownCertVerifier,
         error::TcpServerError,
@@ -85,6 +85,10 @@ impl ClockerConnection {
     #[func]
     fn signal_new_textchat_message(&mut self) -> String {
         SIGNAL_NEW_TEXTCHAT_MESSAGE.to_string()
+    }
+    #[func]
+    fn signal_connection_established(&mut self) -> String {
+        SIGNAL_CONNECTION_ESTABLISHED.to_string()
     }
 
     #[func]
@@ -278,6 +282,8 @@ impl INode for ClockerConnection {
     fn ready(&mut self) {
         self.base_mut()
             .add_user_signal(SIGNAL_NEW_TEXTCHAT_MESSAGE.into());
+        self.base_mut()
+            .add_user_signal(SIGNAL_CONNECTION_ESTABLISHED.into());
     }
 
     fn on_notification(&mut self, what: NodeNotification) {
