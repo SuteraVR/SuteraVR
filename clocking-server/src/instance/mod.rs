@@ -3,12 +3,13 @@ use std::collections::{hash_map::Entry, HashMap};
 use derivative::Derivative;
 use suteravr_lib::{
     clocking::schemas::oneshot::chat_entry::ChatEntry,
+    error,
     info,
     messaging::id::{InstanceId, PlayerId, WorldId},
     util::logger::EnvLogger,
     warn,
 };
-use tokio::sync::mpsc;
+use tokio::{sync::mpsc, task};
 
 use crate::{errors::InstanceError, shutdown::ShutdownReason};
 
@@ -20,6 +21,8 @@ pub enum InstanceControl {
     ChatMesasge(ChatEntry),
 }
 pub enum PlayerControl {
+    PlayerJoined(PlayerId),
+    PlayerLeft(PlayerId),
     NewChatMessage(ChatEntry),
 }
 
@@ -76,6 +79,20 @@ pub async fn launch_instance(
                             Entry::Vacant(o) => {
                                 o.insert(sender);
                                 info!(logger, "Player joined (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
+
+                                let iter = instance.players.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>();
+                                for (target_player_id, sender) in iter {
+                                    let id = player_id;
+                                    if id == target_player_id { break; }
+                                    let logger = logger.clone();
+                                    task::Builder::new()
+                                        .name("PlayerJoined Notify")
+                                        .spawn(async move {
+                                            if let Err(e) = sender.send(PlayerControl::PlayerJoined(id)).await {
+                                                error!(logger, "Failed to PlayerJoined Notify to Player {}: {:?}", target_player_id, e);
+                                            }
+                                        }).map_err(InstanceError::SpawnError)?;
+                                }
                             },
                             Entry::Occupied(mut o) => {
                                 o.insert(sender);
@@ -86,6 +103,19 @@ pub async fn launch_instance(
                     InstanceControl::Leave(player_id) => {
                         instance.players.remove(&player_id);
                         info!(logger, "Player left: (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
+                        let iter = instance.players.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>();
+                        for (target_player_id, sender) in iter {
+                            let id = player_id;
+                            if id == target_player_id { break; }
+                            let logger = logger.clone();
+                            task::Builder::new()
+                                .name("PlayerLeft Notify")
+                                .spawn(async move {
+                                    if let Err(e) = sender.send(PlayerControl::PlayerLeft(id)).await {
+                                        error!(logger, "Failed to PlayerLeft Notify to Player {}: {:?}", target_player_id, e);
+                                    }
+                                }).map_err(InstanceError::SpawnError)?;
+                        }
                     },
                     InstanceControl::ChatMesasge(chat_entry) => {
                         instance.chat_history.push(chat_entry.clone());

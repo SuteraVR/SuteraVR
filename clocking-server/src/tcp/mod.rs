@@ -154,7 +154,9 @@ async fn connection_init(
                         PlayerControl::NewChatMessage(entry) => {
                             message.send_event_ok(EventTypes::TextChat_ReceiveChatMessage_Push,
                             SendableChatEntry::from(entry)).await?;
-                        }
+                        },
+                        PlayerControl::PlayerJoined(_) => todo!(),
+                        PlayerControl::PlayerLeft(_) => todo!(), 
                     }
                 },
                 Some(request) = message.recv() => {
