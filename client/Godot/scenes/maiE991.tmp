@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=28 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" uid="uid://dl3j05ogv5103" path="res://character_body_3d.tscn" id="1_k7dhr"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
@@ -33,19 +33,7 @@ func _ready():
 	add_child(school)
 "
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_xy7xn"]
-sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
-sky_energy_multiplier = 1.25
-ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
-
-[sub_resource type="Sky" id="Sky_tlmag"]
-sky_material = SubResource("ProceduralSkyMaterial_xy7xn")
-
-[sub_resource type="Environment" id="Environment_ix0qt"]
-background_mode = 2
-sky = SubResource("Sky_tlmag")
-tonemap_mode = 2
-glow_enabled = true
+[sub_resource type="Environment" id="Environment_jscir"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_farqr"]
 
@@ -113,11 +101,11 @@ albedo_texture = SubResource("ViewportTexture_uipkr")
 [node name="Node3D" type="Node3D"]
 script = SubResource("GDScript_qak7f")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_ix0qt")
-
 [node name="CharacterBody3D" parent="." instance=ExtResource("1_k7dhr")]
 script = ExtResource("2_7xvxd")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_jscir")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 
