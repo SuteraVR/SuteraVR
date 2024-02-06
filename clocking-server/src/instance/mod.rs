@@ -3,8 +3,7 @@ use std::collections::{hash_map::Entry, HashMap};
 use derivative::Derivative;
 use suteravr_lib::{
     clocking::schemas::oneshot::chat_entry::ChatEntry,
-    error,
-    info,
+    error, info,
     messaging::id::{InstanceId, PlayerId, WorldId},
     util::logger::EnvLogger,
     warn,

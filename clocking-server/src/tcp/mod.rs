@@ -156,7 +156,7 @@ async fn connection_init(
                             SendableChatEntry::from(entry)).await?;
                         },
                         PlayerControl::PlayerJoined(_) => todo!(),
-                        PlayerControl::PlayerLeft(_) => todo!(), 
+                        PlayerControl::PlayerLeft(_) => todo!(),
                     }
                 },
                 Some(request) = message.recv() => {
