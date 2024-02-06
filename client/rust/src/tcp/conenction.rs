@@ -10,7 +10,10 @@ use suteravr_lib::{
         oneshot_headers::{
             OneshotDirection, OneshotHeader, OneshotStep, OneshotTypes, ONESHOT_DIRECTION_MAP,
         },
-        schemas::oneshot::chat_entry::SendableChatEntry,
+        schemas::{
+            event::update_player_being::{PlayerJoined, PlayerLeft},
+            oneshot::chat_entry::SendableChatEntry,
+        },
         sutera_header::SuteraHeader,
     },
     error, SCHEMA_VERSION,
@@ -40,7 +43,9 @@ use tokio_rustls::{
 use crate::{
     async_driver::tokio,
     logger::GodotLogger,
-    signal_names::{SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE},
+    signal_names::{
+        SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE, SIGNAL_UPDATE_PLAYER_BEING,
+    },
     tcp::{
         error::TcpServerError,
         requests::{EventMessage, OneshotRequest, OneshotResponse},
@@ -191,7 +196,8 @@ impl Connection {
                                     }
                                     match received.content_header {
                                         ContentHeader::Event(event_header) if event_header.message_type == EventTypes::TextChat_ReceiveChatMessage_Push => {
-                                            let chat_message = deserialize::<SendableChatEntry, SendableChatEntry>(&received.payload)?; Gd::<ClockerConnection>::from_instance_id(instance_id).cast::<ClockerConnection>().call_deferred(
+                                            let chat_message = deserialize::<SendableChatEntry, SendableChatEntry>(&received.payload)?;
+                                            Gd::<ClockerConnection>::from_instance_id(instance_id).cast::<ClockerConnection>().call_deferred(
                                                 "emit_signal".into(),
                                                 &[
                                                     Variant::from(SIGNAL_NEW_TEXTCHAT_MESSAGE.into_godot()),
@@ -199,8 +205,29 @@ impl Connection {
                                                     Variant::from(chat_message.message.into_godot()),
                                                 ] ,
                                             );
-
-                                        }
+                                        },
+                                        ContentHeader::Event(event_header)  if event_header.message_type == EventTypes::Instance_PlayerJoined_Push => {
+                                            let joined = deserialize::<PlayerJoined, PlayerJoined>(&received.payload)?;
+                                            Gd::<ClockerConnection>::from_instance_id(instance_id).cast::<ClockerConnection>().call_deferred(
+                                                "emit_signal".into(),
+                                                &[
+                                                    Variant::from(SIGNAL_UPDATE_PLAYER_BEING.into_godot()),
+                                                    Variant::from(joined.joined_player.into_godot()),
+                                                    Variant::from(true.into_godot()),
+                                                ] ,
+                                            );
+                                        },
+                                        ContentHeader::Event(event_header)  if event_header.message_type == EventTypes::Instance_PlayerLeft_Push => {
+                                            let left = deserialize::<PlayerLeft, PlayerLeft>(&received.payload)?;
+                                            Gd::<ClockerConnection>::from_instance_id(instance_id).cast::<ClockerConnection>().call_deferred(
+                                                "emit_signal".into(),
+                                                &[
+                                                    Variant::from(SIGNAL_UPDATE_PLAYER_BEING.into_godot()),
+                                                    Variant::from(left.left_player.into_godot()),
+                                                    Variant::from(false.into_godot()),
+                                                ] ,
+                                            );
+                                        },
                                         ContentHeader::Event(event_header) => {
                                             receive.send(
                                                 Response::Event(EventMessage::new(

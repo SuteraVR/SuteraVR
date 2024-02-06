@@ -1,9 +1,10 @@
-[gd_scene load_steps=28 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=29 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" uid="uid://dl3j05ogv5103" path="res://character_body_3d.tscn" id="1_k7dhr"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="Script" path="res://move_and_pov.gd" id="2_7xvxd"]
 [ext_resource type="Script" path="res://scenes/join_instance.gd" id="3_sapx3"]
+[ext_resource type="Script" path="res://scenes/instance_player.gd" id="8_44ca1"]
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
 [ext_resource type="FontFile" uid="uid://cqol00xok5gdi" path="res://font/mplus-1c-regular.ttf" id="10_igx2x"]
 [ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
@@ -282,3 +283,6 @@ unique_name_in_owner = true
 
 [node name="InstanceAnchor" type="Node" parent="Clocker"]
 script = ExtResource("3_sapx3")
+
+[node name="InstancePlayer" type="Node" parent="Clocker"]
+script = ExtResource("8_44ca1")
