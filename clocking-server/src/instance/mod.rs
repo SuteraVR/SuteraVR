@@ -105,7 +105,7 @@ pub async fn launch_instance(
                         let iter = instance.players.iter().map(|(k, v)| (*k, v.clone())).collect::<Vec<_>>();
                         for (target_player_id, sender) in iter {
                             let id = player_id;
-                            if id == target_player_id { break; }
+                            if id == target_player_id { continue; }
                             let logger = logger.clone();
                             task::Builder::new()
                                 .name("PlayerLeft Notify")
