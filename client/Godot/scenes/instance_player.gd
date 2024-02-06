@@ -1,13 +1,16 @@
 extends Node
-var CLOCKER: ClockerConnection
+class_name PlayerInstance
 
-func _ready():
-	CLOCKER = %Clocker
-	await CLOCKER.ready
-	CLOCKER.connect(CLOCKER.signal_update_player_being(), _on_update_player_being)
+var Scene: Node3D
+var PlayerId: int
+var Clocker: ClockerConnection
 
-func _on_update_player_being(id: int, value: bool):
-	if value == true:
-		print('プレイヤー%sが参加しました' % [id])
-	if value == false:
-		print('プレイヤー%sが離脱しました' % [id])
+const player_scene = preload("res://scenes/instance_player.tscn")
+
+
+func _init(clocker: ClockerConnection, player_id: int):
+	self.Clocker = clocker
+	self.PlayerId = player_id
+	self.Scene = player_scene.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+	add_child(self.Scene)
+	print("Player %s initialized." % [PlayerId])
