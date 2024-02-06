@@ -79,7 +79,7 @@ pub async fn launch_instance(
                                 o.insert(sender);
                                 info!(logger, "Player joined (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
 
-                                let iter = instance.players.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>();
+                                let iter = instance.players.iter().map(|(k, v)| (*k, v.clone())).collect::<Vec<_>>();
                                 for (target_player_id, sender) in iter {
                                     let id = player_id;
                                     if id == target_player_id { break; }
@@ -102,7 +102,7 @@ pub async fn launch_instance(
                     InstanceControl::Leave(player_id) => {
                         instance.players.remove(&player_id);
                         info!(logger, "Player left: (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
-                        let iter = instance.players.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>();
+                        let iter = instance.players.iter().map(|(k, v)| (*k, v.clone())).collect::<Vec<_>>();
                         for (target_player_id, sender) in iter {
                             let id = player_id;
                             if id == target_player_id { break; }

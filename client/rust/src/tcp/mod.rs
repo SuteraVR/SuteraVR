@@ -304,6 +304,8 @@ impl INode for ClockerConnection {
             .add_user_signal(SIGNAL_NEW_TEXTCHAT_MESSAGE.into());
         self.base_mut()
             .add_user_signal(SIGNAL_CONNECTION_ESTABLISHED.into());
+        self.base_mut()
+            .add_user_signal(SIGNAL_UPDATE_PLAYER_BEING.into());
     }
 
     fn on_notification(&mut self, what: NodeNotification) {

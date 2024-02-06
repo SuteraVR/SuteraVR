@@ -12,6 +12,7 @@ use suteravr_lib::clocking::event_headers::EventTypes;
 use suteravr_lib::clocking::oneshot_headers::{
     OneshotDirection, OneshotHeader, OneshotStep, OneshotTypes, ONESHOT_DIRECTION_MAP,
 };
+use suteravr_lib::clocking::schemas::event::update_player_being::{PlayerJoined, PlayerLeft};
 use suteravr_lib::clocking::schemas::oneshot::chat_entry::{
     ChatEntry, SendChatMessageRequest, SendChatMessageResponse, SendableChatEntry,
 };
@@ -152,11 +153,23 @@ async fn connection_init(
                 Some(control) = control.recv() => {
                     match control {
                         PlayerControl::NewChatMessage(entry) => {
-                            message.send_event_ok(EventTypes::TextChat_ReceiveChatMessage_Push,
-                            SendableChatEntry::from(entry)).await?;
+                            message.send_event_ok(
+                                EventTypes::TextChat_ReceiveChatMessage_Push,
+                                SendableChatEntry::from(entry)
+                            ).await?;
                         },
-                        PlayerControl::PlayerJoined(_) => todo!(),
-                        PlayerControl::PlayerLeft(_) => todo!(),
+                        PlayerControl::PlayerJoined(id) => {
+                            message.send_event_ok(
+                                EventTypes::Instance_PlayerJoined_Push,
+                                PlayerJoined { joined_player: id }
+                            ).await?;
+                        }
+                        PlayerControl::PlayerLeft(id) => {
+                            message.send_event_ok(
+                                EventTypes::Instance_PlayerLeft_Push,
+                                PlayerLeft { left_player: id }
+                            ).await?;
+                        },
                     }
                 },
                 Some(request) = message.recv() => {
