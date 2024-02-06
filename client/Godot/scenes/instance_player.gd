@@ -14,3 +14,13 @@ func _init(clocker: ClockerConnection, player_id: int):
 	self.Scene = player_scene.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
 	add_child(self.Scene)
 	print("Player %s initialized." % [PlayerId])
+
+func move(
+	x: float, y: float, z: float,
+	xx: float, xz: float, zx: float, zz: float,
+):
+	self.Scene.transform.origin = Vector3(x, y, z)
+	self.Scene.transform.basis.x.x = xx
+	self.Scene.transform.basis.x.z = xz
+	self.Scene.transform.basis.z.x = zx
+	self.Scene.transform.basis.z.z = zz

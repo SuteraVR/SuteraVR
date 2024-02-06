@@ -8,7 +8,7 @@ pub struct PubPlayerMove {
     pub now: StandingTransform,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[alkahest(Formula, Serialize, Deserialize)]
 pub struct PushPlayerMove {
     pub player: PlayerId,

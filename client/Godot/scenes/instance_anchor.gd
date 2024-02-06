@@ -8,6 +8,7 @@ var player_instances = {}
 func _ready():
 	await clocker.ready
 	clocker.connect(clocker.signal_update_player_being(), _on_update_player_being)
+	clocker.connect(clocker.signal_player_moved(), _on_player_moved)
 	
 	# ホストに接続し、通信確立を待機
 	# 
@@ -31,6 +32,15 @@ func _on_update_player_being(id: int, value: bool):
 		delete_player_instance(id)
 		print('プレイヤー%sが離脱しました' % [id])
 
+func _on_player_moved(
+	id: int,
+	x: float, y: float, z: float,
+	xx: float, xz: float, zx: float, zz: float,
+):
+	var player = get_player(id)
+	if player == null:
+		return
+	player.move(x, y, z, xx, xz, zx, zz)
 
 func push_player(id: int) -> PlayerInstance:
 	var instance = PlayerInstance.new(clocker, id)
@@ -40,6 +50,8 @@ func push_player(id: int) -> PlayerInstance:
 	return instance
 
 func get_player(id: int) -> PlayerInstance:
+	if !player_instances.has(id):
+		return null
 	return player_instances[id]
 
 func delete_player_instance(id: int):

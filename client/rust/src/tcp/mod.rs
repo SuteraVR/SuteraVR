@@ -43,7 +43,8 @@ use crate::{
     async_driver::tokio,
     logger::GodotLogger,
     signal_names::{
-        SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE, SIGNAL_UPDATE_PLAYER_BEING,
+        SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE, SIGNAL_PLAYER_MOVED,
+        SIGNAL_UPDATE_PLAYER_BEING,
     },
     tcp::{
         allow_unknown_cert::AllowUnknownCertVerifier,
@@ -103,6 +104,10 @@ impl ClockerConnection {
     #[func]
     fn signal_update_player_being(&mut self) -> String {
         SIGNAL_UPDATE_PLAYER_BEING.to_string()
+    }
+    #[func]
+    fn signal_player_moved(&mut self) -> String {
+        SIGNAL_PLAYER_MOVED.to_string()
     }
 
     #[func]
@@ -341,6 +346,7 @@ impl INode for ClockerConnection {
             .add_user_signal(SIGNAL_CONNECTION_ESTABLISHED.into());
         self.base_mut()
             .add_user_signal(SIGNAL_UPDATE_PLAYER_BEING.into());
+        self.base_mut().add_user_signal(SIGNAL_PLAYER_MOVED.into());
     }
 
     fn on_notification(&mut self, what: NodeNotification) {

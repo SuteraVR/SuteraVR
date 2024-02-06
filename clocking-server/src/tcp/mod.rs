@@ -12,6 +12,7 @@ use suteravr_lib::clocking::event_headers::EventTypes;
 use suteravr_lib::clocking::oneshot_headers::{
     OneshotDirection, OneshotHeader, OneshotStep, OneshotTypes, ONESHOT_DIRECTION_MAP,
 };
+use suteravr_lib::clocking::schemas::event::player_move::PubPlayerMove;
 use suteravr_lib::clocking::schemas::event::update_player_being::{PlayerJoined, PlayerLeft};
 use suteravr_lib::clocking::schemas::oneshot::chat_entry::{
     ChatEntry, SendChatMessageRequest, SendChatMessageResponse, SendableChatEntry,
@@ -170,10 +171,27 @@ async fn connection_init(
                                 PlayerLeft { left_player: id }
                             ).await?;
                         },
+                        PlayerControl::PlayerMoved(moved) => {
+                            message.send_event_ok(
+                                EventTypes::Instance_PushPlayerMove_Push,
+                                moved,
+                            ).await?;
+                        }
                     }
                 },
                 Some(request) = message.recv() => {
                     match request {
+                        Request::Event(request) if request.event_header.message_type == EventTypes::Instance_PubPlayerMove_Pull => {
+                            let Ok(payload) = deserialize::<PubPlayerMove, PubPlayerMove>(&request.payload) else {
+                                warn!("Failed to deserialize PubPlayerMove, skipping...");
+                                continue;
+                            };
+                            if let Some((player_id, instance_tx)) = &login_status {
+                                instance_tx.send(InstanceControl::PlayerMoved(*player_id, payload)).await?;
+                            } else {
+                                warn!("Received PubPlayerMove from unauthenticated client, skipping...");
+                            }
+                        },
                         Request::Oneshot(request) if ONESHOT_DIRECTION_MAP[request.oneshot_header.message_type] == OneshotDirection::Push => {
                             if request.oneshot_header.message_type == OneshotTypes::Connection_HealthCheck_Push {
                                 healthcheck_missed_count = 0;

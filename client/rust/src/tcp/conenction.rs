@@ -11,7 +11,10 @@ use suteravr_lib::{
             OneshotDirection, OneshotHeader, OneshotStep, OneshotTypes, ONESHOT_DIRECTION_MAP,
         },
         schemas::{
-            event::update_player_being::{PlayerJoined, PlayerLeft},
+            event::{
+                player_move::PushPlayerMove,
+                update_player_being::{PlayerJoined, PlayerLeft},
+            },
             oneshot::chat_entry::SendableChatEntry,
         },
         sutera_header::SuteraHeader,
@@ -44,7 +47,8 @@ use crate::{
     async_driver::tokio,
     logger::GodotLogger,
     signal_names::{
-        SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE, SIGNAL_UPDATE_PLAYER_BEING,
+        SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE, SIGNAL_PLAYER_MOVED,
+        SIGNAL_UPDATE_PLAYER_BEING,
     },
     tcp::{
         error::TcpServerError,
@@ -233,6 +237,28 @@ impl Connection {
                                                 ] ,
                                             );
                                         },
+                                        ContentHeader::Event(event_header) if event_header.message_type == EventTypes::Instance_PushPlayerMove_Push => {
+                                            let moved = deserialize::<PushPlayerMove, PushPlayerMove>(&received.payload)?;
+                                            let xx = moved.now.yaw.abs() - 1f64;
+                                            let xz = (1f64 - xx.powi(2)).sqrt() * moved.now.yaw.signum();
+                                            let zx = -xz;
+                                            let zz = xx;
+
+                                            Gd::<ClockerConnection>::from_instance_id(instance_id).cast::<ClockerConnection>().call_deferred(
+                                                "emit_signal".into(),
+                                                &[
+                                                    Variant::from(SIGNAL_PLAYER_MOVED.into_godot()),
+                                                    Variant::from(moved.player.into_godot()),
+                                                    Variant::from(moved.now.x.into_godot()),
+                                                    Variant::from(moved.now.y.into_godot()),
+                                                    Variant::from(moved.now.z.into_godot()),
+                                                    Variant::from(xx.into_godot()),
+                                                    Variant::from(xz.into_godot()),
+                                                    Variant::from(zx.into_godot()),
+                                                    Variant::from(zz.into_godot()),
+                                                ] ,
+                                            );
+                                        }
                                         ContentHeader::Event(event_header) => {
                                             receive.send(
                                                 Response::Event(EventMessage::new(
