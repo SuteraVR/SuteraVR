@@ -25,8 +25,8 @@ func _ready():
 
 func _on_update_player_being(id: int, value: bool):
 	if value == true:
-		push_player(id)
 		print('プレイヤー%sが参加しました' % [id])
+		push_player(id)
 	if value == false:
 		delete_player_instance(id)
 		print('プレイヤー%sが離脱しました' % [id])
