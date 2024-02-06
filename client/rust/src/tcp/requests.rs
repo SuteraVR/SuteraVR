@@ -22,6 +22,7 @@ pub enum Response {
 pub enum Request {
     Oneshot(OneshotRequest),
     OneshotWithReply(OneshotRequest, oneshot::Sender<Response>),
+    Event(EventMessage),
 }
 
 #[derive(Derivative)]

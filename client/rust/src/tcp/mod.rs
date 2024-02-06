@@ -7,11 +7,18 @@ use alkahest::deserialize;
 use hickory_resolver::TokioAsyncResolver;
 use std::sync::{atomic::AtomicU64, Arc, Mutex};
 use suteravr_lib::{
-    clocking::schemas::oneshot::{
-        chat_entry::SendChatMessageRequest,
-        login::{LoginRequest, LoginResponse},
+    clocking::{
+        event_headers::{EventDirection, EventHeader, EventTypes},
+        schemas::{
+            event::player_move::PubPlayerMove,
+            oneshot::{
+                chat_entry::SendChatMessageRequest,
+                login::{LoginRequest, LoginResponse},
+            },
+        },
     },
     debug, error,
+    messaging::player::{StandingTransform, StandingTransformEncoder},
     util::serialize_to_new_vec,
 };
 
@@ -47,7 +54,7 @@ use crate::{
 
 use self::{
     conenction::Connection,
-    requests::{Request, Response},
+    requests::{EventMessage, Request, Response},
 };
 
 #[derive(Debug)]
@@ -59,6 +66,7 @@ pub enum ShutdownReason {
 #[class(base=Node)]
 struct ClockerConnection {
     base: Base<Node>,
+    pos: StandingTransformEncoder,
     logger: GodotLogger,
     connection: Arc<Mutex<Option<Connection>>>,
     message_id_dispatch: AtomicU64,
@@ -203,6 +211,34 @@ impl ClockerConnection {
     }
 
     #[func]
+    fn report_player_transform(&mut self, x: f64, y: f64, z: f64, xx: f64, xz: f64) {
+        self.pos.push(StandingTransform {
+            x,
+            y,
+            z,
+            yaw: (xx + 1f64) * xz.signum(),
+        });
+        if let Some(now) = self.pos.payload() {
+            let send = self.send_tx();
+            tokio().bind().spawn("report_player_pos", async move {
+                send.send(Request::Event(EventMessage {
+                    sutera_header: SuteraHeader {
+                        version: SCHEMA_VERSION,
+                    },
+                    event_header: EventHeader {
+                        direction: EventDirection::Pull,
+                        message_type: EventTypes::Instance_PubPlayerMove_Pull,
+                    },
+                    payload: serialize_to_new_vec(PubPlayerMove { now }),
+                }))
+                .await
+                .map_err(TcpServerError::CannotSendRequest)?;
+                Ok::<(), TcpServerError>(())
+            });
+        }
+    }
+
+    #[func]
     fn join_instance(&mut self, join_token: u64) {
         let id = self.get_message_id();
         let logger = self.logger();
@@ -267,10 +303,7 @@ impl ClockerConnection {
             .await
             .map_err(TcpServerError::CannotSendRequest)?;
 
-        // TODO: そのうちRequestにOneshot以外が実装されるので、irrefutable_let_patternsは解消されるはず
-        #[allow(irrefutable_let_patterns)]
-        let Response::Oneshot(oneshot) = rx.await?
-        else {
+        let Response::Oneshot(oneshot) = rx.await? else {
             error!(
                 logger,
                 "rx of messageId {:?} not received Oneshot!", message_id
@@ -279,6 +312,7 @@ impl ClockerConnection {
         };
         Ok(oneshot)
     }
+
     fn get_message_id(&mut self) -> MessageId {
         self.message_id_dispatch
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed) as MessageId
@@ -293,6 +327,7 @@ impl INode for ClockerConnection {
         };
         Self {
             base,
+            pos: StandingTransformEncoder::new(),
             logger,
             connection: Arc::new(Mutex::new(None)),
             message_id_dispatch: AtomicU64::new(0),

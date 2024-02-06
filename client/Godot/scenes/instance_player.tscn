@@ -5,6 +5,7 @@
 [sub_resource type="BoxMesh" id="BoxMesh_lnjc3"]
 
 [node name="Node3D" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="Cube" type="MeshInstance3D" parent="."]
 transform = Transform3D(0.6, 0, 0, 0, 1.6, 0, 0, 0, 0.6, 0, 0.8, 0)

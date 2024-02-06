@@ -184,7 +184,12 @@ impl Connection {
                                 connection.write_frame(&ClockingFrameUnit::SuteraHeader(oneshot.sutera_header)).await?;
                                 connection.write_frame(&ClockingFrameUnit::OneshotHeaders(oneshot.oneshot_header)).await?;
                                 connection.write_frame(&ClockingFrameUnit::Content(oneshot.payload)).await?;
-                            }
+                            },
+                            Request::Event(event) => {
+                                connection.write_frame(&ClockingFrameUnit::SuteraHeader(event.sutera_header)).await?;
+                                connection.write_frame(&ClockingFrameUnit::EventHeader(event.event_header)).await?;
+                                connection.write_frame(&ClockingFrameUnit::Content(event.payload)).await?;
+                            },
                         }
                     },
                     read = connection.read_frame() => {
