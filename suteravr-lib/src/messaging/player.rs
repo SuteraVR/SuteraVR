@@ -72,7 +72,7 @@ impl StandingTransformEncoder {
             Err(_) => return None,
         };
 
-        let threshold = 0.05f64 + 1f64 / elapse.ln_1p();
+        let threshold = 0.3f64 / elapse.ln_1p();
         if (self.target.x.sub(self.last_sent.x).powi(2)
             + self.target.y.sub(self.last_sent.y).powi(2)
             + self.target.z.sub(self.last_sent.z).powi(2)
