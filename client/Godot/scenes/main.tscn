@@ -114,7 +114,7 @@ light_data = ExtResource("8_40yc0")
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
-transform = Transform3D(3, -0.00121381, 0.000522831, 0.0012137, 3, 0.000634692, -0.000523087, -0.000634481, 3, 0, 0, 0)
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 mesh = SubResource("PlaneMesh_farqr")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
