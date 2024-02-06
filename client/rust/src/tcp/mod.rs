@@ -190,7 +190,9 @@ impl ClockerConnection {
     fn oneshot_send_chat_message(&mut self, content: String) {
         let id = self.get_message_id();
         let logger = self.logger();
-        let send = self.send_tx();
+        let Some(send) = self.send_tx() else {
+            return;
+        };
         tokio().bind().spawn("clocking_request", async move {
             let login_result = Self::create_oneshot_p(
                 logger.clone(),
@@ -224,7 +226,9 @@ impl ClockerConnection {
             yaw: (xx + 1f64) * xz.signum(),
         });
         if let Some(now) = self.pos.payload() {
-            let send = self.send_tx();
+            let Some(send) = self.send_tx() else {
+                return;
+            };
             tokio().bind().spawn("report_player_pos", async move {
                 send.send(Request::Event(EventMessage {
                     sutera_header: SuteraHeader {
@@ -247,7 +251,9 @@ impl ClockerConnection {
     fn join_instance(&mut self, join_token: u64) {
         let id = self.get_message_id();
         let logger = self.logger();
-        let send = self.send_tx();
+        let Some(send) = self.send_tx() else {
+            return;
+        };
         let instance_id = self.base().instance_id();
         tokio().bind().spawn("clocking_request", async move {
             info!(logger, "Joining instance with token: {}", join_token);
@@ -290,15 +296,8 @@ impl ClockerConnection {
     }
 }
 impl ClockerConnection {
-    fn send_tx(&self) -> mpsc::Sender<Request> {
-        return self
-            .connection
-            .lock()
-            .unwrap()
-            .as_ref()
-            .unwrap()
-            .send_tx
-            .clone();
+    fn send_tx(&self) -> Option<mpsc::Sender<Request>> {
+        Some(self.connection.lock().ok()?.as_ref()?.send_tx.clone())
     }
 
     fn connect<T: Into<String> + Send + 'static>(
