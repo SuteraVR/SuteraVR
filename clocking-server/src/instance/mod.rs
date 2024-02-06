@@ -11,14 +11,21 @@ use suteravr_lib::{
     util::logger::EnvLogger,
     warn,
 };
-use tokio::{sync::mpsc, task};
+use tokio::{
+    sync::{mpsc, oneshot},
+    task,
+};
 
 use crate::{errors::InstanceError, shutdown::ShutdownReason};
 
 pub mod manager;
 pub enum InstanceControl {
     Shutdown(ShutdownReason),
-    Join(PlayerId, mpsc::Sender<PlayerControl>),
+    Join(
+        PlayerId,
+        mpsc::Sender<PlayerControl>,
+        oneshot::Sender<Vec<PlayerId>>,
+    ),
     Leave(PlayerId),
     ChatMesasge(ChatEntry),
     PlayerMoved(PlayerId, PubPlayerMove),
@@ -79,12 +86,13 @@ pub async fn launch_instance(
                     InstanceControl::Shutdown(_) => {
                         break;
                     },
-                    InstanceControl::Join(player_id, sender) => {
+                    InstanceControl::Join(player_id, sender, reply_pos) => {
                         match instance.players.entry(player_id) {
                             Entry::Vacant(o) => {
                                 o.insert(sender);
                                 info!(logger, "Player joined (id: {:?}), currently {} player(s) in instance.", player_id, instance.players.len());
                                 notify(&instance, "PlayerJoined".to_string(), &logger, player_id,  PlayerControl::PlayerJoined(player_id))?;
+                                reply_pos.send(instance.players.keys().cloned().filter(|p| *p != player_id).collect()).map_err(|_| InstanceError::CannotSendReply)?;
                             },
                             Entry::Occupied(mut o) => {
                                 o.insert(sender);

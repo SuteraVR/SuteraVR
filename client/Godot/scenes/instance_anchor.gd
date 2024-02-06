@@ -24,13 +24,15 @@ func _ready():
 	clocker.join_instance(1)	
 
 
-func _on_update_player_being(id: int, value: bool):
+func _on_update_player_being(id: int, value: bool, joining: bool):
 	if value == true:
-		print('プレイヤー%sが参加しました' % [id])
 		push_player(id)
+		if !joining:
+			print('プレイヤー%sが参加しました' % [id])
 	if value == false:
 		delete_player_instance(id)
-		print('プレイヤー%sが離脱しました' % [id])
+		if !joining:
+			print('プレイヤー%sが離脱しました' % [id])
 
 func _on_player_moved(
 	id: int,
@@ -40,13 +42,13 @@ func _on_player_moved(
 	var player = get_player(id)
 	if player == null:
 		return
+	player.appear()
 	player.move(x, y, z, xx, xz, zx, zz)
 
 func push_player(id: int) -> PlayerInstance:
 	var instance = PlayerInstance.new(clocker, id)
 	player_instances[id] = instance
 	add_child(instance)
-	
 	return instance
 
 func get_player(id: int) -> PlayerInstance:

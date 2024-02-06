@@ -12,8 +12,12 @@ func _init(clocker: ClockerConnection, player_id: int):
 	self.Clocker = clocker
 	self.PlayerId = player_id
 	self.Scene = player_scene.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+	self.Scene.visible = false
 	add_child(self.Scene)
 	print("Player %s initialized." % [PlayerId])
+
+func appear():
+	self.Scene.visible = true
 
 func move(
 	x: float, y: float, z: float,

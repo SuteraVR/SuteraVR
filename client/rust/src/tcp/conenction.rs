@@ -212,7 +212,7 @@ impl Connection {
                                                     Variant::from(SIGNAL_NEW_TEXTCHAT_MESSAGE.into_godot()),
                                                     Variant::from(chat_message.sender.into_godot()),
                                                     Variant::from(chat_message.message.into_godot()),
-                                                ] ,
+                                                ],
                                             );
                                         },
                                         ContentHeader::Event(event_header)  if event_header.message_type == EventTypes::Instance_PlayerJoined_Push => {
@@ -223,7 +223,8 @@ impl Connection {
                                                     Variant::from(SIGNAL_UPDATE_PLAYER_BEING.into_godot()),
                                                     Variant::from(joined.joined_player.into_godot()),
                                                     Variant::from(true.into_godot()),
-                                                ] ,
+                                                    Variant::from(false.into_godot()),
+                                                ],
                                             );
                                         },
                                         ContentHeader::Event(event_header)  if event_header.message_type == EventTypes::Instance_PlayerLeft_Push => {
@@ -234,29 +235,28 @@ impl Connection {
                                                     Variant::from(SIGNAL_UPDATE_PLAYER_BEING.into_godot()),
                                                     Variant::from(left.left_player.into_godot()),
                                                     Variant::from(false.into_godot()),
-                                                ] ,
+                                                    Variant::from(false.into_godot()),
+                                                ],
                                             );
                                         },
                                         ContentHeader::Event(event_header) if event_header.message_type == EventTypes::Instance_PushPlayerMove_Push => {
                                             let moved = deserialize::<PushPlayerMove, PushPlayerMove>(&received.payload)?;
-                                            let xx = moved.now.yaw.abs() - 1f64;
-                                            let xz = (1f64 - xx.powi(2)).sqrt() * moved.now.yaw.signum();
-                                            let zx = -xz;
-                                            let zz = xx;
+                                            let decode = moved.now.decode();
 
                                             Gd::<ClockerConnection>::from_instance_id(instance_id).cast::<ClockerConnection>().call_deferred(
                                                 "emit_signal".into(),
                                                 &[
                                                     Variant::from(SIGNAL_PLAYER_MOVED.into_godot()),
                                                     Variant::from(moved.player.into_godot()),
-                                                    Variant::from(moved.now.x.into_godot()),
-                                                    Variant::from(moved.now.y.into_godot()),
-                                                    Variant::from(moved.now.z.into_godot()),
-                                                    Variant::from(xx.into_godot()),
-                                                    Variant::from(xz.into_godot()),
-                                                    Variant::from(zx.into_godot()),
-                                                    Variant::from(zz.into_godot()),
-                                                ] ,
+                                                    // FIXME: マジ無駄コードだな……
+                                                    Variant::from(decode.0.into_godot()),
+                                                    Variant::from(decode.1.into_godot()),
+                                                    Variant::from(decode.2.into_godot()),
+                                                    Variant::from(decode.3.into_godot()),
+                                                    Variant::from(decode.4.into_godot()),
+                                                    Variant::from(decode.5.into_godot()),
+                                                    Variant::from(decode.6.into_godot()),
+                                                ],
                                             );
                                         }
                                         ContentHeader::Event(event_header) => {

@@ -210,9 +210,9 @@ async fn connection_init(
                             };
                             let (reply, reply_recv) = oneshot::channel();
                             instances_tx.send(InstancesControl::JoinInstance { id: payload.join_token, reply, control: control_tx.clone() }).await?;
-                            if let Some(auth) = reply_recv.await.map_err(TcpServerError::CannotReceiveFromInstanceManager)? {
+                            if let Some((auth, list)) = reply_recv.await.map_err(TcpServerError::CannotReceiveFromInstanceManager)? {
                                 login_status = Some(auth);
-                                request.serialize_and_send_reply(LoginResponse::Ok).await?;
+                                request.serialize_and_send_reply(LoginResponse::Ok(list)).await?;
                             } else {
                                 request.serialize_and_send_reply(LoginResponse::BadToken).await?;
                             }

@@ -30,6 +30,16 @@ pub struct StandingTransformEncoder {
     last_sent_at: Instant,
 }
 
+impl StandingTransform {
+    pub fn decode(&self) -> (f64, f64, f64, f64, f64, f64, f64) {
+        let xx = self.yaw.abs() - 1f64;
+        let xz = (1f64 - xx.powi(2)).sqrt() * self.yaw.signum();
+        let zx = -xz;
+        let zz = xx;
+        (self.x, self.y, self.z, xx, xz, zx, zz)
+    }
+}
+
 impl StandingTransformEncoder {
     pub fn new() -> Self {
         Self {

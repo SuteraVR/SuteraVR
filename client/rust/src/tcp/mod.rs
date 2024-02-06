@@ -248,6 +248,7 @@ impl ClockerConnection {
         let id = self.get_message_id();
         let logger = self.logger();
         let send = self.send_tx();
+        let instance_id = self.base().instance_id();
         tokio().bind().spawn("clocking_request", async move {
             info!(logger, "Joining instance with token: {}", join_token);
             let login_result = Self::create_oneshot_p(
@@ -269,6 +270,21 @@ impl ClockerConnection {
             .await?;
             let result = deserialize::<LoginResponse, LoginResponse>(&login_result.payload)?;
             info!(logger, "Instance Joined: {:?}", result);
+            if let LoginResponse::Ok(players) = result {
+                for player in players {
+                    Gd::<ClockerConnection>::from_instance_id(instance_id)
+                        .cast::<ClockerConnection>()
+                        .call_deferred(
+                            "emit_signal".into(),
+                            &[
+                                Variant::from(SIGNAL_UPDATE_PLAYER_BEING.into_godot()),
+                                Variant::from(player.into_godot()),
+                                Variant::from(true.into_godot()),
+                                Variant::from(true.into_godot()),
+                            ],
+                        );
+                }
+            }
             Ok::<(), TcpServerError>(())
         });
     }
