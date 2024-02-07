@@ -10,11 +10,16 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use crate::clocking::traits::ClockingFrame;
 
-use self::{oneshot_headers::OneshotHeader, sutera_status::SuteraStatus, traits::MessageAuthor};
+use self::{
+    event_headers::EventHeader, oneshot_headers::OneshotHeader, sutera_status::SuteraStatus,
+    traits::MessageAuthor,
+};
 
 pub mod buffer;
+pub mod event_headers;
 pub mod oneshot_headers;
 pub mod schema_snapshot;
+pub mod schemas;
 pub mod sutera_header;
 pub mod sutera_status;
 pub mod traits;
@@ -40,6 +45,7 @@ pub enum ClockingFrameUnit {
     SuteraHeader(sutera_header::SuteraHeader),
     SuteraStatus(sutera_status::SuteraStatus),
     OneshotHeaders(oneshot_headers::OneshotHeader),
+    EventHeader(event_headers::EventHeader),
     Content(Vec<u8>),
     Unfragmented(Vec<u8>),
 }
@@ -80,6 +86,9 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin + Send> ClockingConnection<W> {
                 status.write_frame(&mut self.stream, &()).await?;
             }
             ClockingFrameUnit::OneshotHeaders(header) => {
+                header.write_frame(&mut self.stream, &self.author).await?;
+            }
+            ClockingFrameUnit::EventHeader(header) => {
                 header.write_frame(&mut self.stream, &self.author).await?;
             }
             ClockingFrameUnit::Content(content) => {
@@ -218,6 +227,12 @@ impl<W: AsyncReadExt + AsyncWriteExt + Unpin + Send> ClockingConnection<W> {
                     self.context = ConnectionContext::WaitContent;
                     self.buffer.advance(buf.position() as usize);
                     return Ok(Some(ClockingFrameUnit::OneshotHeaders(header)));
+                }
+                buf.set_position(0);
+                if let Some(header) = EventHeader::parse_frame(&mut buf, &self.author) {
+                    self.context = ConnectionContext::WaitContent;
+                    self.buffer.advance(buf.position() as usize);
+                    return Ok(Some(ClockingFrameUnit::EventHeader(header)));
                 }
 
                 buf.set_position(0);

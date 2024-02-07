@@ -1,6 +1,6 @@
 use futures::Future;
 use godot::{engine::Engine, prelude::*};
-use suteravr_lib::info;
+use suteravr_lib::{debug, info};
 use tokio::{
     runtime::{Builder, Runtime},
     task::JoinHandle,
@@ -42,7 +42,7 @@ impl AsyncExecutorDriver {
         name: &str,
         f: impl Future<Output = T> + Send + 'static,
     ) -> JoinHandle<T> {
-        info!(self.logger, "Spawning task: {}", name);
+        debug!(self.logger, "Spawning task: {}", name);
         self.runtime.spawn(f)
     }
 }

@@ -2,7 +2,10 @@ use suteravr_lib::clocking::ClockingFramingError;
 use thiserror::Error;
 use tokio::sync::{mpsc::error::SendError, oneshot};
 
-use crate::tcp::requests::{Request, Response};
+use crate::{
+    instance::{manager::InstancesControl, InstanceControl, PlayerControl},
+    tcp::requests::{Request, Response},
+};
 
 #[derive(Debug, Error)]
 #[error(transparent)]
@@ -12,6 +15,12 @@ pub enum ClockingServerError {
     IoError(#[from] std::io::Error),
 
     TcpServerError(#[from] TcpServerError),
+    InstanceError(#[from] InstanceError),
+
+    CannotSendShutdown(anyhow::Error),
+
+    #[error("The oneshot reply cannot be sent.")]
+    CannotSendReply,
 }
 
 #[derive(Debug, Error)]
@@ -36,4 +45,16 @@ pub enum TcpServerError {
     SpawnError(std::io::Error),
     #[error(transparent)]
     JoinError(#[from] tokio::task::JoinError),
+    #[error(transparent)]
+    CannotSendToInstanceManager(#[from] SendError<InstancesControl>),
+    #[error(transparent)]
+    CannotSendToInstance(#[from] SendError<InstanceControl>),
+    #[error(transparent)]
+    CannotReceiveFromInstanceManager(oneshot::error::RecvError),
+}
+
+#[derive(Debug, Error)]
+pub enum InstanceError {
+    #[error(transparent)]
+    CannotSendToPlayer(#[from] SendError<PlayerControl>),
 }

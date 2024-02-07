@@ -16,6 +16,10 @@ use tokio::{
 use tokio_rustls::rustls::ServerConfig;
 
 use crate::{
+    instance::{
+        manager::{launch_instance_manager, InstancesControl},
+        InstanceControl,
+    },
     shutdown::ShutdownReason,
     signal::listen_signal,
     tcp::{certs::SingleCerts, tcp_server, TcpServerSignal},
@@ -23,6 +27,7 @@ use crate::{
 
 mod consts;
 pub mod errors;
+pub mod instance;
 mod shutdown;
 mod signal;
 mod tcp;
@@ -52,7 +57,7 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
     )
     .map_err(|e| {
         error!("Failed to load certifications!: {}", e);
-        error!("Ensure that ./server.crt and ./private.pem exists.");
+        error!("Ensure that ./server.crt and ./server.key exists.");
         info!("Hint: you can generate your own by certgen.sh");
         e
     })?;
@@ -64,17 +69,39 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
     let addr = SocketAddr::from(([127, 0, 0, 1], *consts::PORT));
 
     let (tcp_tx, tcp_rx) = mpsc::channel::<TcpServerSignal>(32);
+    let (instances_tx, instances_rx) = mpsc::channel::<InstancesControl>(32);
     let (shutdown_tx, shutdown) = oneshot::channel::<ShutdownReason>();
 
     let server = task::Builder::new()
         .name("TCP server")
-        .spawn(tcp_server(cfg, addr, tcp_rx))
+        .spawn(tcp_server(cfg, addr, tcp_rx, instances_tx.clone()))
         .map_err(ClockingServerError::SpawnError)?;
 
     let signal = task::Builder::new()
         .name("Signal listener")
         .spawn(listen_signal(shutdown_tx))
         .map_err(ClockingServerError::SpawnError)?;
+
+    let instance_manager = task::Builder::new()
+        .name("Instance manager")
+        .spawn(launch_instance_manager(instances_rx))
+        .map_err(ClockingServerError::SpawnError)?;
+
+    // Pre-run ------
+
+    let (instance_1_tx, instance_1_rx) =
+        oneshot::channel::<Option<mpsc::Sender<InstanceControl>>>();
+    instances_tx
+        .send(InstancesControl::SpawnNew {
+            id: 0x01,
+            world: 0x01,
+            reply: instance_1_tx,
+        })
+        .await
+        .unwrap();
+    let _instance_1_control = instance_1_rx.await.unwrap();
+
+    // Shutdown -----
 
     let reason = match shutdown.await {
         Ok(reason) => {
@@ -87,13 +114,27 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
         }
     };
 
-    let _ = tcp_tx
+    tcp_tx
         .send(TcpServerSignal::Shutdown(reason))
         .await
-        .map_err(|_| error!("Failed to send shutdown signal to TCP server"));
+        .map_err(|e| {
+            error!("Failed to send shutdown signal to TCP server");
+            ClockingServerError::CannotSendShutdown(e.into())
+        })?;
+
+    instances_tx
+        .send(InstancesControl::Shutdown(reason))
+        .await
+        .map_err(|e| {
+            error!("Failed to send shutdown signal to Instances manager");
+            ClockingServerError::CannotSendShutdown(e.into())
+        })?;
 
     server.await??;
+    instance_manager.await??;
     signal.await??;
+
+    info!("Shutdown completed successfully. Bye!");
 
     Ok(())
 }

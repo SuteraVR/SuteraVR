@@ -1,10 +1,13 @@
+use alkahest::{Formula, Serialize};
 use derivative::Derivative;
 use suteravr_lib::{
     clocking::{
+        event_headers::{EventRequest, EventResponse},
         oneshot_headers::{OneshotHeader, OneshotStep},
         sutera_header::SuteraHeader,
-        sutera_status::SuteraStatus,
+        sutera_status::{SuteraStatus, SuteraStatusError},
     },
+    util::serialize_to_new_vec,
     SCHEMA_VERSION,
 };
 use tokio::sync::mpsc;
@@ -13,10 +16,12 @@ use crate::errors::TcpServerError;
 
 pub enum Request {
     Oneshot(OneshotRequest),
+    Event(EventRequest),
 }
 
 pub enum Response {
     Oneshot(OneshotResponse),
+    Event(EventResponse),
 }
 
 #[derive(Derivative)]
@@ -55,6 +60,14 @@ impl OneshotRequest {
     }
 
     #[inline]
+    pub async fn serialize_and_send_reply<T: Formula + Serialize<T>>(
+        self,
+        payload: T,
+    ) -> Result<(), TcpServerError> {
+        self.send_reply(serialize_to_new_vec(payload)).await
+    }
+
+    #[inline]
     pub async fn send_reply(self, payload: Vec<u8>) -> Result<(), TcpServerError> {
         let response = self.to_reply(payload);
         self.reply
@@ -72,6 +85,17 @@ impl OneshotRequest {
             .await
             .map_err(TcpServerError::CannotSendResponse)?;
         Ok(())
+    }
+
+    #[inline]
+    pub async fn send_reply_bad_request(self) -> Result<(), TcpServerError> {
+        self.send_reply_failed(SuteraStatus::Error(SuteraStatusError::BadRequest))
+            .await
+    }
+    #[inline]
+    pub async fn send_reply_unauthorized(self) -> Result<(), TcpServerError> {
+        self.send_reply_failed(SuteraStatus::Error(SuteraStatusError::Unauthorized))
+            .await
     }
 
     #[inline]

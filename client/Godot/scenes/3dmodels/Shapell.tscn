@@ -1,9 +1,11 @@
+
 [gd_scene load_steps=5 format=3 uid="uid://bm6yri2k540dt"]
 
 [ext_resource type="PackedScene" uid="uid://cgdn6uudh6bjr" path="res://scenes/3dmodels/Shapell.glb" id="1_2ns3s"]
 [ext_resource type="Script" path="res://HandIK.gd" id="2_3dw36"]
 [ext_resource type="Script" path="res://scenes/3dmodels/step_ray.gd" id="2_fdy7v"]
 [ext_resource type="Script" path="res://scenes/3dmodels/ik_target.gd" id="3_yrh3j"]
+
 
 [node name="Shapell" instance=ExtResource("1_2ns3s")]
 
@@ -21,6 +23,7 @@ tip_bone = &"Hand.R"
 use_magnet = true
 target_node = NodePath("../../RightMarker3D")
 script = ExtResource("2_3dw36")
+
 
 [node name="LeftHand" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="2"]
 process_priority = 1

@@ -1,7 +1,12 @@
-[gd_scene load_steps=15 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=28 format=3 uid="uid://ce61dcahc8n1t"]
 
-[ext_resource type="PackedScene" uid="uid://w4x133wmjuv" path="res://scenes/Player.tscn" id="1_bg4ug"]
+[ext_resource type="PackedScene" uid="uid://dl3j05ogv5103" path="res://character_body_3d.tscn" id="1_k7dhr"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
+[ext_resource type="Script" path="res://move_and_pov.gd" id="2_7xvxd"]
+[ext_resource type="Script" path="res://scenes/join_instance.gd" id="3_sapx3"]
+[ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
+[ext_resource type="FontFile" uid="uid://cqol00xok5gdi" path="res://font/mplus-1c-regular.ttf" id="10_igx2x"]
+[ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
@@ -32,7 +37,7 @@ func _ready():
 size = Vector2(1.6, 0.9)
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_tqnxw"]
-viewport_path = NodePath("SubViewport")
+viewport_path = NodePath("UI")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_verhv"]
 resource_local_to_scene = true
@@ -61,10 +66,37 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5hww7"]
+bg_color = Color(0.584314, 0.513726, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_mtb2j"]
+line_spacing = 1.635
+font = ExtResource("10_igx2x")
+font_size = 48
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cbvqx"]
+bg_color = Color(0.211765, 0.54902, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yb0jc"]
+bg_color = Color(0, 0.0745098, 0.560784, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jycfp"]
+bg_color = Color(0.423529, 0.537255, 0.964706, 1)
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_uipkr"]
+viewport_path = NodePath("Nameplate")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pywo7"]
+resource_local_to_scene = true
+albedo_texture = SubResource("ViewportTexture_uipkr")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_1vcv5"]
+
 [node name="Node3D" type="Node3D"]
 script = SubResource("GDScript_qak7f")
 
-[node name="XROrigin3D" parent="." instance=ExtResource("1_bg4ug")]
+[node name="CharacterBody3D" parent="." instance=ExtResource("1_k7dhr")]
+script = ExtResource("2_7xvxd")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jscir")
@@ -86,23 +118,23 @@ transform = Transform3D(1.90346, 0, 0, 0, 1.90346, 0, 0, 0, 1.90346, 0.0279732, 
 mesh = SubResource("QuadMesh_qh65e")
 surface_material_override/0 = SubResource("StandardMaterial3D_verhv")
 
-[node name="SubViewport" type="SubViewport" parent="."]
+[node name="UI" type="SubViewport" parent="."]
 size = Vector2i(1920, 1080)
 
-[node name="Control" type="Control" parent="SubViewport"]
+[node name="Control" type="Control" parent="UI"]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 1920.0
 offset_bottom = 1080.0
 theme = SubResource("Theme_dy827")
 
-[node name="Panel" type="Panel" parent="SubViewport/Control"]
+[node name="Panel" type="Panel" parent="UI/Control"]
 layout_mode = 0
 offset_right = 1920.0
 offset_bottom = 1080.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_e3lws")
 
-[node name="PlayerInfoBox" type="Panel" parent="SubViewport/Control"]
+[node name="PlayerInfoBox" type="Panel" parent="UI/Control"]
 layout_mode = 0
 offset_left = 24.0
 offset_top = 24.0
@@ -110,7 +142,7 @@ offset_right = 686.0
 offset_bottom = 221.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_3xtot")
 
-[node name="Title" type="Label" parent="SubViewport/Control/PlayerInfoBox"]
+[node name="Title" type="Label" parent="UI/Control/PlayerInfoBox"]
 layout_mode = 0
 offset_left = 206.0
 offset_top = 41.0
@@ -120,7 +152,7 @@ theme_override_font_sizes/font_size = 87
 text = "Sutera VR"
 vertical_alignment = 1
 
-[node name="AvatarFrame" type="Panel" parent="SubViewport/Control/PlayerInfoBox"]
+[node name="AvatarFrame" type="Panel" parent="UI/Control/PlayerInfoBox"]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
@@ -133,7 +165,7 @@ grow_vertical = 2
 theme = SubResource("Theme_peokl")
 theme_override_styles/panel = SubResource("StyleBoxFlat_6lapw")
 
-[node name="Avatar" type="TextureRect" parent="SubViewport/Control/PlayerInfoBox/AvatarFrame"]
+[node name="Avatar" type="TextureRect" parent="UI/Control/PlayerInfoBox/AvatarFrame"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -149,8 +181,104 @@ grow_vertical = 2
 texture = ExtResource("1_wjwcn")
 expand_mode = 1
 
-[node name="ClockerConnection" type="ClockerConnection" parent="."]
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1154.0
+offset_bottom = 649.0
+script = ExtResource("10_7j42d")
 
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(-0.0922315, 0, 0.995738, 0, 1, 0, -0.995738, 0, -0.0922315, 3.65724, 1.02176, -0.251623)
-current = true
+[node name="Panel" type="Panel" parent="Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -100.0
+offset_right = 500.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_5hww7")
+
+[node name="Label" type="Label" parent="Control/Panel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 16.0
+offset_right = 522.0
+offset_bottom = 130.0
+text = "テキストチャット"
+label_settings = SubResource("LabelSettings_mtb2j")
+
+[node name="LineEdit" type="LineEdit" parent="Control/Panel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 98.0
+offset_right = 980.0
+offset_bottom = 188.0
+theme_override_fonts/font = ExtResource("10_igx2x")
+theme_override_font_sizes/font_size = 41
+placeholder_text = "ここに文章を入力してね"
+language = "ja_JP"
+script = ExtResource("12_xih1r")
+
+[node name="Nameplate" type="SubViewport" parent="."]
+size = Vector2i(900, 400)
+
+[node name="Panel" type="Panel" parent="Nameplate"]
+offset_right = 900.0
+offset_bottom = 200.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_cbvqx")
+
+[node name="Panel" type="Panel" parent="Nameplate/Panel"]
+layout_mode = 0
+offset_top = 200.0
+offset_right = 900.0
+offset_bottom = 400.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_yb0jc")
+
+[node name="Panel" type="Panel" parent="Nameplate/Panel/Panel"]
+layout_mode = 0
+offset_top = -10.0
+offset_right = 900.0
+offset_bottom = 10.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_jycfp")
+
+[node name="Label" type="Label" parent="Nameplate/Panel/Panel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_fonts/font = ExtResource("10_igx2x")
+theme_override_font_sizes/font_size = 134
+text = "Comment"
+language = "ja_JP"
+
+[node name="Label" type="Label" parent="Nameplate/Panel"]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 3.0
+offset_right = 344.0
+offset_bottom = 191.0
+theme_override_colors/font_color = Color(1, 1, 0, 1)
+theme_override_fonts/font = ExtResource("10_igx2x")
+theme_override_font_sizes/font_size = 134
+text = "Name"
+language = "ja_JP"
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.382, 0, 0, 0, -1.85773e-08, -0.17, 0, 0.425, -7.43094e-09, 0, 1.60353, 0.0421326)
+material_override = SubResource("StandardMaterial3D_pywo7")
+mesh = SubResource("PlaneMesh_1vcv5")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.382, -3.71547e-08, 6.49633e-16, 0, -1.85773e-08, -0.17, 3.33955e-08, -0.425, 7.43094e-09, 0, 1.60353, 0.0376808)
+material_override = SubResource("StandardMaterial3D_pywo7")
+mesh = SubResource("PlaneMesh_1vcv5")
+
+[node name="Clocker" type="ClockerConnection" parent="."]
+unique_name_in_owner = true
+
+[node name="InstanceAnchor" type="Node" parent="Clocker"]
+script = ExtResource("3_sapx3")

@@ -27,6 +27,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "alkahest"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3afb453d344e42ba592019bb80778e8c0a4976c4f4986e0dba6a0ae7d5a9616"
+dependencies = [
+ "alkahest-proc",
+]
+
+[[package]]
+name = "alkahest-proc"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bdf15b0c04be1356fbef6d2733d5778156720b1576f52c1389bad04a5726a3f4"
+dependencies = [
+ "proc-easy",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "alloc-no-stdlib"
 version = "2.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -875,6 +896,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
+name = "proc-easy"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea59c637cd0e6b71ae18e589854e9de9b7cb17fefdbf2047e42bd38e24285b19"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1088,6 +1120,7 @@ dependencies = [
 name = "suteravr-lib"
 version = "0.1.0"
 dependencies = [
+ "alkahest",
  "bytes",
  "enum-map",
  "env_logger 0.11.1",
