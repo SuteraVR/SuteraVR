@@ -1,0 +1,87 @@
+[gd_scene load_steps=17 format=3 uid="uid://dl3j05ogv5103"]
+
+[ext_resource type="PackedScene" uid="uid://ct7lvk0u476id" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_g6opq"]
+[ext_resource type="PackedScene" uid="uid://njx823gyk04n" path="res://addons/godot-xr-tools/hands/scenes/highpoly/left_hand.tscn" id="2_cdgsw"]
+[ext_resource type="PackedScene" uid="uid://bl2nuu3qhlb5k" path="res://addons/godot-xr-tools/functions/movement_direct.tscn" id="3_ls3qk"]
+[ext_resource type="PackedScene" uid="uid://raeeicvvindd" path="res://addons/godot-xr-tools/hands/scenes/highpoly/right_hand.tscn" id="4_hj2c2"]
+[ext_resource type="PackedScene" uid="uid://b6bk2pj8vbj28" path="res://addons/godot-xr-tools/functions/movement_turn.tscn" id="5_leniv"]
+[ext_resource type="PackedScene" uid="uid://c2q5phg8w08o" path="res://addons/godot-xr-tools/functions/movement_jump.tscn" id="6_8spm5"]
+[ext_resource type="PackedScene" uid="uid://diyu06cw06syv" path="res://addons/godot-xr-tools/player/player_body.tscn" id="7_y60sy"]
+[ext_resource type="PackedScene" uid="uid://bm6yri2k540dt" path="res://scenes/3dmodels/Shapell.tscn" id="8_3dlk8"]
+[ext_resource type="Script" path="res://scenes/keyboard_jump.gd" id="8_poryf"]
+[ext_resource type="Script" path="res://scenes/keyboard_direct.gd" id="9_y2nx7"]
+[ext_resource type="Script" path="res://scenes/mouse_capture.gd" id="10_rl716"]
+[ext_resource type="Script" path="res://scenes/looking_around.gd" id="11_u7dw0"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_qh65e"]
+size = Vector2(1.6, 0.9)
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_tqnxw"]
+viewport_path = NodePath("UI")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_verhv"]
+resource_local_to_scene = true
+albedo_texture = SubResource("ViewportTexture_tqnxw")
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_217kt"]
+radius = 0.2
+height = 1.4
+
+[node name="CharacterBody3D" type="CharacterBody3D"]
+
+[node name="XROrigin3D" type="XROrigin3D" parent="."]
+
+[node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.19056, 0)
+
+[node name="VRCommonShaderCache" parent="XROrigin3D/XRCamera3D" instance=ExtResource("1_g6opq")]
+
+[node name="LeftHand" type="XRController3D" parent="XROrigin3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5)
+tracker = &"left_hand"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="XROrigin3D/LeftHand"]
+transform = Transform3D(0.16146, 0, 0, 0, 0.16146, 0, 0, 0, 0.16146, 0.148207, 0.054749, -0.0200708)
+mesh = SubResource("QuadMesh_qh65e")
+skeleton = NodePath("../../../../MeshInstance3D")
+surface_material_override/0 = SubResource("StandardMaterial3D_verhv")
+
+[node name="LeftHand" parent="XROrigin3D/LeftHand" instance=ExtResource("2_cdgsw")]
+
+[node name="MovementDirect" parent="XROrigin3D/LeftHand" instance=ExtResource("3_ls3qk")]
+strafe = true
+
+[node name="RightHand" type="XRController3D" parent="XROrigin3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1, -0.5)
+tracker = &"right_hand"
+
+[node name="RightHand" parent="XROrigin3D/RightHand" instance=ExtResource("4_hj2c2")]
+
+[node name="MovementTurn" parent="XROrigin3D/RightHand" instance=ExtResource("5_leniv")]
+turn_mode = 2
+
+[node name="MovementJump" parent="XROrigin3D/RightHand" instance=ExtResource("6_8spm5")]
+
+[node name="Keyboard" type="XRController3D" parent="XROrigin3D"]
+
+[node name="KeyboardJump" parent="XROrigin3D/Keyboard" instance=ExtResource("6_8spm5")]
+script = ExtResource("8_poryf")
+
+[node name="KeyboardDirect" parent="XROrigin3D/Keyboard" instance=ExtResource("3_ls3qk")]
+script = ExtResource("9_y2nx7")
+strafe = true
+
+[node name="MouseCapture" type="Node" parent="XROrigin3D/Keyboard"]
+script = ExtResource("10_rl716")
+
+[node name="LookingAround" parent="XROrigin3D/Keyboard" instance=ExtResource("5_leniv")]
+script = ExtResource("11_u7dw0")
+
+[node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("7_y60sy")]
+
+[node name="Shapell" parent="XROrigin3D/PlayerBody" instance=ExtResource("8_3dlk8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.00168823)
+
+[node name="_CollisionShape3D_20927" type="CollisionShape3D" parent="XROrigin3D/PlayerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("CapsuleShape3D_217kt")
