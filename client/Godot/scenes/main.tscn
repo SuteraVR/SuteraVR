@@ -1,9 +1,10 @@
-[gd_scene load_steps=28 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=29 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" uid="uid://dl3j05ogv5103" path="res://character_body_3d.tscn" id="1_k7dhr"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="Script" path="res://move_and_pov.gd" id="2_7xvxd"]
-[ext_resource type="Script" path="res://scenes/join_instance.gd" id="3_sapx3"]
+[ext_resource type="Script" path="res://scenes/instance_anchor.gd" id="3_sapx3"]
+[ext_resource type="LightmapGIData" uid="uid://bmvustwyuhsyb" path="res://scenes/main.lmbake" id="8_40yc0"]
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
 [ext_resource type="FontFile" uid="uid://cqol00xok5gdi" path="res://font/mplus-1c-regular.ttf" id="10_igx2x"]
 [ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
@@ -30,10 +31,14 @@ func _ready():
 [sub_resource type="Environment" id="Environment_jscir"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_farqr"]
+lightmap_size_hint = Vector2i(12, 12)
+add_uv2 = true
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jgrjk"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_qh65e"]
+lightmap_size_hint = Vector2i(10, 6)
+add_uv2 = true
 size = Vector2(1.6, 0.9)
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_tqnxw"]
@@ -91,6 +96,8 @@ resource_local_to_scene = true
 albedo_texture = SubResource("ViewportTexture_uipkr")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_1vcv5"]
+lightmap_size_hint = Vector2i(12, 12)
+add_uv2 = true
 
 [node name="Node3D" type="Node3D"]
 script = SubResource("GDScript_qak7f")
@@ -101,7 +108,8 @@ script = ExtResource("2_7xvxd")
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jscir")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="LightmapGI" type="LightmapGI" parent="."]
+light_data = ExtResource("8_40yc0")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
 
@@ -115,6 +123,9 @@ shape = SubResource("BoxShape3D_jgrjk")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1.90346, 0, 0, 0, 1.90346, 0, 0, 0, 1.90346, 0.0279732, 1.31003, -1.98213)
+cast_shadow = 0
+ignore_occlusion_culling = true
+gi_mode = 2
 mesh = SubResource("QuadMesh_qh65e")
 surface_material_override/0 = SubResource("StandardMaterial3D_verhv")
 
@@ -270,15 +281,48 @@ language = "ja_JP"
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
 transform = Transform3D(0.382, 0, 0, 0, -1.85773e-08, -0.17, 0, 0.425, -7.43094e-09, 0, 1.60353, 0.0421326)
 material_override = SubResource("StandardMaterial3D_pywo7")
+cast_shadow = 0
 mesh = SubResource("PlaneMesh_1vcv5")
 
 [node name="MeshInstance3D3" type="MeshInstance3D" parent="."]
 transform = Transform3D(-0.382, -3.71547e-08, 6.49633e-16, 0, -1.85773e-08, -0.17, 3.33955e-08, -0.425, 7.43094e-09, 0, 1.60353, 0.0376808)
 material_override = SubResource("StandardMaterial3D_pywo7")
+cast_shadow = 0
 mesh = SubResource("PlaneMesh_1vcv5")
 
 [node name="Clocker" type="ClockerConnection" parent="."]
 unique_name_in_owner = true
 
 [node name="InstanceAnchor" type="Node" parent="Clocker"]
+
 script = ExtResource("3_sapx3")
+
+[node name="Node" type="Node" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Node"]
+transform = Transform3D(-0.879574, 0.341467, -0.331286, -2.4559e-08, 0.696326, 0.717725, 0.475762, 0.631292, -0.61247, -3.69723, 3.0358, -2.76411)
+light_bake_mode = 1
+
+[node name="OmniLight3D" type="OmniLight3D" parent="Node"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0437, 3.4906, -1.07123)
+light_indirect_energy = 3.854
+light_volumetric_fog_energy = 0.0
+light_bake_mode = 1
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="Node"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.70939, 3.4906, -1.07123)
+light_indirect_energy = 3.854
+light_volumetric_fog_energy = 0.0
+light_bake_mode = 1
+
+[node name="OmniLight3D3" type="OmniLight3D" parent="Node"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.06723, 3.4906, 1.75023)
+light_indirect_energy = 3.854
+light_volumetric_fog_energy = 0.0
+light_bake_mode = 1
+
+[node name="OmniLight3D4" type="OmniLight3D" parent="Node"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.68586, 3.4906, 1.75023)
+light_indirect_energy = 3.854
+light_volumetric_fog_energy = 0.0
+light_bake_mode = 1

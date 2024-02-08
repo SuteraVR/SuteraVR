@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://cwv3nweeihvex"]
+
+[ext_resource type="FontFile" uid="uid://cqol00xok5gdi" path="res://font/mplus-1c-regular.ttf" id="1_onmlx"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_lnjc3"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Cube" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.4, 0, 0, 0, 1.2, 0, 0, 0, 0.4, 0, 0.6, -0.158034)
+gi_mode = 2
+mesh = SubResource("BoxMesh_lnjc3")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(-0.8, 0, -1.20797e-07, 0, 0.8, 0, 1.20797e-07, 0, -0.8, 0, 1.001, -0.374034)
+text = "顔"
+font = ExtResource("1_onmlx")
+font_size = 64

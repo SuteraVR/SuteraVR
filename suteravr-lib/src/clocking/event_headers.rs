@@ -14,6 +14,10 @@ use super::traits::{ClockingFrame, MessageAuthor};
 #[derive(Enum, PartialEq, Debug, Clone, Copy)]
 #[allow(non_camel_case_types)]
 pub enum EventTypes {
+    Instance_PlayerJoined_Push,
+    Instance_PlayerLeft_Push,
+    Instance_PubPlayerMove_Pull,
+    Instance_PushPlayerMove_Push,
     TextChat_ReceiveChatMessage_Push,
 }
 
@@ -26,12 +30,20 @@ pub enum EventDirection {
 static EVENT_TYPES_MAP: Lazy<EnumMap<EventTypes, [u8; EventHeader::MESSAGE_TYPE_DISTINCTOR_SIZE]>> =
     Lazy::new(|| {
         enum_map! {
+            EventTypes::Instance_PlayerJoined_Push       => [0x00, 0x02, 0x00, 0x01],
+            EventTypes::Instance_PlayerLeft_Push         => [0x00, 0x02, 0x00, 0x02],
+            EventTypes::Instance_PubPlayerMove_Pull      => [0x00, 0x02, 0x01, 0x01],
+            EventTypes::Instance_PushPlayerMove_Push     => [0x00, 0x02, 0x01, 0x02],
             EventTypes::TextChat_ReceiveChatMessage_Push => [0x00, 0x03, 0x00, 0x01],
         }
     });
 
 pub static EVENT_TYPES_DIRECTION_MAP: Lazy<EnumMap<EventTypes, EventDirection>> = Lazy::new(|| {
     enum_map! {
+        EventTypes::Instance_PlayerJoined_Push       => EventDirection::Push,
+        EventTypes::Instance_PlayerLeft_Push         => EventDirection::Push,
+        EventTypes::Instance_PubPlayerMove_Pull      => EventDirection::Pull,
+        EventTypes::Instance_PushPlayerMove_Push     => EventDirection::Push,
         EventTypes::TextChat_ReceiveChatMessage_Push => EventDirection::Push,
     }
 });
