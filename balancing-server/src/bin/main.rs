@@ -1,10 +1,10 @@
 use axum::{
     body::Body,
     extract::Request,
+    http::header::USER_AGENT,
     middleware::Next,
     response::{Json, Response},
     routing::get,
-    http::header::USER_AGENT,
     Router,
 };
 use tower::ServiceBuilder;
@@ -54,7 +54,7 @@ async fn logger(request: Request, next: Next) -> Response {
         Some(u) => u.to_str().unwrap(),
         None => "(Unknown Useragent)",
     };
-    
+
     let forwarded = match request.headers().get("X-Forwarded-For") {
         Some(u) => u.to_str().unwrap(),
         None => "",
@@ -68,11 +68,7 @@ async fn logger(request: Request, next: Next) -> Response {
         forwarded,
     );
     let response = next.run(request).await;
-    log::info!(
-        "{} {}",
-        log_str,
-        response.status().as_str(),
-    );
+    log::info!("{} {}", log_str, response.status().as_str(),);
     response
 }
 
