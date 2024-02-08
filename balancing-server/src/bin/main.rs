@@ -4,6 +4,7 @@ use axum::{
     middleware::Next,
     response::{Json, Response},
     routing::get,
+    http::header::USER_AGENT,
     Router,
 };
 use tower::ServiceBuilder;
@@ -49,14 +50,29 @@ async fn schemaversion_checker(request: Request, next: Next) -> Result<Response,
 }
 
 async fn logger(request: Request, next: Next) -> Response {
+    let user_agent = match request.headers().get(USER_AGENT) {
+        Some(u) => u.to_str().unwrap(),
+        None => "(Unknown Useragent)",
+    };
+    
+    let forwarded = match request.headers().get("X-Forwarded-For") {
+        Some(u) => u.to_str().unwrap(),
+        None => "",
+    };
     let log_str = format!(
-        "{} {} {:?}",
+        "{} {} {:?} {} {}",
         request.method(),
         request.uri(),
-        request.version()
+        request.version(),
+        user_agent,
+        forwarded,
     );
     let response = next.run(request).await;
-    log::info!("{} {}", log_str, response.status().as_str());
+    log::info!(
+        "{} {}",
+        log_str,
+        response.status().as_str(),
+    );
     response
 }
 
