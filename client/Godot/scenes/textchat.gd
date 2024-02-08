@@ -1,7 +1,7 @@
 extends LineEdit
-var CLOCKER: ClockerConnection
+@onready var CLOCKER: ClockerConnection = %Clocker
+
 func _ready():
-	CLOCKER = %Clocker
 	await CLOCKER.ready
 	CLOCKER.connect(CLOCKER.signal_new_textchat_message(), _on_new_textchat_message)
 

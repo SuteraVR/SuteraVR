@@ -9,12 +9,12 @@ use super::requests::{Request, Response};
 pub enum TcpServerError {
     #[error("ClockingConnection is not initialized or already closed.")]
     ConnectionNotFound,
-    #[error("The request cannot be sent.")]
-    CannotSendRequest(SendError<Request>),
-    #[error("The oneshot reply cannot be sent.")]
-    CannotSendOneshotReply,
     #[error("The response cannot be sent.")]
     CannotSendResponse(SendError<Response>),
+    #[error("The oneshot reply cannot be sent.")]
+    CannotSendOneshotReply,
+    #[error("The request cannot be sent.")]
+    CannotSendRequest(SendError<Request>),
     #[error(transparent)]
     ConnectingError(std::io::Error),
     #[error(transparent)]

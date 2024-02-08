@@ -7,11 +7,18 @@ use alkahest::deserialize;
 use hickory_resolver::TokioAsyncResolver;
 use std::sync::{atomic::AtomicU64, Arc, Mutex};
 use suteravr_lib::{
-    clocking::schemas::oneshot::{
-        chat_entry::SendChatMessageRequest,
-        login::{LoginRequest, LoginResponse},
+    clocking::{
+        event_headers::{EventDirection, EventHeader, EventTypes},
+        schemas::{
+            event::player_move::PubPlayerMove,
+            oneshot::{
+                chat_entry::SendChatMessageRequest,
+                login::{LoginRequest, LoginResponse},
+            },
+        },
     },
     debug, error,
+    messaging::player::{StandingTransform, StandingTransformEncoder},
     util::serialize_to_new_vec,
 };
 
@@ -35,7 +42,10 @@ use tokio_rustls::rustls::ClientConfig;
 use crate::{
     async_driver::tokio,
     logger::GodotLogger,
-    signal_names::{SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE},
+    signal_names::{
+        SIGNAL_CONNECTION_ESTABLISHED, SIGNAL_NEW_TEXTCHAT_MESSAGE, SIGNAL_PLAYER_MOVED,
+        SIGNAL_UPDATE_PLAYER_BEING,
+    },
     tcp::{
         allow_unknown_cert::AllowUnknownCertVerifier,
         error::TcpServerError,
@@ -45,7 +55,7 @@ use crate::{
 
 use self::{
     conenction::Connection,
-    requests::{Request, Response},
+    requests::{EventMessage, Request, Response},
 };
 
 #[derive(Debug)]
@@ -57,6 +67,7 @@ pub enum ShutdownReason {
 #[class(base=Node)]
 struct ClockerConnection {
     base: Base<Node>,
+    pos: StandingTransformEncoder,
     logger: GodotLogger,
     connection: Arc<Mutex<Option<Connection>>>,
     message_id_dispatch: AtomicU64,
@@ -89,6 +100,14 @@ impl ClockerConnection {
     #[func]
     fn signal_connection_established(&mut self) -> String {
         SIGNAL_CONNECTION_ESTABLISHED.to_string()
+    }
+    #[func]
+    fn signal_update_player_being(&mut self) -> String {
+        SIGNAL_UPDATE_PLAYER_BEING.to_string()
+    }
+    #[func]
+    fn signal_player_moved(&mut self) -> String {
+        SIGNAL_PLAYER_MOVED.to_string()
     }
 
     #[func]
@@ -171,12 +190,14 @@ impl ClockerConnection {
     fn oneshot_send_chat_message(&mut self, content: String) {
         let id = self.get_message_id();
         let logger = self.logger();
-        let send = self.send_tx();
+        let Some(send) = self.send_tx() else {
+            return;
+        };
         tokio().bind().spawn("clocking_request", async move {
             let login_result = Self::create_oneshot_p(
                 logger.clone(),
                 send,
-                OneshotResponse {
+                OneshotRequest {
                     sutera_header: SuteraHeader {
                         version: SCHEMA_VERSION,
                     },
@@ -197,16 +218,49 @@ impl ClockerConnection {
     }
 
     #[func]
+    fn report_player_transform(&mut self, x: f64, y: f64, z: f64, xx: f64, xz: f64) {
+        self.pos.push(StandingTransform {
+            x,
+            y,
+            z,
+            yaw: (xx + 1f64) * xz.signum(),
+        });
+        if let Some(now) = self.pos.payload() {
+            let Some(send) = self.send_tx() else {
+                return;
+            };
+            tokio().bind().spawn("report_player_pos", async move {
+                send.send(Request::Event(EventMessage {
+                    sutera_header: SuteraHeader {
+                        version: SCHEMA_VERSION,
+                    },
+                    event_header: EventHeader {
+                        direction: EventDirection::Pull,
+                        message_type: EventTypes::Instance_PubPlayerMove_Pull,
+                    },
+                    payload: serialize_to_new_vec(PubPlayerMove { now }),
+                }))
+                .await
+                .map_err(TcpServerError::CannotSendRequest)?;
+                Ok::<(), TcpServerError>(())
+            });
+        }
+    }
+
+    #[func]
     fn join_instance(&mut self, join_token: u64) {
         let id = self.get_message_id();
         let logger = self.logger();
-        let send = self.send_tx();
+        let Some(send) = self.send_tx() else {
+            return;
+        };
+        let instance_id = self.base().instance_id();
         tokio().bind().spawn("clocking_request", async move {
             info!(logger, "Joining instance with token: {}", join_token);
             let login_result = Self::create_oneshot_p(
                 logger.clone(),
                 send,
-                OneshotResponse {
+                OneshotRequest {
                     sutera_header: SuteraHeader {
                         version: SCHEMA_VERSION,
                     },
@@ -222,20 +276,28 @@ impl ClockerConnection {
             .await?;
             let result = deserialize::<LoginResponse, LoginResponse>(&login_result.payload)?;
             info!(logger, "Instance Joined: {:?}", result);
+            if let LoginResponse::Ok(players) = result {
+                for player in players {
+                    Gd::<ClockerConnection>::from_instance_id(instance_id)
+                        .cast::<ClockerConnection>()
+                        .call_deferred(
+                            "emit_signal".into(),
+                            &[
+                                Variant::from(SIGNAL_UPDATE_PLAYER_BEING.into_godot()),
+                                Variant::from(player.into_godot()),
+                                Variant::from(true.into_godot()),
+                                Variant::from(true.into_godot()),
+                            ],
+                        );
+                }
+            }
             Ok::<(), TcpServerError>(())
         });
     }
 }
 impl ClockerConnection {
-    fn send_tx(&self) -> mpsc::Sender<Response> {
-        return self
-            .connection
-            .lock()
-            .unwrap()
-            .as_ref()
-            .unwrap()
-            .send_tx
-            .clone();
+    fn send_tx(&self) -> Option<mpsc::Sender<Request>> {
+        Some(self.connection.lock().ok()?.as_ref()?.send_tx.clone())
     }
 
     fn connect<T: Into<String> + Send + 'static>(
@@ -252,19 +314,16 @@ impl ClockerConnection {
 
     async fn create_oneshot_p(
         logger: GodotLogger,
-        send: mpsc::Sender<Response>,
-        response: OneshotResponse,
-    ) -> Result<OneshotRequest, TcpServerError> {
+        send: mpsc::Sender<Request>,
+        response: OneshotRequest,
+    ) -> Result<OneshotResponse, TcpServerError> {
         let message_id = response.oneshot_header.message_id;
-        let (tx, rx) = oneshot::channel::<Request>();
-        send.send(Response::OneshotWithReply(response, tx))
+        let (tx, rx) = oneshot::channel::<Response>();
+        send.send(Request::OneshotWithReply(response, tx))
             .await
-            .map_err(TcpServerError::CannotSendResponse)?;
+            .map_err(TcpServerError::CannotSendRequest)?;
 
-        // TODO: そのうちRequestにOneshot以外が実装されるので、irrefutable_let_patternsは解消されるはず
-        #[allow(irrefutable_let_patterns)]
-        let Request::Oneshot(oneshot) = rx.await?
-        else {
+        let Response::Oneshot(oneshot) = rx.await? else {
             error!(
                 logger,
                 "rx of messageId {:?} not received Oneshot!", message_id
@@ -273,6 +332,7 @@ impl ClockerConnection {
         };
         Ok(oneshot)
     }
+
     fn get_message_id(&mut self) -> MessageId {
         self.message_id_dispatch
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed) as MessageId
@@ -287,6 +347,7 @@ impl INode for ClockerConnection {
         };
         Self {
             base,
+            pos: StandingTransformEncoder::new(),
             logger,
             connection: Arc::new(Mutex::new(None)),
             message_id_dispatch: AtomicU64::new(0),
@@ -298,6 +359,9 @@ impl INode for ClockerConnection {
             .add_user_signal(SIGNAL_NEW_TEXTCHAT_MESSAGE.into());
         self.base_mut()
             .add_user_signal(SIGNAL_CONNECTION_ESTABLISHED.into());
+        self.base_mut()
+            .add_user_signal(SIGNAL_UPDATE_PLAYER_BEING.into());
+        self.base_mut().add_user_signal(SIGNAL_PLAYER_MOVED.into());
     }
 
     fn on_notification(&mut self, what: NodeNotification) {

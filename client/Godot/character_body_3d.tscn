@@ -85,3 +85,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.00168823)
 [node name="_CollisionShape3D_20927" type="CollisionShape3D" parent="XROrigin3D/PlayerBody"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("CapsuleShape3D_217kt")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="XROrigin3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0437, 3.4906, -1.07123)
+light_energy = 3.14
+light_indirect_energy = 3.854
+light_volumetric_fog_energy = 0.0
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="XROrigin3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.70939, 3.4906, -1.07123)
+light_energy = 3.14
+light_indirect_energy = 3.854
+light_volumetric_fog_energy = 0.0
