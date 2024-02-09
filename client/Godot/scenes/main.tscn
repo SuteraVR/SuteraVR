@@ -1,10 +1,11 @@
-[gd_scene load_steps=29 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=30 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" uid="uid://dl3j05ogv5103" path="res://character_body_3d.tscn" id="1_k7dhr"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="Script" path="res://move_and_pov.gd" id="2_7xvxd"]
 [ext_resource type="Script" path="res://scenes/instance_anchor.gd" id="3_sapx3"]
 [ext_resource type="LightmapGIData" uid="uid://bmvustwyuhsyb" path="res://scenes/main.lmbake" id="8_40yc0"]
+[ext_resource type="Script" path="res://scenes/show_comment.gd" id="8_gs6hu"]
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
 [ext_resource type="FontFile" uid="uid://cqol00xok5gdi" path="res://font/mplus-1c-regular.ttf" id="10_igx2x"]
 [ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
@@ -27,6 +28,17 @@ func _ready():
 	else:
 		print(\"OpenXR not initialized, please check if your headset is connected\")
 "
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_uipkr"]
+viewport_path = NodePath("Nameplate")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pywo7"]
+resource_local_to_scene = true
+albedo_texture = SubResource("ViewportTexture_uipkr")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_1vcv5"]
+lightmap_size_hint = Vector2i(12, 12)
+add_uv2 = true
 
 [sub_resource type="Environment" id="Environment_jscir"]
 
@@ -88,22 +100,25 @@ bg_color = Color(0, 0.0745098, 0.560784, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jycfp"]
 bg_color = Color(0.423529, 0.537255, 0.964706, 1)
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_uipkr"]
-viewport_path = NodePath("Nameplate")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pywo7"]
-resource_local_to_scene = true
-albedo_texture = SubResource("ViewportTexture_uipkr")
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_1vcv5"]
-lightmap_size_hint = Vector2i(12, 12)
-add_uv2 = true
-
 [node name="Node3D" type="Node3D"]
 script = SubResource("GDScript_qak7f")
 
 [node name="CharacterBody3D" parent="." instance=ExtResource("1_k7dhr")]
 script = ExtResource("2_7xvxd")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="CharacterBody3D"]
+transform = Transform3D(-0.382, -3.71547e-08, 6.49633e-16, 0, -1.85773e-08, -0.17, 3.33955e-08, -0.425, 7.43094e-09, 0, 1.60353, 0.0376808)
+material_override = SubResource("StandardMaterial3D_pywo7")
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_1vcv5")
+skeleton = NodePath("../..")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="CharacterBody3D"]
+transform = Transform3D(0.382, 0, 0, 0, -1.85773e-08, -0.17, 0, 0.425, -7.43094e-09, 0, 1.60353, 0.0421326)
+material_override = SubResource("StandardMaterial3D_pywo7")
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_1vcv5")
+skeleton = NodePath("../..")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jscir")
@@ -257,14 +272,15 @@ offset_right = 900.0
 offset_bottom = 10.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_jycfp")
 
-[node name="Label" type="Label" parent="Nameplate/Panel/Panel"]
+[node name="Label" type="Label" parent="Nameplate/Panel/Panel" node_paths=PackedStringArray("line_edit")]
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
 theme_override_fonts/font = ExtResource("10_igx2x")
 theme_override_font_sizes/font_size = 134
-text = "Comment"
 language = "ja_JP"
+script = ExtResource("8_gs6hu")
+line_edit = NodePath("../../../../Control/Panel/LineEdit")
 
 [node name="Label" type="Label" parent="Nameplate/Panel"]
 layout_mode = 0
@@ -277,18 +293,6 @@ theme_override_fonts/font = ExtResource("10_igx2x")
 theme_override_font_sizes/font_size = 134
 text = "Name"
 language = "ja_JP"
-
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.382, 0, 0, 0, -1.85773e-08, -0.17, 0, 0.425, -7.43094e-09, 0, 1.60353, 0.0421326)
-material_override = SubResource("StandardMaterial3D_pywo7")
-cast_shadow = 0
-mesh = SubResource("PlaneMesh_1vcv5")
-
-[node name="MeshInstance3D3" type="MeshInstance3D" parent="."]
-transform = Transform3D(-0.382, -3.71547e-08, 6.49633e-16, 0, -1.85773e-08, -0.17, 3.33955e-08, -0.425, 7.43094e-09, 0, 1.60353, 0.0376808)
-material_override = SubResource("StandardMaterial3D_pywo7")
-cast_shadow = 0
-mesh = SubResource("PlaneMesh_1vcv5")
 
 [node name="Clocker" type="ClockerConnection" parent="."]
 unique_name_in_owner = true
