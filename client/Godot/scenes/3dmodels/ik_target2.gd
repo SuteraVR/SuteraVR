@@ -4,7 +4,7 @@ extends Marker3D
 @export var adjacent_target: Node3D
 @export var step_threshold: float = 1.0
 
-var is_stepping = true
+var is_stepping = false
 var foot_origin
 var distance
 

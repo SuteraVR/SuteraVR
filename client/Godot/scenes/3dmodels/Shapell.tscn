@@ -1,11 +1,10 @@
-
-[gd_scene load_steps=5 format=3 uid="uid://bm6yri2k540dt"]
+[gd_scene load_steps=6 format=3 uid="uid://bm6yri2k540dt"]
 
 [ext_resource type="PackedScene" uid="uid://cgdn6uudh6bjr" path="res://scenes/3dmodels/Shapell.glb" id="1_2ns3s"]
 [ext_resource type="Script" path="res://HandIK.gd" id="2_3dw36"]
 [ext_resource type="Script" path="res://scenes/3dmodels/step_ray.gd" id="2_fdy7v"]
 [ext_resource type="Script" path="res://scenes/3dmodels/ik_target.gd" id="3_yrh3j"]
-
+[ext_resource type="Script" path="res://scenes/3dmodels/ik_target2.gd" id="4_c058k"]
 
 [node name="Shapell" instance=ExtResource("1_2ns3s")]
 
@@ -23,7 +22,6 @@ tip_bone = &"Hand.R"
 use_magnet = true
 target_node = NodePath("../../RightMarker3D")
 script = ExtResource("2_3dw36")
-
 
 [node name="LeftHand" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="2"]
 process_priority = 1
@@ -84,18 +82,10 @@ step_target = NodePath("LeftStepTarget")
 transform = Transform3D(4.37114e-08, 1, 8.74228e-08, 1, -4.37114e-08, 0, 3.82137e-15, 8.74228e-08, -1, -0.092, 0, 0.034)
 top_level = true
 
-[node name="RightIKTarget" type="Marker3D" parent="StepTargetContainer" index="2" node_paths=PackedStringArray("step_target", "adjacent_target")]
-transform = Transform3D(-0.999976, 0.00534804, -0.00448747, -5.61943e-08, -0.642788, -0.766045, -0.00698133, -0.766026, 0.642772, 0.0915207, 0.0386946, -0.184715)
-top_level = true
+[node name="RightIKTarget" type="Marker3D" parent="StepTargetContainer" index="2" node_paths=PackedStringArray("adjacent_target")]
 script = ExtResource("3_yrh3j")
-step_target = NodePath("../RayCast3D/RightStepTarget")
-step_distance = 0.3
 adjacent_target = NodePath("../LeftIKTarget")
 
-[node name="LeftIKTarget" type="Marker3D" parent="StepTargetContainer" index="3" node_paths=PackedStringArray("step_target", "adjacent_target")]
-transform = Transform3D(-1, 8.74228e-08, 0, -5.61943e-08, -0.642788, -0.766045, -6.69697e-08, -0.766045, 0.642788, -0.092, 0.0385994, -0.184185)
-top_level = true
-script = ExtResource("3_yrh3j")
-step_target = NodePath("../RayCast3D2/LeftStepTarget")
-step_distance = 0.3
+[node name="LeftIKTarget" type="Marker3D" parent="StepTargetContainer" index="3" node_paths=PackedStringArray("adjacent_target")]
+script = ExtResource("4_c058k")
 adjacent_target = NodePath("../RightIKTarget")
