@@ -1,6 +1,0 @@
-[gd_resource type="FontVariation" load_steps=2 format=3 uid="uid://bsvhbkmeaw4mr"]
-
-[ext_resource type="FontFile" uid="uid://bsrhce4guq2j4" path="res://font/Romana.ttf" id="1_pl3c5"]
-
-[resource]
-base_font = ExtResource("1_pl3c5")
