@@ -1,11 +1,14 @@
-[gd_scene load_steps=30 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=33 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" uid="uid://dl3j05ogv5103" path="res://character_body_3d.tscn" id="1_k7dhr"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="Script" path="res://move_and_pov.gd" id="2_7xvxd"]
 [ext_resource type="Script" path="res://scenes/instance_anchor.gd" id="3_sapx3"]
+[ext_resource type="FontVariation" uid="uid://dl5u8haql6ab6" path="res://font/NeverMind.tres" id="6_lrlhe"]
+[ext_resource type="FontFile" uid="uid://2uv8b8gmoet7" path="res://font/Koruri-Bold.ttf" id="7_ro30e"]
 [ext_resource type="LightmapGIData" uid="uid://bmvustwyuhsyb" path="res://scenes/main.lmbake" id="8_40yc0"]
 [ext_resource type="Script" path="res://scenes/show_comment.gd" id="8_gs6hu"]
+[ext_resource type="Script" path="res://scenes/show_name.gd" id="9_p62a6"]
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
 [ext_resource type="FontFile" uid="uid://cqol00xok5gdi" path="res://font/mplus-1c-regular.ttf" id="10_igx2x"]
 [ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
@@ -84,12 +87,10 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5hww7"]
-bg_color = Color(0.584314, 0.513726, 1, 1)
+bg_color = Color(0.137255, 0.270588, 0.513726, 1)
 
-[sub_resource type="LabelSettings" id="LabelSettings_mtb2j"]
-line_spacing = 1.635
-font = ExtResource("10_igx2x")
-font_size = 48
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cuplg"]
+bg_color = Color(1, 1, 1, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cbvqx"]
 bg_color = Color(0.211765, 0.54902, 1, 1)
@@ -229,14 +230,28 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_5hww7")
 
+[node name="Panel2" type="Panel" parent="Control/Panel"]
+offset_left = 866.0
+offset_right = 905.0
+offset_bottom = 106.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_cuplg")
+
+[node name="Panel" type="Panel" parent="Control/Panel"]
+layout_mode = 0
+offset_left = 813.0
+offset_right = 852.0
+offset_bottom = 107.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_cuplg")
+
 [node name="Label" type="Label" parent="Control/Panel"]
 layout_mode = 0
-offset_left = 10.0
-offset_top = 16.0
-offset_right = 522.0
-offset_bottom = 130.0
-text = "テキストチャット"
-label_settings = SubResource("LabelSettings_mtb2j")
+offset_left = 9.0
+offset_top = 5.5
+offset_right = 528.0
+offset_bottom = 119.5
+theme_override_fonts/font = ExtResource("6_lrlhe")
+theme_override_font_sizes/font_size = 67
+text = "TextChat"
 
 [node name="LineEdit" type="LineEdit" parent="Control/Panel"]
 layout_mode = 0
@@ -244,11 +259,20 @@ offset_left = 10.0
 offset_top = 98.0
 offset_right = 980.0
 offset_bottom = 188.0
-theme_override_fonts/font = ExtResource("10_igx2x")
+theme_override_fonts/font = ExtResource("7_ro30e")
 theme_override_font_sizes/font_size = 41
 placeholder_text = "ここに文章を入力してね"
 language = "ja_JP"
 script = ExtResource("12_xih1r")
+
+[node name="TextureRect" type="TextureRect" parent="Control"]
+layout_mode = 0
+offset_left = 533.0
+offset_top = 242.0
+offset_right = 583.0
+offset_bottom = 292.0
+texture = ExtResource("1_wjwcn")
+expand_mode = 1
 
 [node name="Nameplate" type="SubViewport" parent="."]
 size = Vector2i(900, 400)
@@ -282,7 +306,7 @@ language = "ja_JP"
 script = ExtResource("8_gs6hu")
 line_edit = NodePath("../../../../Control/Panel/LineEdit")
 
-[node name="Label" type="Label" parent="Nameplate/Panel"]
+[node name="Label" type="Label" parent="Nameplate/Panel" node_paths=PackedStringArray("line_edit")]
 layout_mode = 0
 offset_left = 6.0
 offset_top = 3.0
@@ -293,6 +317,8 @@ theme_override_fonts/font = ExtResource("10_igx2x")
 theme_override_font_sizes/font_size = 134
 text = "Name"
 language = "ja_JP"
+script = ExtResource("9_p62a6")
+line_edit = NodePath("../../../Control/Panel/LineEdit")
 
 [node name="Clocker" type="ClockerConnection" parent="."]
 unique_name_in_owner = true

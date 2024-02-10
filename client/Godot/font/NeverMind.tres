@@ -1,0 +1,8 @@
+[gd_resource type="FontVariation" load_steps=2 format=3 uid="uid://dl5u8haql6ab6"]
+
+[ext_resource type="FontFile" uid="uid://buyc5r2kbocfp" path="res://font/NeverMindUltraExtended-HeavyItalic.ttf" id="1_atrtx"]
+
+[resource]
+resource_local_to_scene = true
+base_font = ExtResource("1_atrtx")
+variation_face_index = 1
