@@ -1,8 +1,8 @@
-use rustls_pemfile::{certs, pkcs8_private_keys};
 use log::info;
+use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::{
-    fs::File,
     env,
+    fs::File,
     io::{self, BufReader, Error, ErrorKind},
     path::{Path, PathBuf},
 };
@@ -18,18 +18,21 @@ pub struct SingleCerts {
 }
 
 fn load_from_env() -> io::Result<Option<SingleCerts>> {
-    let Ok(certs_env) = env::var("SINGLECERTS_CERT_PEM") else { return Ok(None); };
-    let Ok(keys_env) = env::var("SINGLECERTS_KEY_PEM") else { return Ok(None); };
+    let Ok(certs_env) = env::var("SINGLECERTS_CERT_PEM") else {
+        return Ok(None);
+    };
+    let Ok(keys_env) = env::var("SINGLECERTS_KEY_PEM") else {
+        return Ok(None);
+    };
 
-    
-    let mut keys_bytes = pkcs8_private_keys(&mut keys_env.as_bytes());
-    Ok(Some(SingleCerts{
-        certs: certs(&mut certs_env.as_bytes()).collect::<io::Result<Vec<CertificateDer<'static>>>>()?,
-        keys: keys_bytes
-            .next()
-            .ok_or(io::ErrorKind::InvalidInput)?
-            .map(|v| PrivateKeyDer<'static>::from(v))
-            .clone(),
+    let keys = pkcs8_private_keys(&mut keys_env.as_bytes())
+        .next()
+        .ok_or(io::ErrorKind::InvalidInput)?
+        .map(Into::into)?;
+    Ok(Some(SingleCerts {
+        certs: certs(&mut certs_env.as_bytes())
+            .collect::<io::Result<Vec<CertificateDer<'static>>>>()?,
+        keys,
     }))
 }
 
@@ -48,8 +51,6 @@ fn load_from_file() -> io::Result<Option<SingleCerts>> {
             .ok_or(io::ErrorKind::InvalidInput)?
             .map(Into::into)?,
     }))
-
-
 }
 
 impl SingleCerts {
