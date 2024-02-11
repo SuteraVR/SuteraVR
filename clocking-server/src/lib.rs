@@ -51,10 +51,7 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
 
     info!("");
     info!("Loading Certifications...");
-    let single_certs = SingleCerts::new(
-        &PathBuf::from("./certs/server.crt"),
-        &PathBuf::from("./certs/server.key"),
-    )
+    let single_certs = SingleCerts::new()
     .map_err(|e| {
         error!("Failed to load certifications!: {}", e);
         error!("Ensure that ./server.crt and ./server.key exists.");
