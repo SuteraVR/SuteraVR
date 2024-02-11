@@ -78,7 +78,9 @@ corner_radius_bottom_left = 4
 bg_color = Color(0, 0.862745, 0.847059, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5hww7"]
-bg_color = Color(0.137255, 0.270588, 0.513726, 1)
+bg_color = Color(0.137255, 0.270588, 0.513726, 0.627451)
+border_width_left = 6
+border_color = Color(1, 1, 1, 1)
 corner_radius_top_left = 62
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cuplg"]
@@ -249,12 +251,12 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_cuplg")
 
 [node name="Label" type="Label" parent="Control/Panel"]
 layout_mode = 0
-offset_left = 9.0
-offset_top = 5.5
-offset_right = 528.0
-offset_bottom = 119.5
+offset_left = 67.0
+offset_top = -4.0
+offset_right = 586.0
+offset_bottom = 116.0
 theme_override_fonts/font = ExtResource("6_lrlhe")
-theme_override_font_sizes/font_size = 97
+theme_override_font_sizes/font_size = 85
 text = "TextChat"
 
 [node name="LineEdit" type="LineEdit" parent="Control/Panel"]
