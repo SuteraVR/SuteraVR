@@ -17,6 +17,7 @@ func _process(delta):
 		distance = global_position.distance_to(foot_origin)
 		if(distance > step_threshold):
 			foot_origin = global_position
+			foot_origin.y = 0
 			print("true")
 			is_stepping = false
 		position.y = step_propotional*distance*distance

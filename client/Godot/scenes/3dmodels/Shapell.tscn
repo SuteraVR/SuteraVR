@@ -47,7 +47,31 @@ use_magnet = true
 target_node = NodePath("../../../StepTargetContainer/LeftIKTarget")
 script = ExtResource("2_3dw36")
 
-[node name="Head" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="5"]
+[node name="RightAncle" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="5"]
+process_priority = 1
+root_bone = &"Foot.R"
+tip_bone = &"Toes.R"
+use_magnet = true
+target_node = NodePath("../../../StepTargetContainer/RightIKTarget/RightToeMarker3D")
+script = ExtResource("2_3dw36")
+
+[node name="LeftAncle" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="6"]
+process_priority = 1
+root_bone = &"Foot.L"
+tip_bone = &"Toes.L"
+use_magnet = true
+target_node = NodePath("../../../StepTargetContainer/LeftIKTarget/LeftToeMarker3D")
+script = ExtResource("2_3dw36")
+
+[node name="LeftLeg4" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="7"]
+process_priority = 1
+root_bone = &"UpperLeg.L"
+tip_bone = &"Foot.L"
+use_magnet = true
+target_node = NodePath("../../../StepTargetContainer/LeftIKTarget")
+script = ExtResource("2_3dw36")
+
+[node name="Head" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="8"]
 process_priority = 1
 root_bone = &"Chest"
 tip_bone = &"Head"
@@ -69,7 +93,7 @@ script = ExtResource("2_fdy7v")
 step_target = NodePath("RightStepTarget")
 
 [node name="RightStepTarget" type="Marker3D" parent="StepTargetContainer/RayCast3D" index="0"]
-transform = Transform3D(4.37114e-08, 1, 8.74228e-08, 1, -4.37114e-08, 0, 3.82137e-15, 8.74228e-08, -1, 0.0915207, 9.52184e-05, 0.0335046)
+transform = Transform3D(4.37114e-08, 1, 8.74228e-08, 1, -4.37114e-08, 0, 3.82137e-15, 8.74228e-08, -1, 0.092, 0, 0)
 top_level = true
 
 [node name="RayCast3D2" type="RayCast3D" parent="StepTargetContainer" index="1" node_paths=PackedStringArray("step_target")]
@@ -83,9 +107,17 @@ transform = Transform3D(4.37114e-08, 1, 8.74228e-08, 1, -4.37114e-08, 0, 3.82137
 top_level = true
 
 [node name="RightIKTarget" type="Marker3D" parent="StepTargetContainer" index="2" node_paths=PackedStringArray("adjacent_target")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.091, 0.05, 0)
 script = ExtResource("3_yrh3j")
 adjacent_target = NodePath("../LeftIKTarget")
 
+[node name="RightToeMarker3D" type="Marker3D" parent="StepTargetContainer/RightIKTarget" index="0"]
+transform = Transform3D(4.37114e-08, -1, -1.50996e-07, -1, -4.37114e-08, -2.5411e-21, -6.60023e-15, 1.50996e-07, -1, 0.000728682, -0.150897, -0.218)
+
 [node name="LeftIKTarget" type="Marker3D" parent="StepTargetContainer" index="3" node_paths=PackedStringArray("adjacent_target")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.092, 0, 0)
 script = ExtResource("4_c058k")
 adjacent_target = NodePath("../RightIKTarget")
+
+[node name="LeftToeMarker3D" type="Marker3D" parent="StepTargetContainer/LeftIKTarget" index="0"]
+transform = Transform3D(4.37114e-08, -1, -1.50996e-07, -1, -4.37114e-08, -2.5411e-21, -6.60023e-15, 1.50996e-07, -1, -0.00181246, -0.102983, -0.218)

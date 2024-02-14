@@ -291,10 +291,8 @@ cast_shadow = 0
 mesh = SubResource("PlaneMesh_1vcv5")
 
 [node name="Clocker" type="ClockerConnection" parent="."]
-unique_name_in_owner = true
 
 [node name="InstanceAnchor" type="Node" parent="Clocker"]
-
 script = ExtResource("3_sapx3")
 
 [node name="Node" type="Node" parent="."]
