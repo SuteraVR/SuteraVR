@@ -42,10 +42,10 @@ target_node = NodePath("../../LeftMarker3D")
 script = ExtResource("2_sdw6w")
 
 [node name="RightMarker3D" type="Marker3D" parent="Armature" index="1"]
-transform = Transform3D(4.37114e-08, 1, 8.74228e-08, 1, -4.37114e-08, 0, 3.82137e-15, 8.74228e-08, -1, 0.458487, 1.03683, 0.0335046)
+transform = Transform3D(4.37114e-08, 3.82137e-15, -1, 8.74228e-08, -1, 0, -1, -8.74228e-08, -4.37114e-08, 0.25349, 0.71, 0.034)
 top_level = true
 script = SubResource("GDScript_icr5d")
 
 [node name="LeftMarker3D" type="Marker3D" parent="Armature" index="2"]
-transform = Transform3D(4.37114e-08, -1, -8.74228e-08, -1, -4.37114e-08, 0, -3.82137e-15, 8.74228e-08, -1, -0.463125, 1.04518, 0.0386075)
+transform = Transform3D(-4.37114e-08, 0.0348994, 0.999391, 0, -0.999391, 0.0348994, 1, 1.5255e-09, 4.36848e-08, -0.273, 0.71, 0.039)
 top_level = true
