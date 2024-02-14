@@ -1,0 +1,8 @@
+[gd_resource type="FontVariation" load_steps=2 format=3 uid="uid://dl5u8haql6ab6"]
+
+[ext_resource type="FontFile" uid="uid://2uv8b8gmoet7" path="res://font/Koruri-Bold.ttf" id="1_02fw2"]
+
+[resource]
+resource_local_to_scene = true
+base_font = ExtResource("1_02fw2")
+variation_face_index = 1
