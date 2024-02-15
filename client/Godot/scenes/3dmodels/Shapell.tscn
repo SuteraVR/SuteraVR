@@ -1,21 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://bm6yri2k540dt"]
+[gd_scene load_steps=3 format=3 uid="uid://bm6yri2k540dt"]
 
 [ext_resource type="PackedScene" uid="uid://cgdn6uudh6bjr" path="res://scenes/3dmodels/Shapell.glb" id="1_2ns3s"]
 [ext_resource type="Script" path="res://HandIK.gd" id="2_sdw6w"]
-
-[sub_resource type="GDScript" id="GDScript_icr5d"]
-script/source = "extends Marker3D
-
-
-# Called when the node enters the scene tree for the first time.
-func _ready():
-	pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
-	pass
-"
 
 [node name="Shapell" instance=ExtResource("1_2ns3s")]
 
@@ -25,27 +11,50 @@ transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 
 [node name="Body" parent="Armature/Skeleton3D" index="0"]
 gi_mode = 2
 
-[node name="RightHand" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="1"]
+[node name="RightHandUpper" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="1"]
 process_priority = 1
 root_bone = &"UpperArm.R"
-tip_bone = &"Hand.R"
+tip_bone = &"LowerArm.R"
 use_magnet = true
-target_node = NodePath("../../RightMarker3D")
+target_node = NodePath("../../RightHijiMarker")
 script = ExtResource("2_sdw6w")
 
-[node name="LeftHand" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="2"]
+[node name="RightHandLower" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="2"]
+process_priority = 1
+root_bone = &"LowerArm.R"
+tip_bone = &"Hand.R"
+use_magnet = true
+target_node = NodePath("../../RightMarker")
+script = ExtResource("2_sdw6w")
+
+[node name="LeftHandUpper" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="3"]
 process_priority = 1
 root_bone = &"UpperArm.L"
+tip_bone = &"LowerArm.L"
+use_magnet = true
+target_node = NodePath("../../LeftHijiMarker")
+script = ExtResource("2_sdw6w")
+
+[node name="LeftHandLower" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="4"]
+process_priority = 1
+root_bone = &"LowerArm.L"
 tip_bone = &"Hand.L"
 use_magnet = true
 target_node = NodePath("../../LeftMarker3D")
 script = ExtResource("2_sdw6w")
 
-[node name="RightMarker3D" type="Marker3D" parent="Armature" index="1"]
-transform = Transform3D(4.37114e-08, 3.82137e-15, -1, 8.74228e-08, -1, 0, -1, -8.74228e-08, -4.37114e-08, 0.25349, 0.71, 0.034)
+[node name="RightHijiMarker" type="Marker3D" parent="Armature" index="1"]
+transform = Transform3D(0.999991, 8.7422e-08, 0.00431104, 8.74228e-08, -1, 0, 0.00431104, 3.76883e-10, -0.999991, 0.148, 0.924, 0.054)
 top_level = true
-script = SubResource("GDScript_icr5d")
 
-[node name="LeftMarker3D" type="Marker3D" parent="Armature" index="2"]
-transform = Transform3D(-4.37114e-08, 0.0348994, 0.999391, 0, -0.999391, 0.0348994, 1, 1.5255e-09, 4.36848e-08, -0.273, 0.71, 0.039)
+[node name="RightMarker" type="Marker3D" parent="Armature" index="2"]
+transform = Transform3D(4.37114e-08, 3.82137e-15, -1, 0.258819, -0.965926, 1.13133e-08, -0.965926, -0.258819, -4.2222e-08, 0.253, 0.71, -0.071)
+top_level = true
+
+[node name="LeftHijiMarker" type="Marker3D" parent="Armature" index="3"]
+transform = Transform3D(-4.37114e-08, 0.0348994, 0.999391, 0, -0.999391, 0.0348994, 1, 1.5255e-09, 4.36848e-08, -0.158, 0.899, 0.084)
+top_level = true
+
+[node name="LeftMarker3D" type="Marker3D" parent="Armature" index="4"]
+transform = Transform3D(-4.37114e-08, 0.0348994, 0.999391, -0.258819, -0.965338, 0.0337102, 0.965926, -0.258661, 0.00903267, -0.273, 0.705433, 0)
 top_level = true
