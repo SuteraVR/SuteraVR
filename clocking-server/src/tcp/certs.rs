@@ -4,7 +4,7 @@ use std::{
     env,
     fs::File,
     io::{self, BufReader, Error, ErrorKind},
-    path::{Path, PathBuf},
+    path::{PathBuf},
 };
 use tokio_rustls::rustls::{
     self,
