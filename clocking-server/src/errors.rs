@@ -21,6 +21,8 @@ pub enum ClockingServerError {
 
     #[error("The oneshot reply cannot be sent.")]
     CannotSendReply,
+    #[error("The oneshot reply cannot be receive.")]
+    CannotReceiveReply,
 }
 
 #[derive(Debug, Error)]
@@ -57,4 +59,8 @@ pub enum TcpServerError {
 pub enum InstanceError {
     #[error(transparent)]
     CannotSendToPlayer(#[from] SendError<PlayerControl>),
+    #[error(transparent)]
+    SpawnError(std::io::Error),
+    #[error("The oneshot reply cannot be sent.")]
+    CannotSendReply,
 }

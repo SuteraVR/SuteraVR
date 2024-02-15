@@ -1,6 +1,7 @@
 use axum::{
     body::Body,
     extract::Request,
+    http::header::USER_AGENT,
     middleware::Next,
     response::{Json, Response},
     routing::get,
@@ -48,6 +49,29 @@ async fn schemaversion_checker(request: Request, next: Next) -> Result<Response,
     Ok(response)
 }
 
+async fn logger(request: Request, next: Next) -> Response {
+    let user_agent = match request.headers().get(USER_AGENT) {
+        Some(u) => u.to_str().unwrap(),
+        None => "(Unknown Useragent)",
+    };
+
+    let forwarded = match request.headers().get("X-Forwarded-For") {
+        Some(u) => u.to_str().unwrap(),
+        None => "",
+    };
+    let log_str = format!(
+        "{} {} {:?} {} {}",
+        request.method(),
+        request.uri(),
+        request.version(),
+        user_agent,
+        forwarded,
+    );
+    let response = next.run(request).await;
+    log::info!("{} {}", log_str, response.status().as_str(),);
+    response
+}
+
 #[tokio::main]
 async fn main() {
     env::set_var("RUST_LOG", "info");
@@ -60,9 +84,11 @@ async fn main() {
     };
     log::info!("Run on port :{}", port);
 
-    let app = Router::new()
-        .route("/hello", get(hello))
-        .layer(ServiceBuilder::new().layer(axum::middleware::from_fn(schemaversion_checker)));
+    let app = Router::new().route("/hello", get(hello)).layer(
+        ServiceBuilder::new()
+            .layer(axum::middleware::from_fn(logger))
+            .layer(axum::middleware::from_fn(schemaversion_checker)),
+    );
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await

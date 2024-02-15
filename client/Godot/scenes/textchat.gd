@@ -1,7 +1,9 @@
 extends LineEdit
-var CLOCKER: ClockerConnection
+@onready var CLOCKER: ClockerConnection = %Clocker
+var message_box = "Comment"
+var name_box = "?"
+
 func _ready():
-	CLOCKER = %Clocker
 	await CLOCKER.ready
 	CLOCKER.connect(CLOCKER.signal_new_textchat_message(), _on_new_textchat_message)
 
@@ -13,5 +15,7 @@ func _input(event):
 			clear()
 
 func _on_new_textchat_message(sender, message):
+	name_box = sender
+	message_box = message
 	print("プレイヤー%s 「%s」" % [sender, message])
 	pass # Replace with function body.

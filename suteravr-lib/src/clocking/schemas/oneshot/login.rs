@@ -1,4 +1,4 @@
-use crate::messaging::id::InstanceId;
+use crate::messaging::id::{InstanceId, PlayerId};
 use alkahest::alkahest;
 
 #[derive(Debug)]
@@ -13,6 +13,6 @@ pub struct LoginRequest {
 #[derive(Debug)]
 #[alkahest(Formula, Serialize, Deserialize)]
 pub enum LoginResponse {
-    Ok,
+    Ok(Vec<PlayerId>),
     BadToken,
 }

@@ -22,6 +22,9 @@ func _process(delta):
 [node name="Armature" parent="." index="0"]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
 
+[node name="Body" parent="Armature/Skeleton3D" index="0"]
+gi_mode = 2
+
 [node name="RightHand" type="SkeletonIK3D" parent="Armature/Skeleton3D" index="1"]
 process_priority = 1
 root_bone = &"UpperArm.R"

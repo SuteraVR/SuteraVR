@@ -33,7 +33,9 @@ pub enum InstancesControl {
     JoinInstance {
         id: InstanceId,
         control: mpsc::Sender<PlayerControl>,
-        reply: oneshot::Sender<Option<(PlayerId, mpsc::Sender<InstanceControl>)>>,
+        // FIXME: 型が複雑すぎるぞ!!!とお叱りを受けるが、なおすのはあとで
+        #[allow(clippy::type_complexity)]
+        reply: oneshot::Sender<Option<((PlayerId, mpsc::Sender<InstanceControl>), Vec<PlayerId>)>>,
     },
 }
 
@@ -93,10 +95,11 @@ pub async fn launch_instance_manager(
                     InstancesControl::JoinInstance { id, reply, control } => {
                         let result = if let Some(tx) = mng.instances.get(&id) {
                             let player_id = mng.player_id_dispatch.fetch_add(1, std::sync::atomic::Ordering::Relaxed) as PlayerId;
-                            tx.send(InstanceControl::Join(player_id, control))
+                            let (tx_i, rx_i) = oneshot::channel::<Vec<PlayerId>>();
+                            tx.send(InstanceControl::Join(player_id, control, tx_i))
                                 .await
                                 .map_err(|e| ClockingServerError::CannotSendShutdown(e.into()))?;
-                            Some((player_id, tx.clone()))
+                            Some(((player_id, tx.clone()), rx_i.await.map_err(|_| ClockingServerError::CannotReceiveReply)?))
                         } else {
                             error!(logger, "Failed to join the instance {:?}. The instance was not found.", id);
                             None

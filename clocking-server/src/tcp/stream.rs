@@ -23,7 +23,7 @@ use tokio::{
 
 use crate::{errors::TcpServerError, shutdown::ShutdownReason, tcp::requests::OneshotRequest};
 
-use super::requests::{Request, Response};
+use super::requests::{OneshotResponse, Request, Response};
 
 pub struct ClientMessageStream {
     shutdown_tx: oneshot::Sender<ShutdownReason>,
@@ -136,6 +136,15 @@ impl ClientMessageStream {
     #[inline]
     pub async fn recv(&mut self) -> Option<Request> {
         self.receive_rx.recv().await
+    }
+
+    #[inline]
+    pub async fn send_oneshot(&self, response: OneshotResponse) -> Result<(), TcpServerError> {
+        self.send_tx
+            .send(Response::Oneshot(response))
+            .await
+            .map_err(TcpServerError::CannotSendResponse)?;
+        Ok(())
     }
 
     #[inline]
