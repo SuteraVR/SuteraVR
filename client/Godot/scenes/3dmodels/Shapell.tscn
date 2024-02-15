@@ -1,10 +1,18 @@
-[gd_scene load_steps=6 format=3 uid="uid://bm6yri2k540dt"]
+[gd_scene load_steps=9 format=3 uid="uid://bm6yri2k540dt"]
 
 [ext_resource type="PackedScene" uid="uid://cgdn6uudh6bjr" path="res://scenes/3dmodels/Shapell.glb" id="1_2ns3s"]
 [ext_resource type="Script" path="res://HandIK.gd" id="2_3dw36"]
 [ext_resource type="Script" path="res://scenes/3dmodels/step_ray.gd" id="2_fdy7v"]
 [ext_resource type="Script" path="res://scenes/3dmodels/ik_target.gd" id="3_yrh3j"]
-[ext_resource type="Script" path="res://scenes/3dmodels/ik_target2.gd" id="4_c058k"]
+[ext_resource type="Script" path="res://scenes/3dmodels/MeshInstance3D.gd" id="6_873h3"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_n772p"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vqeo3"]
+albedo_color = Color(1, 0, 1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_irr2j"]
+albedo_color = Color(0, 1, 1, 1)
 
 [node name="Shapell" instance=ExtResource("1_2ns3s")]
 
@@ -106,18 +114,49 @@ step_target = NodePath("LeftStepTarget")
 transform = Transform3D(4.37114e-08, 1, 8.74228e-08, 1, -4.37114e-08, 0, 3.82137e-15, 8.74228e-08, -1, -0.092, 0, 0.034)
 top_level = true
 
-[node name="RightIKTarget" type="Marker3D" parent="StepTargetContainer" index="2" node_paths=PackedStringArray("adjacent_target")]
+[node name="RightIKTarget" type="Marker3D" parent="StepTargetContainer" index="2" node_paths=PackedStringArray("adjacent_target", "shapell_target", "following_target")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.091, 0.05, 0)
+top_level = true
 script = ExtResource("3_yrh3j")
 adjacent_target = NodePath("../LeftIKTarget")
+shapell_target = NodePath("../..")
+following_target = NodePath("../RightIKLocking")
 
 [node name="RightToeMarker3D" type="Marker3D" parent="StepTargetContainer/RightIKTarget" index="0"]
 transform = Transform3D(4.37114e-08, -1, -1.50996e-07, -1, -4.37114e-08, -2.5411e-21, -6.60023e-15, 1.50996e-07, -1, 0.000728682, -0.150897, -0.218)
 
-[node name="LeftIKTarget" type="Marker3D" parent="StepTargetContainer" index="3" node_paths=PackedStringArray("adjacent_target")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.092, 0, 0)
-script = ExtResource("4_c058k")
+[node name="LeftIKTarget" type="Marker3D" parent="StepTargetContainer" index="3" node_paths=PackedStringArray("adjacent_target", "shapell_target", "following_target")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.092, 0, 0.0301485)
+top_level = true
+script = ExtResource("3_yrh3j")
 adjacent_target = NodePath("../RightIKTarget")
+shapell_target = NodePath("../..")
+following_target = NodePath("../LeftIKLocking")
+text = "b"
+is_stepping = true
 
 [node name="LeftToeMarker3D" type="Marker3D" parent="StepTargetContainer/LeftIKTarget" index="0"]
 transform = Transform3D(4.37114e-08, -1, -1.50996e-07, -1, -4.37114e-08, -2.5411e-21, -6.60023e-15, 1.50996e-07, -1, -0.00181246, -0.102983, -0.218)
+
+[node name="LeftIKLocking" type="Marker3D" parent="StepTargetContainer" index="4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.092, 0, 0.0301485)
+
+[node name="RightIKLocking" type="Marker3D" parent="StepTargetContainer" index="5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.091, 0, 0)
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="." index="2" node_paths=PackedStringArray("mark")]
+transform = Transform3D(0.0767158, 0, 0, 0, -0.0544456, 0, 0, 0, 0.176998, -0.0864374, 0, 0)
+top_level = true
+mesh = SubResource("CylinderMesh_n772p")
+skeleton = NodePath("../MeshInstance3D")
+surface_material_override/0 = SubResource("StandardMaterial3D_vqeo3")
+script = ExtResource("6_873h3")
+mark = NodePath("../StepTargetContainer/LeftIKTarget")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." index="3" node_paths=PackedStringArray("mark")]
+transform = Transform3D(0.0658097, 0, 0, 0, 0.0563526, 0, 0, 0, 0.158401, 0.0885631, 0, 0)
+top_level = true
+mesh = SubResource("CylinderMesh_n772p")
+surface_material_override/0 = SubResource("StandardMaterial3D_irr2j")
+script = ExtResource("6_873h3")
+mark = NodePath("../StepTargetContainer/RightIKTarget")
