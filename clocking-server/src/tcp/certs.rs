@@ -38,11 +38,9 @@ fn load_from_env() -> io::Result<Option<SingleCerts>> {
 
 fn load_from_env_path() -> io::Result<Option<(SingleCerts, String, String)>> {
     let Ok(certs_path) = env::var("SINGLECERTS_CERT_PATH") else {
-        error!("Certification file was specified by 'SINGLECERTS_CERT_PATH', but not existing. ");
         return Ok(None);
     };
     let Ok(keys_path) = env::var("SINGLECERTS_KEY_PATH") else {
-        error!("Private key file was specified by 'SINGLECERTS_KEY_PATH', but not existing.");
         return Ok(None);
     };
     let certs_file = &PathBuf::from(&certs_path);
