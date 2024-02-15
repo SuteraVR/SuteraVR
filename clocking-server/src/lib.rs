@@ -51,8 +51,7 @@ pub async fn clocking_server() -> Result<(), ClockingServerError> {
 
     info!("");
     info!("Loading Certifications...");
-    let single_certs = SingleCerts::new()
-    .map_err(|e| {
+    let single_certs = SingleCerts::new().map_err(|e| {
         error!("Failed to load certifications!: {}", e);
         error!("Ensure that ./server.crt and ./server.key exists.");
         info!("Hint: you can generate your own by certgen.sh");

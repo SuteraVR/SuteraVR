@@ -1,4 +1,4 @@
-use log::info;
+use log::{error, info};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::{
     env,
@@ -36,8 +36,29 @@ fn load_from_env() -> io::Result<Option<SingleCerts>> {
     }))
 }
 
-fn load_from_env_path() -> io::Result<Option<(SingleCerts, PathBuf, PathBuf)>> {
-    todo!()
+fn load_from_env_path() -> io::Result<Option<(SingleCerts, String, String)>> {
+    let Ok(certs_path) = env::var("SINGLECERTS_CERT_PATH") else {
+        error!("Certification file was specified by 'SINGLECERTS_CERT_PATH', but not existing. ");
+        return Ok(None);
+    };
+    let Ok(keys_path) = env::var("SINGLECERTS_KEY_PATH") else {
+        error!("Private key file was specified by 'SINGLECERTS_KEY_PATH', but not existing.");
+        return Ok(None);
+    };
+    let certs_file = &PathBuf::from(&certs_path);
+    let keys_file = &PathBuf::from(&keys_path);
+    Ok(Some((
+        SingleCerts {
+            certs: certs(&mut BufReader::new(File::open(certs_file)?))
+                .collect::<io::Result<Vec<CertificateDer<'static>>>>()?,
+            keys: pkcs8_private_keys(&mut BufReader::new(File::open(keys_file)?))
+                .next()
+                .ok_or(io::ErrorKind::InvalidInput)?
+                .map(Into::into)?,
+        },
+        certs_path,
+        keys_path,
+    )))
 }
 
 fn load_from_file() -> io::Result<Option<SingleCerts>> {
