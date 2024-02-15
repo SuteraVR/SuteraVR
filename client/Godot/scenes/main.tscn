@@ -6,7 +6,7 @@
 [ext_resource type="Script" path="res://scenes/instance_anchor.gd" id="3_sapx3"]
 [ext_resource type="FontVariation" uid="uid://dl5u8haql6ab6" path="res://font/NeverMind.tres" id="6_lrlhe"]
 [ext_resource type="FontFile" uid="uid://2uv8b8gmoet7" path="res://font/Koruri-Bold.ttf" id="7_ro30e"]
-[ext_resource type="LightmapGIData" uid="uid://bmvustwyuhsyb" path="res://scenes/main.lmbake" id="8_40yc0"]
+[ext_resource type="LightmapGIData" path="res://scenes/main.lmbake" id="8_40yc0"]
 [ext_resource type="Script" path="res://scenes/show_comment.gd" id="8_gs6hu"]
 [ext_resource type="Script" path="res://scenes/show_name.gd" id="9_p62a6"]
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]

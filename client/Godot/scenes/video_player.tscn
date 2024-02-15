@@ -1,0 +1,48 @@
+[gd_scene load_steps=7 format=3 uid="uid://dnrjutg8g30bo"]
+
+[ext_resource type="VideoStream" path="res://movies/output.ogv" id="1_gpq66"]
+[ext_resource type="Script" path="res://scenes/video_player.gd" id="1_py8ny"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_55ttj"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_q2i08"]
+viewport_path = NodePath("SubViewport")
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_j1pwf"]
+viewport_path = NodePath("SubViewport")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_igo7k"]
+resource_local_to_scene = true
+albedo_texture = SubResource("ViewportTexture_q2i08")
+emission_enabled = true
+emission_energy_multiplier = 3.0
+emission_texture = SubResource("ViewportTexture_j1pwf")
+
+[node name="VideoPlayer" type="Node3D"]
+script = ExtResource("1_py8ny")
+file = "res://movies/output.ogv"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.777, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 1, 0)
+mesh = SubResource("PlaneMesh_55ttj")
+surface_material_override/0 = SubResource("StandardMaterial3D_igo7k")
+metadata/_edit_group_ = true
+
+[node name="SubViewport" type="SubViewport" parent="."]
+size = Vector2i(1920, 1080)
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="SubViewport"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="SubViewport/SubViewportContainer"]
+layout_mode = 2
+stream = ExtResource("1_gpq66")
+autoplay = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-4.37114e-08, 0.573576, -0.819152, 0, 0.819152, 0.573576, 1, 2.50718e-08, -3.58063e-08, -3, 2, 0)
+visible = false

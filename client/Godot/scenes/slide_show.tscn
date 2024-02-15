@@ -1,0 +1,68 @@
+[gd_scene load_steps=9 format=3 uid="uid://mlc2a6dg4x14"]
+
+[ext_resource type="Script" path="res://scenes/slide_show.gd" id="1_k454j"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_hbprf"]
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+sky_energy_multiplier = 1.25
+ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_u141d"]
+sky_material = SubResource("ProceduralSkyMaterial_hbprf")
+
+[sub_resource type="Environment" id="Environment_pd0mk"]
+background_mode = 2
+sky = SubResource("Sky_u141d")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_h6g7h"]
+size = Vector2(2.55, 1.434)
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_7x70h"]
+viewport_path = NodePath("SubViewport")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ld5cu"]
+resource_local_to_scene = true
+albedo_texture = SubResource("ViewportTexture_7x70h")
+
+[sub_resource type="GDScript" id="GDScript_flwfm"]
+script/source = "extends TextureRect
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	pass
+"
+
+[node name="SlideShow" type="Node3D"]
+script = ExtResource("1_k454j")
+dir = "res://slides/rekut/1.jpg"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_pd0mk")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 1, 0)
+mesh = SubResource("PlaneMesh_h6g7h")
+surface_material_override/0 = SubResource("StandardMaterial3D_ld5cu")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+size = Vector2i(2550, 1434)
+
+[node name="TextureRect" type="TextureRect" parent="SubViewport"]
+offset_right = 40.0
+offset_bottom = 40.0
+script = SubResource("GDScript_flwfm")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 1)
