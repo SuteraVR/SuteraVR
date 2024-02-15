@@ -1,4 +1,4 @@
-use log::{error, info};
+use log::info;
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::{
     env,
