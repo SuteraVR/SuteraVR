@@ -45,16 +45,12 @@ script = ExtResource("2_sdw6w")
 
 [node name="RightHijiMarker" type="Marker3D" parent="Armature" index="1"]
 transform = Transform3D(0.999991, 8.7422e-08, 0.00431104, 8.74228e-08, -1, 0, 0.00431104, 3.76883e-10, -0.999991, 0.148, 0.924, 0.054)
-top_level = true
 
 [node name="RightMarker" type="Marker3D" parent="Armature" index="2"]
 transform = Transform3D(4.37114e-08, 3.82137e-15, -1, 0.258819, -0.965926, 1.13133e-08, -0.965926, -0.258819, -4.2222e-08, 0.253, 0.71, -0.071)
-top_level = true
 
 [node name="LeftHijiMarker" type="Marker3D" parent="Armature" index="3"]
-transform = Transform3D(-4.37114e-08, 0.0348994, 0.999391, 0, -0.999391, 0.0348994, 1, 1.5255e-09, 4.36848e-08, -0.158, 0.899, 0.084)
-top_level = true
+transform = Transform3D(-4.37114e-08, 0.0348994, 0.999391, 0, -0.999391, 0.0348994, 1, 1.5255e-09, 4.36848e-08, -0.169663, 0.899, 0.084)
 
 [node name="LeftMarker3D" type="Marker3D" parent="Armature" index="4"]
-transform = Transform3D(-4.37114e-08, 0.0348994, 0.999391, -0.258819, -0.965338, 0.0337102, 0.965926, -0.258661, 0.00903267, -0.273, 0.705433, 0)
-top_level = true
+transform = Transform3D(-4.37114e-08, 0.0348994, 0.999391, -0.258819, -0.965338, 0.0337102, 0.965926, -0.258661, 0.00903267, -0.222999, 0.705433, 0)
