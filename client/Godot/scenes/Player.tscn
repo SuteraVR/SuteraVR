@@ -1,7 +1,7 @@
 [gd_scene load_steps=18 format=3 uid="uid://w4x133wmjuv"]
 
 [ext_resource type="Script" path="res://scenes/Player.gd" id="1_0pp0e"]
-[ext_resource type="PackedScene" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="2_u5fih"]
+[ext_resource type="PackedScene" uid="uid://ct7lvk0u476id" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="2_u5fih"]
 [ext_resource type="PackedScene" uid="uid://njx823gyk04n" path="res://addons/godot-xr-tools/hands/scenes/highpoly/left_hand.tscn" id="3_yo2ld"]
 [ext_resource type="PackedScene" uid="uid://bl2nuu3qhlb5k" path="res://addons/godot-xr-tools/functions/movement_direct.tscn" id="4_4hnfv"]
 [ext_resource type="PackedScene" uid="uid://raeeicvvindd" path="res://addons/godot-xr-tools/hands/scenes/highpoly/right_hand.tscn" id="5_1wtg2"]
@@ -83,8 +83,8 @@ order = 9
 [node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("8_62am2")]
 
 [node name="Shapell" parent="XROrigin3D/PlayerBody" instance=ExtResource("9_go32e")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.101566)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.150263, 0)
 
 [node name="_CollisionShape3D_20947" type="CollisionShape3D" parent="XROrigin3D/PlayerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+transform = Transform3D(1, 0, 0, 0, 0.845, 0, 0, 0, 1, 0, 0.623609, 0)
 shape = SubResource("CapsuleShape3D_1n2os")

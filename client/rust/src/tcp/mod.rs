@@ -37,7 +37,7 @@ use tokio::{
     sync::{mpsc, oneshot},
     task::JoinError,
 };
-use tokio_rustls::rustls::ClientConfig;
+use tokio_rustls::rustls::{ClientConfig, RootCertStore};
 
 use crate::{
     async_driver::tokio,
@@ -123,10 +123,8 @@ impl ClockerConnection {
             match srv.map(|v| v.into_iter().next()) {
                 Ok(Some(e)) => {
                     info!(logger, "SRV record resolved: {:?}", e);
-                    let mut root_cert_store = tokio_rustls::rustls::RootCertStore::empty();
-                    for cert in rustls_native_certs::load_native_certs().unwrap() {
-                        root_cert_store.add(cert).unwrap();
-                    }
+                    let mut root_cert_store = RootCertStore::empty();
+                    root_cert_store.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
                     let config = ClientConfig::builder()
                         .with_root_certificates(root_cert_store)
                         .with_no_client_auth();

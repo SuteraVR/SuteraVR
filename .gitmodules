@@ -1,0 +1,4 @@
+[submodule "client/Godot/tsukurun-world"]
+	path = client/Godot/tsukurun-world
+	url = https://github.com/suteravr/tsukurun-world
+  ignore = dirty
