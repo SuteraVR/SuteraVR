@@ -24,11 +24,11 @@ func appear():
 
 func change_avatar(avatar_num:int):
 	if(avatar_num==1):
-		self.Scene = player_scene1.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+		self.Scene = player_scene1.instantiate()
 	elif(avatar_num==2):
-		self.Scene = player_scene2.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+		self.Scene = player_scene2.instantiate()
 	elif(avatar_num==3):
-		self.Scene = player_scene3.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+		self.Scene = player_scene3.instantiate()
 	else:
 		print("error invalid value")
 
