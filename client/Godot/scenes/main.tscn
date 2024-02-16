@@ -149,9 +149,12 @@ texture = ExtResource("1_wjwcn")
 expand_mode = 1
 
 [node name="Panel2" type="Panel" parent="."]
-offset_top = 910.0
-offset_right = 1432.0
-offset_bottom = 955.0
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -45.0
+offset_right = 1113.0
+grow_vertical = 0
 
 [node name="Label" type="Label" parent="Panel2" node_paths=PackedStringArray("line_edit")]
 layout_mode = 0
@@ -184,9 +187,17 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_106fn")
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 3
-anchors_preset = 0
-offset_right = 1154.0
-offset_bottom = 649.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -577.0
+offset_top = -324.5
+offset_right = 577.0
+offset_bottom = 324.5
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("10_7j42d")
 
 [node name="Panel" type="Panel" parent="Control"]
@@ -196,10 +207,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -217.0
-offset_top = 95.5
-offset_right = 983.0
-offset_bottom = 335.5
+offset_left = -539.0
+offset_top = -123.0
+offset_right = 539.0
+offset_bottom = 123.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_5hww7")
@@ -232,7 +243,7 @@ text = "TextChat"
 layout_mode = 0
 offset_left = 25.0
 offset_top = 112.0
-offset_right = 1175.0
+offset_right = 1067.0
 offset_bottom = 222.0
 theme_override_fonts/font = ExtResource("7_ro30e")
 theme_override_font_sizes/font_size = 41
