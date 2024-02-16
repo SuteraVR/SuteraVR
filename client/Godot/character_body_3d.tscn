@@ -60,6 +60,7 @@ script = ExtResource("11_u7dw0")
 
 [node name="Shapell" parent="XROrigin3D/PlayerBody" instance=ExtResource("8_3dlk8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.00168823)
+visible = false
 
 [node name="_CollisionShape3D_20927" type="CollisionShape3D" parent="XROrigin3D/PlayerBody"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
