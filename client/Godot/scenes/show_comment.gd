@@ -17,4 +17,4 @@ func _process(delta):
 			text = "%s" % comment
 	else:
 		text = "%s" % comment
-	comment.my_comment = false
+	line_edit.my_comment = false
