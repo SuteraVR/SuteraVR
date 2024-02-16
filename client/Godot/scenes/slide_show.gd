@@ -10,7 +10,7 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	$SubViewport/TextureRect.texture = ResourceLoader.load("res://slides/rekut/"+str(page)+".jpg")
+	$SubViewport/TextureRect.texture = ResourceLoader.load(dir+str(page)+".jpg")
 	if Input.is_action_just_pressed("slides_next"):
 		page+=1
 	if Input.is_action_just_pressed("slides_back"):
