@@ -61,4 +61,7 @@ func delete_player_instance(id: int):
 	if instance != null && is_instance_valid(instance):
 		instance.free()
 		player_instances[id] = null
-
+		
+func change_user_avatar(id:int,avatar_num:int):
+	var player = get_player(id)
+	player.change_avatar(avatar_num)
