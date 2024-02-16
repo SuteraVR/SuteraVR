@@ -35,6 +35,7 @@ script = ExtResource("1_0pp0e")
 
 [node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+current = true
 
 [node name="VRCommonShaderCache" parent="XROrigin3D/XRCamera3D" instance=ExtResource("2_u5fih")]
 
