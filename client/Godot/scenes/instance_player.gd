@@ -6,6 +6,9 @@ var PlayerId: int
 var Clocker: ClockerConnection
 
 const player_scene = preload("res://scenes/instance_player.tscn")
+const player_scene1 = preload("res://tsukurun-world/avatars/ash/ash_1_0.tscn")
+const player_scene2 = preload("res://tsukurun-world/avatars/ciel/ciel_1_0.tscn")
+const player_scene3 = preload("res://scenes/3dmodels/Shapell.tscn")
 
 
 func _init(clocker: ClockerConnection, player_id: int):
@@ -18,6 +21,16 @@ func _init(clocker: ClockerConnection, player_id: int):
 
 func appear():
 	self.Scene.visible = true
+
+func change_avatar(avatar_num:int):
+	if(avatar_num==1):
+		self.Scene = player_scene1.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+	elif(avatar_num==2):
+		self.Scene = player_scene2.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+	elif(avatar_num==3):
+		self.Scene = player_scene3.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+	else:
+		print("error invalid value")
 
 func move(
 	x: float, y: float, z: float,
