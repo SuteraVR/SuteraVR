@@ -13,10 +13,10 @@ func _ready():
 	# ホストに接続し、通信確立を待機
 	# 
 	# 例) ローカルでclocking-serverを動かしている場合:
-	clocker.connect_to_localhost()
+	#    clocker.connect_to_localhost()
 	#
 	# 例) 外部のサーバーに接続する場合
-	#   clocker.connect_by_srv("suteravr.io")
+	clocker.connect_by_srv("aspulse-host.suteravr.io")
 	
 	await Signal(clocker, clocker.signal_connection_established())
 	
