@@ -1,12 +1,11 @@
-[gd_scene load_steps=27 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=21 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" uid="uid://dl3j05ogv5103" path="res://character_body_3d.tscn" id="1_k7dhr"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="Script" path="res://move_and_pov.gd" id="2_7xvxd"]
 [ext_resource type="Script" path="res://scenes/instance_anchor.gd" id="3_sapx3"]
-[ext_resource type="FontVariation" uid="uid://dl5u8haql6ab6" path="res://font/NeverMind.tres" id="6_lrlhe"]
+[ext_resource type="FontVariation" path="res://font/NeverMind.tres" id="6_lrlhe"]
 [ext_resource type="FontFile" uid="uid://2uv8b8gmoet7" path="res://font/Koruri-Bold.ttf" id="7_ro30e"]
-[ext_resource type="LightmapGIData" uid="uid://bmvustwyuhsyb" path="res://scenes/main.lmbake" id="8_40yc0"]
 [ext_resource type="Script" path="res://scenes/show_comment.gd" id="8_gs6hu"]
 [ext_resource type="Script" path="res://scenes/show_name.gd" id="9_p62a6"]
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
@@ -16,6 +15,8 @@
 script/source = "extends Node3D
 
 var xr_interface: XRInterface
+
+var school_scene = preload(\"res://tsukurun-world/scenes/school.tscn\")
 
 func _ready():
 	xr_interface = XRServer.find_interface(\"OpenXR\")
@@ -29,27 +30,13 @@ func _ready():
 		get_viewport().use_xr = true
 	else:
 		print(\"OpenXR not initialized, please check if your headset is connected\")
+
+	var school = school_scene.instantiate()
+	school.position = Vector3(0, 0, 0)
+	add_child(school)
 "
 
-[sub_resource type="Environment" id="Environment_jscir"]
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_farqr"]
-lightmap_size_hint = Vector2i(12, 12)
-add_uv2 = true
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_jgrjk"]
-
-[sub_resource type="QuadMesh" id="QuadMesh_qh65e"]
-lightmap_size_hint = Vector2i(10, 6)
-add_uv2 = true
-size = Vector2(1.6, 0.9)
-
-[sub_resource type="ViewportTexture" id="ViewportTexture_tqnxw"]
-viewport_path = NodePath("UI")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_verhv"]
-resource_local_to_scene = true
-albedo_texture = SubResource("ViewportTexture_tqnxw")
 
 [sub_resource type="Theme" id="Theme_dy827"]
 
@@ -92,29 +79,11 @@ script = SubResource("GDScript_qak7f")
 [node name="CharacterBody3D" parent="." instance=ExtResource("1_k7dhr")]
 script = ExtResource("2_7xvxd")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_jscir")
-
-[node name="LightmapGI" type="LightmapGI" parent="."]
-light_data = ExtResource("8_40yc0")
-
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
-transform = Transform3D(10.2345, 0, 0, 0, 3, 0, 0, 0, 10.8304, 0, 0, 0)
-mesh = SubResource("PlaneMesh_farqr")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
 transform = Transform3D(19.6385, 0, 0, 0, 1, 0, 0, 0, 21.2501, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_jgrjk")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1.90346, 0, 0, 0, 1.90346, 0, 0, 0, 1.90346, 0.0279732, 1.31003, -1.98213)
-cast_shadow = 0
-ignore_occlusion_culling = true
-gi_mode = 2
-mesh = SubResource("QuadMesh_qh65e")
-surface_material_override/0 = SubResource("StandardMaterial3D_verhv")
 
 [node name="UI" type="SubViewport" parent="."]
 size = Vector2i(1920, 1080)
@@ -180,9 +149,12 @@ texture = ExtResource("1_wjwcn")
 expand_mode = 1
 
 [node name="Panel2" type="Panel" parent="."]
-offset_top = 910.0
-offset_right = 1432.0
-offset_bottom = 955.0
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -45.0
+offset_right = 1113.0
+grow_vertical = 0
 
 [node name="Label" type="Label" parent="Panel2" node_paths=PackedStringArray("line_edit")]
 layout_mode = 0
@@ -215,9 +187,17 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_106fn")
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 3
-anchors_preset = 0
-offset_right = 1154.0
-offset_bottom = 649.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -577.0
+offset_top = -324.5
+offset_right = 577.0
+offset_bottom = 324.5
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("10_7j42d")
 
 [node name="Panel" type="Panel" parent="Control"]
@@ -227,10 +207,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -217.0
-offset_top = 95.5
-offset_right = 983.0
-offset_bottom = 335.5
+offset_left = -539.0
+offset_top = -123.0
+offset_right = 539.0
+offset_bottom = 123.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_5hww7")
@@ -263,7 +243,7 @@ text = "TextChat"
 layout_mode = 0
 offset_left = 25.0
 offset_top = 112.0
-offset_right = 1175.0
+offset_right = 1067.0
 offset_bottom = 222.0
 theme_override_fonts/font = ExtResource("7_ro30e")
 theme_override_font_sizes/font_size = 41
@@ -276,39 +256,3 @@ unique_name_in_owner = true
 
 [node name="InstanceAnchor" type="Node" parent="Clocker"]
 script = ExtResource("3_sapx3")
-
-[node name="Node" type="Node" parent="."]
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Node"]
-transform = Transform3D(-0.879574, 0.341467, -0.331286, -2.4559e-08, 0.696326, 0.717725, 0.475762, 0.631292, -0.61247, -3.69723, 3.0358, -2.76411)
-light_bake_mode = 1
-
-[node name="OmniLight3D" type="OmniLight3D" parent="Node"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0437, 3.4906, -1.07123)
-light_indirect_energy = 3.854
-light_volumetric_fog_energy = 0.0
-light_bake_mode = 1
-
-[node name="OmniLight3D2" type="OmniLight3D" parent="Node"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.70939, 3.4906, -1.07123)
-light_indirect_energy = 3.854
-light_volumetric_fog_energy = 0.0
-light_bake_mode = 1
-
-[node name="OmniLight3D3" type="OmniLight3D" parent="Node"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.06723, 3.4906, 1.75023)
-light_indirect_energy = 3.854
-light_volumetric_fog_energy = 0.0
-light_bake_mode = 1
-
-[node name="OmniLight3D4" type="OmniLight3D" parent="Node"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.68586, 3.4906, 1.75023)
-light_indirect_energy = 3.854
-light_volumetric_fog_energy = 0.0
-light_bake_mode = 1
-script = ExtResource("3_sapx3")
-
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(0.0160738, 0, 0.999871, 0, 1, 0, -0.999871, 0, 0.0160738, 2.50121, 0.464714, 0)
-current = true
-fov = 104.062

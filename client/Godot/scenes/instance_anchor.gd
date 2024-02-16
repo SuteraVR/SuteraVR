@@ -1,6 +1,6 @@
 extends Node
 
-@onready var clocker: ClockerConnection = %Clocker
+@onready var clocker: ClockerConnection = get_parent()
 var player_scene = preload("res://scenes/instance_player.tscn")
 var player_instances = {}
 

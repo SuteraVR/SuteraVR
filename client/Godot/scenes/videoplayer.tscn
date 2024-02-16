@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://cswlbartcog6a"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ks473"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_0gx6j"]
+viewport_path = NodePath("SubViewport")
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_nuwg8"]
+viewport_path = NodePath("SubViewport")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gq4vf"]
+resource_local_to_scene = true
+albedo_texture = SubResource("ViewportTexture_0gx6j")
+emission_enabled = true
+emission_energy_multiplier = 10.0
+emission_texture = SubResource("ViewportTexture_nuwg8")
+
+[node name="Node3D" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1.777, 0, 1, 0)
+mesh = SubResource("PlaneMesh_ks473")
+surface_material_override/0 = SubResource("StandardMaterial3D_gq4vf")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+size = Vector2i(1280, 720)
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="SubViewport"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="SubViewport/SubViewportContainer"]
+layout_mode = 2
