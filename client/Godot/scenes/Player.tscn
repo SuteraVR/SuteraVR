@@ -83,8 +83,8 @@ order = 9
 [node name="PlayerBody" parent="XROrigin3D" instance=ExtResource("8_62am2")]
 
 [node name="Shapell" parent="XROrigin3D/PlayerBody" instance=ExtResource("9_go32e")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.101566)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.150263, 0)
 
 [node name="_CollisionShape3D_20947" type="CollisionShape3D" parent="XROrigin3D/PlayerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+transform = Transform3D(1, 0, 0, 0, 0.845, 0, 0, 0, 1, 0, 0.623609, 0)
 shape = SubResource("CapsuleShape3D_1n2os")

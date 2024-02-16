@@ -101,11 +101,11 @@ light_data = ExtResource("8_40yc0")
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+transform = Transform3D(10.2345, 0, 0, 0, 3, 0, 0, 0, 10.8304, 0, 0, 0)
 mesh = SubResource("PlaneMesh_farqr")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 6, 0, -0.5, 0)
+transform = Transform3D(19.6385, 0, 0, 0, 1, 0, 0, 0, 21.2501, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_jgrjk")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
@@ -306,3 +306,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.68586, 3.4906, 1.75023)
 light_indirect_energy = 3.854
 light_volumetric_fog_energy = 0.0
 light_bake_mode = 1
+script = ExtResource("3_sapx3")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.0160738, 0, 0.999871, 0, 1, 0, -0.999871, 0, 0.0160738, 2.50121, 0.464714, 0)
+current = true
+fov = 104.062
