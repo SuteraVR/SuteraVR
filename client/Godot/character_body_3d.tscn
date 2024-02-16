@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://dl3j05ogv5103"]
+[gd_scene load_steps=12 format=3 uid="uid://dl3j05ogv5103"]
 
 [ext_resource type="PackedScene" uid="uid://ct7lvk0u476id" path="res://addons/godot-xr-tools/misc/vr_common_shader_cache.tscn" id="1_g6opq"]
 [ext_resource type="PackedScene" uid="uid://bl2nuu3qhlb5k" path="res://addons/godot-xr-tools/functions/movement_direct.tscn" id="3_ls3qk"]
@@ -11,16 +11,6 @@
 [ext_resource type="Script" path="res://scenes/mouse_capture.gd" id="10_rl716"]
 [ext_resource type="Script" path="res://scenes/looking_around.gd" id="11_u7dw0"]
 
-[sub_resource type="QuadMesh" id="QuadMesh_qh65e"]
-size = Vector2(1.6, 0.9)
-
-[sub_resource type="ViewportTexture" id="ViewportTexture_tqnxw"]
-viewport_path = NodePath("UI")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_verhv"]
-resource_local_to_scene = true
-albedo_texture = SubResource("ViewportTexture_tqnxw")
-
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_217kt"]
 radius = 0.2
 height = 1.4
@@ -31,18 +21,13 @@ height = 1.4
 
 [node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.19056, 0)
+current = true
 
 [node name="VRCommonShaderCache" parent="XROrigin3D/XRCamera3D" instance=ExtResource("1_g6opq")]
 
 [node name="LeftHand" type="XRController3D" parent="XROrigin3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5)
 tracker = &"left_hand"
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="XROrigin3D/LeftHand"]
-transform = Transform3D(0.16146, 0, 0, 0, 0.16146, 0, 0, 0, 0.16146, 0.148207, 0.054749, -0.0200708)
-mesh = SubResource("QuadMesh_qh65e")
-skeleton = NodePath("../../../../MeshInstance3D")
-surface_material_override/0 = SubResource("StandardMaterial3D_verhv")
 
 [node name="MovementDirect" parent="XROrigin3D/LeftHand" instance=ExtResource("3_ls3qk")]
 strafe = true
