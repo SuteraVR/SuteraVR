@@ -2,6 +2,7 @@ extends LineEdit
 @onready var CLOCKER: ClockerConnection = %Clocker
 var message_box = "Comment"
 var name_box = "?"
+var my_comment = false
 
 func _ready():
 	await CLOCKER.ready
@@ -13,6 +14,7 @@ func _input(event):
 			select()
 			CLOCKER.oneshot_send_chat_message(get_selected_text())
 			clear()
+			my_comment = true
 
 func _on_new_textchat_message(sender, message):
 	name_box = sender

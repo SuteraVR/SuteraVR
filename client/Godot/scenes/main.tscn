@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="Script" path="res://move_and_pov.gd" id="2_7xvxd"]
 [ext_resource type="Script" path="res://scenes/instance_anchor.gd" id="3_sapx3"]
-[ext_resource type="FontVariation" path="res://font/NeverMind.tres" id="6_lrlhe"]
+[ext_resource type="FontVariation" uid="uid://dl5u8haql6ab6" path="res://font/NeverMind.tres" id="6_lrlhe"]
 [ext_resource type="FontFile" uid="uid://2uv8b8gmoet7" path="res://font/Koruri-Bold.ttf" id="7_ro30e"]
 [ext_resource type="Script" path="res://scenes/show_comment.gd" id="8_gs6hu"]
 [ext_resource type="Script" path="res://scenes/show_name.gd" id="9_p62a6"]
@@ -255,4 +255,5 @@ script = ExtResource("12_xih1r")
 unique_name_in_owner = true
 
 [node name="InstanceAnchor" type="Node" parent="Clocker"]
+unique_name_in_owner = true
 script = ExtResource("3_sapx3")
