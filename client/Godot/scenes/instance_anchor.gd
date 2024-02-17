@@ -63,5 +63,10 @@ func delete_player_instance(id: int):
 		player_instances[id] = null
 		
 func change_user_avatar(id:int,avatar_num:int):
+	if id == clocker.get_player_id_or_minus_one():
+		return
 	var player = get_player(id)
-	player.change_avatar(avatar_num)
+	if player != null && is_instance_valid(player):
+		player.change_avatar(avatar_num)
+	else:
+		print('Error occured to change avatar of player %s' % [id])

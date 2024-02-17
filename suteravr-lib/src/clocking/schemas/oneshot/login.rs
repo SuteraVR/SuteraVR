@@ -13,6 +13,6 @@ pub struct LoginRequest {
 #[derive(Debug)]
 #[alkahest(Formula, Serialize, Deserialize)]
 pub enum LoginResponse {
-    Ok(Vec<PlayerId>),
+    Ok(PlayerId, Vec<PlayerId>),
     BadToken,
 }
