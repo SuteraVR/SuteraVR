@@ -45,5 +45,5 @@ func teleport_world(world_num: String):
 		player_body.accept_teleport(Vector3(-300,100,-300))
 		print("teleporting")
 	if(world_num=="homeroom"):
-		player_body.accept_teleport(Vector3(0,-100,0))
+		player_body.accept_teleport(Vector3(0,-99.5,0))
 		print("teleporting")
