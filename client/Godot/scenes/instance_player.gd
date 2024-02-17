@@ -23,6 +23,8 @@ func appear():
 	self.Scene.visible = true
 
 func change_avatar(avatar_num:int):
+	self.Scene.visible = false
+	self.Scene.free()
 	if(avatar_num==1):
 		self.Scene = player_scene1.instantiate()
 	elif(avatar_num==2):
@@ -31,6 +33,9 @@ func change_avatar(avatar_num:int):
 		self.Scene = player_scene3.instantiate()
 	else:
 		print("error invalid value")
+	self.Scene.visible = false
+	add_child(self.Scene)
+	self.Scene.visible = true
 
 func move(
 	x: float, y: float, z: float,
