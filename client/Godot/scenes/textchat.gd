@@ -43,4 +43,12 @@ func teleport_world(world_num: String):
 	if(world_num=="nekoyama"):
 		player_body.accept_teleport(Vector3(100,200,0))
 		print("teleporting")
-		
+	if(world_num=="museum2"):
+		player_body.accept_teleport(Vector3(300,100,300))
+		print("teleporting")
+	if(world_num=="djroom"):
+		player_body.accept_teleport(Vector3(-300,100,-300))
+		print("teleporting")
+	if(world_num=="homeroom"):
+		player_body.accept_teleport(Vector3(0,-100,0))
+		print("teleporting")
