@@ -26,13 +26,16 @@ func _on_new_textchat_message(sender, message):
 			message_box = "changed avatar number %s" % comment_array[1]
 			instance_anchor.change_user_avatar(sender, comment_array[1].to_int())
 		elif(comment_array[0] == "//ch_world"):
-			teleport_world(comment_array[1].to_int())
+			teleport_world(comment_array[1])
 		else:
 			message_box = "invalid command"
 		return
 
-func teleport_world(world_num:int):
-	const world1 = Vector3(3,0,0)
-	if(world_num==1):
-		player_body.accept_teleport(world1)
+func teleport_world(world_num: String):
+	if(world_num=="school"):
+		player_body.accept_teleport(Vector3(0,0,0))
 		print("teleporting")
+	if(world_num=="nekoyama"):
+		player_body.accept_teleport(Vector3(100,200,0))
+		print("teleporting")
+		
