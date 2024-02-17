@@ -13,7 +13,5 @@ func _ready():
 func _process(delta):
 	$SubViewport/TextureRect.texture = ResourceLoader.load(dir+str(page)+".jpg")
 
-func slides_next():
-	page+=1
-func slides_back():
-	page-=1
+func slide_select(num:int):
+	page = num
