@@ -77,6 +77,7 @@ bg_color = Color(1, 1, 1, 1)
 script = SubResource("GDScript_qak7f")
 
 [node name="CharacterBody3D" parent="." instance=ExtResource("1_k7dhr")]
+unique_name_in_owner = true
 script = ExtResource("2_7xvxd")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
