@@ -18,6 +18,7 @@ use suteravr_lib::{
         },
     },
     debug, error,
+    messaging::id::PlayerId,
     messaging::player::{StandingTransform, StandingTransformEncoder},
     util::serialize_to_new_vec,
 };
@@ -70,6 +71,7 @@ struct ClockerConnection {
     pos: StandingTransformEncoder,
     logger: GodotLogger,
     connection: Arc<Mutex<Option<Connection>>>,
+    player_id: Arc<Mutex<Option<PlayerId>>>,
     message_id_dispatch: AtomicU64,
 }
 
@@ -108,6 +110,11 @@ impl ClockerConnection {
     #[func]
     fn signal_player_moved(&mut self) -> String {
         SIGNAL_PLAYER_MOVED.to_string()
+    }
+
+    #[func]
+    fn get_player_id_or_minus_one(&self) -> i64 {
+        self.player_id.lock().unwrap().map(i64::from).unwrap_or(-1)
     }
 
     #[func]
@@ -248,6 +255,7 @@ impl ClockerConnection {
     #[func]
     fn join_instance(&mut self, join_token: u64) {
         let id = self.get_message_id();
+        let player_id_mut = self.player_id.clone();
         let logger = self.logger();
         let Some(send) = self.send_tx() else {
             return;
@@ -274,7 +282,10 @@ impl ClockerConnection {
             .await?;
             let result = deserialize::<LoginResponse, LoginResponse>(&login_result.payload)?;
             info!(logger, "Instance Joined: {:?}", result);
-            if let LoginResponse::Ok(players) = result {
+            if let LoginResponse::Ok(player_id, players) = result {
+                {
+                    player_id_mut.lock().unwrap().replace(player_id);
+                }
                 for player in players {
                     Gd::<ClockerConnection>::from_instance_id(instance_id)
                         .cast::<ClockerConnection>()
@@ -348,6 +359,7 @@ impl INode for ClockerConnection {
             pos: StandingTransformEncoder::new(),
             logger,
             connection: Arc::new(Mutex::new(None)),
+            player_id: Arc::new(Mutex::new(None)),
             message_id_dispatch: AtomicU64::new(0),
         }
     }
