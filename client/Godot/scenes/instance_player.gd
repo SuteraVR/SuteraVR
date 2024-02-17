@@ -6,6 +6,11 @@ var PlayerId: int
 var Clocker: ClockerConnection
 var delay: Array[int] = [];
 
+var ts: float = -1;
+var te: float = -1;
+var from: Transform3D;
+var to: Transform3D;
+
 const player_scene = preload("res://scenes/instance_player.tscn")
 const player_scene1 = preload("res://tsukurun-world/avatars/ash/ash_1_0.tscn")
 const player_scene2 = preload("res://tsukurun-world/avatars/ciel/ciel_1_0.tscn")
@@ -51,17 +56,34 @@ func calc_delay() -> int:
 	if e - s > 1000:
 		reset_delay()
 		return 16
-	return 0
-	
+	delay.push_back(e)
+	var sum: int = 0;
+	for n in 9:
+		sum += (delay[n+1] - delay[n])
+	return sum / 9
 
 func move(
 	x: float, y: float, z: float,
 	xx: float, xz: float, zx: float, zz: float,
 ):
+	var delay = calc_delay()
+	self.ts = Time.get_ticks_msec()
+	self.te = self.ts + delay
+	self.from = Transform3D(self.Scene.transform)
+	self.to = Transform3D(self.Scene.transform)
+	self.to.origin = Vector3(x, y, z)
+	self.to.basis.x.x = xx
+	self.to.basis.x.z = xz
+	self.to.basis.z.x = zx
+	self.to.basis.z.z = zz
 
-	print()
-	self.Scene.transform.origin = Vector3(x, y, z)
-	self.Scene.transform.basis.x.x = xx
-	self.Scene.transform.basis.x.z = xz
-	self.Scene.transform.basis.z.x = zx
-	self.Scene.transform.basis.z.z = zz
+func _process(_delta):
+	if ts < 0:
+		return;
+	var ticks = Time.get_ticks_msec()
+	if ticks > te:
+		self.Scene.transform = self.to
+		return
+	var weight = (ticks - ts) / (te - ts)
+	self.Scene.transform = self.from.interpolate_with(self.to, weight)
+	
