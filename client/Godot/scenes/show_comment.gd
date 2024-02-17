@@ -1,5 +1,4 @@
 extends Label
-
 @onready var line_edit: LineEdit = %LineEdit
 
 func _process(delta):
