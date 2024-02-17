@@ -2,6 +2,7 @@ extends LineEdit
 @onready var CLOCKER: ClockerConnection = %Clocker
 @onready var instance_anchor:Node = %InstanceAnchor
 @onready var player_body:CharacterBody3D = %CharacterBody3D
+@onready var node3d_parent:Node3D = %Node3D
 var message_box = "Comment"
 var name_box = "?"
 
@@ -27,6 +28,10 @@ func _on_new_textchat_message(sender, message):
 			instance_anchor.change_user_avatar(sender, comment_array[1].to_int())
 		elif(comment_array[0] == "//ch_world"):
 			teleport_world(comment_array[1])
+		elif(comment_array[0] == "//next_slide"):
+			node3d_parent.slide_next()
+		elif(comment_array[0] == "//back_slide"):
+			node3d_parent.slide_back()
 		else:
 			message_box = "invalid command"
 		return

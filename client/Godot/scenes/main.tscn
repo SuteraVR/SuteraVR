@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="Script" path="res://move_and_pov.gd" id="2_7xvxd"]
 [ext_resource type="Script" path="res://scenes/instance_anchor.gd" id="3_sapx3"]
-[ext_resource type="FontVariation" path="res://font/NeverMind.tres" id="6_lrlhe"]
+[ext_resource type="FontVariation" uid="uid://dl5u8haql6ab6" path="res://font/NeverMind.tres" id="6_lrlhe"]
 [ext_resource type="FontFile" uid="uid://2uv8b8gmoet7" path="res://font/Koruri-Bold.ttf" id="7_ro30e"]
 [ext_resource type="Script" path="res://scenes/show_comment.gd" id="8_gs6hu"]
 [ext_resource type="Script" path="res://scenes/show_name.gd" id="9_p62a6"]
@@ -13,7 +13,6 @@
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
-
 var xr_interface: XRInterface
 
 var school_scene = preload(\"res://tsukurun-world/tsukurun.tscn\")
@@ -34,6 +33,12 @@ func _ready():
 	var school = school_scene.instantiate()
 	school.position = Vector3(0, 0, 0)
 	add_child(school)
+
+func slide_next():
+	school_scene.slide_next()
+	
+func slide_back():
+	school_scene.slide_back()
 "
 
 [sub_resource type="Theme" id="Theme_dy827"]
