@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=21 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" uid="uid://dl3j05ogv5103" path="res://character_body_3d.tscn" id="1_k7dhr"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
@@ -9,14 +9,14 @@
 [ext_resource type="Script" path="res://scenes/show_comment.gd" id="8_gs6hu"]
 [ext_resource type="Script" path="res://scenes/show_name.gd" id="9_p62a6"]
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
+[ext_resource type="PackedScene" uid="uid://h20sbkn4np74" path="res://tsukurun-world/tsukurun.tscn" id="11_f7qk7"]
 [ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
-
 var xr_interface: XRInterface
+@onready var school_scene = %Tsukurun
 
-var school_scene = preload(\"res://tsukurun-world/tsukurun.tscn\")
 
 func _ready():
 	xr_interface = XRServer.find_interface(\"OpenXR\")
@@ -31,9 +31,9 @@ func _ready():
 	else:
 		print(\"OpenXR not initialized, please check if your headset is connected\")
 
-	var school = school_scene.instantiate()
-	school.position = Vector3(0, 0, 0)
-	add_child(school)
+
+func slide_select(num:int, slide_num:int):
+	school_scene.slide_select(num, slide_num)
 "
 
 [sub_resource type="Theme" id="Theme_dy827"]
@@ -231,7 +231,7 @@ theme_override_fonts/font = ExtResource("6_lrlhe")
 theme_override_font_sizes/font_size = 85
 text = "TextChat"
 
-[node name="LineEdit" type="LineEdit" parent="Control/Panel"]
+[node name="LineEdit" type="LineEdit" parent="Control/Panel" node_paths=PackedStringArray("node3d_parent")]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 25.0
@@ -243,6 +243,7 @@ theme_override_font_sizes/font_size = 41
 placeholder_text = "ここに文章を入力してね"
 language = "ja_JP"
 script = ExtResource("12_xih1r")
+node3d_parent = NodePath("../../..")
 
 [node name="Clocker" type="ClockerConnection" parent="."]
 unique_name_in_owner = true
@@ -250,3 +251,6 @@ unique_name_in_owner = true
 [node name="InstanceAnchor" type="Node" parent="Clocker"]
 unique_name_in_owner = true
 script = ExtResource("3_sapx3")
+
+[node name="Tsukurun" parent="." instance=ExtResource("11_f7qk7")]
+unique_name_in_owner = true

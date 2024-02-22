@@ -82,8 +82,8 @@ func _process(_delta):
 		return;
 	var ticks = Time.get_ticks_msec()
 	if ticks > te:
-		self.Scene.transform = self.to
+		self.Scene.transform = self.to.orthonormalized()
 		return
 	var weight = (ticks - ts) / (te - ts)
-	self.Scene.transform = self.from.interpolate_with(self.to, weight)
+	self.Scene.transform = self.from.interpolate_with(self.to, weight).orthonormalized()
 	

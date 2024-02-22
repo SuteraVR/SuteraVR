@@ -15,4 +15,6 @@ func _physics_process(_delta):
 		origin.transform.basis.x.z,
 	)
 func accept_teleport(destination: Vector3):
-	transform.origin = destination - origin.transform.origin
+	var t = Transform3D(transform)
+	t.origin = destination - origin.transform.origin
+	transform = t.orthonormalized()
