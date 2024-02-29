@@ -1,7 +1,7 @@
 <div align="center">
 <img src="https://github.com/SuteraVR/SuteraVR/assets/61668366/c73c4885-7589-4edd-864c-156da428312b" width=300>
 
-**the distributed metaverse platform:**<br>**makes your precious worlds and avatars independent of any specific service!**
+**the distributed metaverse platform:**<br>**makes your precious relationships built in metaverse independent of any specific service!**
 
 <img src="https://img.shields.io/badge/Rust-v1.74.0 stable-000000.svg?style=for-the-badge&logo=rust">
 <img src="https://img.shields.io/badge/Godot Engine-v4.2 .NET-478CBF.svg?style=for-the-badge&logo=godotengine">
