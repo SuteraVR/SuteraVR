@@ -13,9 +13,12 @@
 
 [日本語版はこちら](./READNE_JP.md)
 
-# ✨ Features
+## ✨ Design
 
-- World, avatar, client format, etc.
-- Create an API . For example, add on to functions such as cameras, etc., or link worlds to external functions.
-- Complete data processing within the sandbox environment. Prevent viruses and malicious scripts from executing and influencing the outside world.
-- Allow users to set permissions for uploading, etc. Limited publication of worlds, etc.
+- **Destributed & Decentralized**
+  - You can create a bloom (commonly called an instance) that works as a metaverse platform: play with friends, share worlds and items. All blooms communicate with each other, and be able to access contents of other blooms.
+- **Sandbox Enviroment**
+  - Complete data processing within the sandbox environment. Prevent viruses and malicious scripts from executing and influencing the outside world.
+- **SuteraVR SDK**
+  - You can upload avatars/worlds/items, and attach functions as you like by coding.
+- **Management of Permissions**
