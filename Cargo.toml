@@ -1,0 +1,11 @@
+[workspace]
+
+members = [
+  "clocking-server",
+  "balancing-server",
+  "social-server",
+  "client/rust"
+]
+
+[workspace.dependencies]
+tokio = { version = "1.36.0", features = ["full"] }
