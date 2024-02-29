@@ -22,3 +22,7 @@
 - **SuteraVR SDK**
   - You can upload avatars/worlds/items, and attach functions as you like by coding.
 - **Management of Permissions**
+
+## 🌼 Name Origin
+
+The name comes from the Sutera flower of the sesamum family, known as Bacopa.
