@@ -5,6 +5,7 @@
 
 <img src="https://img.shields.io/badge/Rust-v1.74.0 stable-000000.svg?style=for-the-badge&logo=rust">
 <img src="https://img.shields.io/badge/Godot Engine-v4.2 .NET-478CBF.svg?style=for-the-badge&logo=godotengine">
+<a href="https://github.com/SuteraVR/.github/blob/main/CONTRIBUTING.md"><img src="https://img.shields.io/badge/Become a-Contributor-A371F7?style=for-the-badge&logo=git-merge&labelColor=363B40"></a>
 <a href="https://discord.gg/pTjBHkVQbT"><img src="https://img.shields.io/badge/Join-the community-5865F2?style=for-the-badge&logo=discord"></a>
 
 </div>
