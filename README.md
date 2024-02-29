@@ -17,16 +17,19 @@
 
 This software is still in the **development phase** and has not yet been officially released.
 
+If you interested in our project, come to [the Discord community](https://discord.gg/pTjBHkVQbT)!
+
+We look forward to your contributions! [Open an issue](https://github.com/SuteraVR/SuteraVR/issues/new/choose)/[Open a PR](https://github.com/SuteraVR/SuteraVR/compare)
+
 ## 🧭 Concept
 
 - **Distributed & Decentralized**
-  - To make the metaverse as certain as reality, it must not become fragile things dependent on each company and platform. Virtual Reality, forever.
-  - Heavily influenced by the Fediverse built by ActivityPub.
+  - To make the metaverse as certain as reality, it must not become fragile things dependent on specific company and platform. Virtual Reality, forever.
 
 ## ✨ Design
 
 - **Bloom**
-  - Bloom (commonly called an instance) works as an independent metaverse platform: play with friends, share worlds and items. All blooms communicate with each other, and be able to access contents of other blooms.
+  - You can create a bloom that works as an independent metaverse platform: play with friends, share worlds and items. All blooms communicate with each other, and be able to access contents of other blooms.
 - **Sandbox Enviroment**
   - Complete data processing within the sandbox environment. Prevent viruses and malicious scripts from executing and influencing the outside world.
 - **SuteraVR SDK**
@@ -37,3 +40,7 @@ This software is still in the **development phase** and has not yet been officia
 
 Are you worrying that "Sutera" is a misspelling of "Stella"?
 The name comes from the Sutera flower of the Scrophulariaceae family, known as Bacopa.
+
+## 💡 Inspiration
+
+- ActivityPub software: Misskey, Mastodon, etc
