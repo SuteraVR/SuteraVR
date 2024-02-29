@@ -11,11 +11,11 @@
 
 ---
 
+[日本語版はこちら](./READNE_JP.md)
+
 # ✨ Features
 
 - World, avatar, client format, etc.
 - Create an API . For example, add on to functions such as cameras, etc., or link worlds to external functions.
 - Complete data processing within the sandbox environment. Prevent viruses and malicious scripts from executing and influencing the outside world.
 - Allow users to set permissions for uploading, etc. Limited publication of worlds, etc.
-
-[README_JP](/README_JP.md)
