@@ -13,6 +13,10 @@
 
 [日本語版はこちら](./READNE_JP.md)
 
+## 🚨 Attention
+
+This software is still in the **development phase** and has not yet been officially released.
+
 ## ✨ Design
 
 - **Destributed & Decentralized**
