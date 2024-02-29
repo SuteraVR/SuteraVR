@@ -44,4 +44,4 @@ The name comes from the Sutera flower of the Scrophulariaceae family, known as B
 
 ## 💡 Inspiration
 
-- ActivityPub software: Misskey, Mastodon, etc
+- ActivityPub Softwares: Misskey, Mastodon, etc
