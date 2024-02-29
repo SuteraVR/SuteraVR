@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+  "clocking-server",
+  "balancing-server",
+  "social-server",
+  "client/rust"
+]
