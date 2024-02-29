@@ -9,7 +9,6 @@
 [ext_resource type="Script" path="res://scenes/show_comment.gd" id="8_gs6hu"]
 [ext_resource type="Script" path="res://scenes/show_name.gd" id="9_p62a6"]
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
-[ext_resource type="PackedScene" uid="uid://h20sbkn4np74" path="res://tsukurun-world/tsukurun.tscn" id="11_f7qk7"]
 [ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
@@ -255,6 +254,3 @@ script = null
 [node name="InstanceAnchor" type="Node" parent="Clocker"]
 unique_name_in_owner = true
 script = ExtResource("3_sapx3")
-
-[node name="Tsukurun" parent="." instance=ExtResource("11_f7qk7")]
-unique_name_in_owner = true
