@@ -25,4 +25,5 @@
 
 ## 🌼 Name Origin
 
-The name comes from the Sutera flower of the sesamum family, known as Bacopa.
+Are you worrying that "Sutera" is a misspelling of "Stella"?
+The name comes from the Sutera flower of the Scrophulariaceae family, known as Bacopa.
