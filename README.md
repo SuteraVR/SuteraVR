@@ -17,10 +17,16 @@
 
 This software is still in the **development phase** and has not yet been officially released.
 
+## 🧭 Concept
+
+- **Distributed & Decentralized**
+  - To make the metaverse as certain as reality, it must not become fragile things dependent on each company and platform. Virtual Reality, forever.
+  - Heavily influenced by the Fediverse built by ActivityPub.
+
 ## ✨ Design
 
-- **Destributed & Decentralized**
-  - You can create a bloom (commonly called an instance) that works as a metaverse platform: play with friends, share worlds and items. All blooms communicate with each other, and be able to access contents of other blooms.
+- **Bloom**
+  - Bloom (commonly called an instance) works as an independent metaverse platform: play with friends, share worlds and items. All blooms communicate with each other, and be able to access contents of other blooms.
 - **Sandbox Enviroment**
   - Complete data processing within the sandbox environment. Prevent viruses and malicious scripts from executing and influencing the outside world.
 - **SuteraVR SDK**
