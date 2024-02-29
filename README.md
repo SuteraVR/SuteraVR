@@ -25,7 +25,7 @@ We look forward to your contributions! [Open an issue](https://github.com/Sutera
 ## 🧭 Concept
 
 - **Distributed & Decentralized**
-  - To make the metaverse as certain as reality, it must not become fragile things dependent on specific company and platform. Virtual Reality, forever.
+  - To make the metaverse as certain as reality, it must not become fragile things dependent on specific companies or platforms. Virtual Reality, forever.
 
 ## ✨ Design
 
