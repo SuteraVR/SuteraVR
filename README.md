@@ -18,7 +18,7 @@
 
 This software is still in the **development phase** and has not yet been officially released.
 
-If you interested in our project, come to [the Discord community](https://discord.gg/pTjBHkVQbT)!
+If you interested in our project, come to [our Discord community](https://discord.gg/pTjBHkVQbT)!
 
 We look forward to your contributions! [Open an issue](https://github.com/SuteraVR/SuteraVR/issues/new/choose)/[Open a PR](https://github.com/SuteraVR/SuteraVR/compare)
 
