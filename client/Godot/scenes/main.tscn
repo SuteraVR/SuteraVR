@@ -4,18 +4,16 @@
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
 [ext_resource type="Script" path="res://move_and_pov.gd" id="2_7xvxd"]
 [ext_resource type="Script" path="res://scenes/instance_anchor.gd" id="3_sapx3"]
-[ext_resource type="FontVariation" path="res://font/NeverMind.tres" id="6_lrlhe"]
+[ext_resource type="FontVariation" uid="uid://dl5u8haql6ab6" path="res://font/NeverMind.tres" id="6_lrlhe"]
 [ext_resource type="FontFile" uid="uid://2uv8b8gmoet7" path="res://font/Koruri-Bold.ttf" id="7_ro30e"]
 [ext_resource type="Script" path="res://scenes/show_comment.gd" id="8_gs6hu"]
 [ext_resource type="Script" path="res://scenes/show_name.gd" id="9_p62a6"]
 [ext_resource type="Script" path="res://scenes/Toggle_chatbox.gd" id="10_7j42d"]
-[ext_resource type="PackedScene" uid="uid://h20sbkn4np74" path="res://tsukurun-world/tsukurun.tscn" id="11_f7qk7"]
 [ext_resource type="Script" path="res://scenes/textchat.gd" id="12_xih1r"]
 
 [sub_resource type="GDScript" id="GDScript_qak7f"]
 script/source = "extends Node3D
 var xr_interface: XRInterface
-@onready var school_scene = %Tsukurun
 
 
 func _ready():
@@ -31,9 +29,6 @@ func _ready():
 	else:
 		print(\"OpenXR not initialized, please check if your headset is connected\")
 
-
-func slide_select(num:int, slide_num:int):
-	school_scene.slide_select(num, slide_num)
 "
 
 [sub_resource type="Theme" id="Theme_dy827"]
@@ -231,7 +226,7 @@ theme_override_fonts/font = ExtResource("6_lrlhe")
 theme_override_font_sizes/font_size = 85
 text = "TextChat"
 
-[node name="LineEdit" type="LineEdit" parent="Control/Panel" node_paths=PackedStringArray("node3d_parent")]
+[node name="LineEdit" type="LineEdit" parent="Control/Panel"]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 25.0
@@ -243,14 +238,19 @@ theme_override_font_sizes/font_size = 41
 placeholder_text = "ここに文章を入力してね"
 language = "ja_JP"
 script = ExtResource("12_xih1r")
-node3d_parent = NodePath("../../..")
+node3d_parent = Object(Node3D,"_import_path":NodePath(""),"unique_name_in_owner":false,"process_mode":0,"process_priority":0,"process_physics_priority":0,"process_thread_group":0,"editor_description":"","transform":Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0),"rotation_edit_mode":0,"rotation_order":2,"top_level":false,"visible":true,"visibility_parent":NodePath(""),"script":SubResource("GDScript_qak7f"))
+
 
 [node name="Clocker" type="ClockerConnection" parent="."]
+_import_path = NodePath("")
 unique_name_in_owner = true
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+editor_description = ""
+script = null
 
 [node name="InstanceAnchor" type="Node" parent="Clocker"]
 unique_name_in_owner = true
 script = ExtResource("3_sapx3")
-
-[node name="Tsukurun" parent="." instance=ExtResource("11_f7qk7")]
-unique_name_in_owner = true
