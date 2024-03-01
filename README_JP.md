@@ -10,7 +10,7 @@
 
 # 実行環境
 
-- Rust v1.74.0 stable
+- Rust v1.75.0 stable
 - Godot Engine v4.2 .NET
 
 [README_EN](/README.md)
