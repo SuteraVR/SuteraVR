@@ -10,7 +10,7 @@ Decentralized VRSNS - A new VRSNS that makes your precious worlds and avatars in
 
 # Enviroment
 
-- Rust v1.74.0 stable
+- Rust v1.75.0 stable
 - Godot Engine v4.2 .NET
 
 [README_JP](/README_JP.md)
