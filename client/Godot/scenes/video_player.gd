@@ -14,4 +14,3 @@ func _process(delta):
 		videoplayer.set_paused(!is_paused)
 		is_paused = !is_paused
 		print(!is_paused)
-

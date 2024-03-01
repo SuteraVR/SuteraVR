@@ -1,11 +1,7 @@
 extends LineEdit
 @onready var CLOCKER: ClockerConnection = %Clocker
-@onready var instance_anchor:Node = %InstanceAnchor
-@onready var player_body:CharacterBody3D = %CharacterBody3D
-@export var node3d_parent:Node3D
 var message_box = "Comment"
 var name_box = "?"
-var slide_number:int = 1
 
 func _ready():
 	await CLOCKER.ready
@@ -22,34 +18,4 @@ func _on_new_textchat_message(sender, message):
 	name_box = sender
 	message_box = message
 	print("プレイヤー%s 「%s」" % [sender, message])
-	if(message.left(2) == "//"):
-		var comment_array = message.rsplit(" ",true)
-		if(comment_array[0]=="//ch_av"):
-			message_box = "changed avatar number %s" % comment_array[1]
-			instance_anchor.change_user_avatar(sender, comment_array[1].to_int())
-		elif(comment_array[0] == "//ch_world"):
-			teleport_world(comment_array[1])
-		elif(comment_array[0] == "//slide"):
-			node3d_parent.slide_select(comment_array[1].to_int(),slide_number)
-		elif(comment_array[0]=="//ch_slide"):
-			slide_number = comment_array[1].to_int()
-		else:
-			message_box = "invalid command"
-		return
-
-func teleport_world(world_num: String):
-	if(world_num=="school"):
-		player_body.accept_teleport(Vector3(0,0,0))
-		print("teleporting")
-	if(world_num=="nekoyama"):
-		player_body.accept_teleport(Vector3(100,200,0))
-		print("teleporting")
-	if(world_num=="museum2"):
-		player_body.accept_teleport(Vector3(300,100,300))
-		print("teleporting")
-	if(world_num=="djroom"):
-		player_body.accept_teleport(Vector3(-300,100,-300))
-		print("teleporting")
-	if(world_num=="homeroom"):
-		player_body.accept_teleport(Vector3(0,-99.5,0))
-		print("teleporting")
+	return
