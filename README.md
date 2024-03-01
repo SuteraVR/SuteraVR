@@ -35,7 +35,6 @@ We look forward to your contributions! [Open an issue](https://github.com/Sutera
   - Complete data processing within the sandbox environment. Prevent viruses and malicious scripts from executing and influencing the outside world.
 - **SuteraVR SDK**
   - You can upload avatars/worlds/items, and attach functions whatever you coded.
-- **Management of Permissions**
 
 ## 🌼 Name Origin
 
