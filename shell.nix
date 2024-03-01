@@ -5,7 +5,7 @@ let
       rust_overlay
     ];
   };
-  rustVersion = "1.74.0";
+  rustVersion = "1.75.0";
   rust = pkgs.rust-bin.stable.${rustVersion}.default.override {
     extensions = [
       "rust-src"
