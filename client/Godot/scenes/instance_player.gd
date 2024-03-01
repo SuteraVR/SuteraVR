@@ -12,8 +12,6 @@ var from: Transform3D;
 var to: Transform3D;
 
 const player_scene = preload("res://scenes/instance_player.tscn")
-const player_scene1 = preload("res://tsukurun-world/avatars/ash/ash_1_0.tscn")
-const player_scene2 = preload("res://tsukurun-world/avatars/ciel/ciel_1_0.tscn")
 const player_scene3 = preload("res://scenes/3dmodels/Shapell.tscn")
 
 func reset_delay():
@@ -33,21 +31,6 @@ func _init(clocker: ClockerConnection, player_id: int):
 
 
 func appear():
-	self.Scene.visible = true
-
-func change_avatar(avatar_num:int):
-	self.Scene.visible = false
-	self.Scene.free()
-	if(avatar_num==1):
-		self.Scene = player_scene1.instantiate()
-	elif(avatar_num==2):
-		self.Scene = player_scene2.instantiate()
-	elif(avatar_num==3):
-		self.Scene = player_scene3.instantiate()
-	else:
-		print("error invalid value")
-	self.Scene.visible = false
-	add_child(self.Scene)
 	self.Scene.visible = true
 
 func calc_delay() -> int:
