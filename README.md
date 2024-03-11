@@ -12,7 +12,7 @@
 
 ---
 
-[日本語版はこちら](./READNE_JP.md)
+[日本語版はこちら](./README_JP.md)
 
 ## 🚨 Attention
 
