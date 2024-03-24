@@ -102,9 +102,7 @@ impl ClockingFrame for OneshotHeader {
                     cursor.get_u8(),
                     cursor.get_u8(),
                 ];
-                let Some(message_type) = search_from_enum(*ONESHOT_TYPES_MAP, &message_type) else {
-                    return None;
-                };
+                let message_type = search_from_enum(*ONESHOT_TYPES_MAP, &message_type)?;
                 if ONESHOT_DIRECTION_MAP[message_type]
                     != match (ctx, step) {
                         (MessageAuthor::Client, OneshotStep::Request) => OneshotDirection::Pull,
