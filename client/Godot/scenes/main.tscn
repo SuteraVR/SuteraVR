@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://ce61dcahc8n1t"]
+[gd_scene load_steps=20 format=3 uid="uid://ce61dcahc8n1t"]
 
 [ext_resource type="PackedScene" uid="uid://dl3j05ogv5103" path="res://character_body_3d.tscn" id="1_k7dhr"]
 [ext_resource type="Texture2D" uid="uid://cd3dic8dx86sj" path="res://suteraVRlogo.png" id="1_wjwcn"]
