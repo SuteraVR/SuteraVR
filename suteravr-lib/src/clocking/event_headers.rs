@@ -87,9 +87,7 @@ impl ClockingFrame for EventHeader {
                     cursor.get_u8(),
                     cursor.get_u8(),
                 ];
-                let Some(message_type) = search_from_enum(*EVENT_TYPES_MAP, &message_type) else {
-                    return None;
-                };
+                let message_type = search_from_enum(*EVENT_TYPES_MAP, &message_type)?;
                 if EVENT_TYPES_DIRECTION_MAP[message_type] != dir {
                     return None;
                 }
