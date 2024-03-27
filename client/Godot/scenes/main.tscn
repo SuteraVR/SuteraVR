@@ -238,18 +238,9 @@ theme_override_font_sizes/font_size = 41
 placeholder_text = "ここに文章を入力してね"
 language = "ja_JP"
 script = ExtResource("12_xih1r")
-node3d_parent = Object(Node3D,"_import_path":NodePath(""),"unique_name_in_owner":false,"process_mode":0,"process_priority":0,"process_physics_priority":0,"process_thread_group":0,"editor_description":"","transform":Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0),"rotation_edit_mode":0,"rotation_order":2,"top_level":false,"visible":true,"visibility_parent":NodePath(""),"script":SubResource("GDScript_qak7f"))
-
 
 [node name="Clocker" type="ClockerConnection" parent="."]
-_import_path = NodePath("")
 unique_name_in_owner = true
-process_mode = 0
-process_priority = 0
-process_physics_priority = 0
-process_thread_group = 0
-editor_description = ""
-script = null
 
 [node name="InstanceAnchor" type="Node" parent="Clocker"]
 unique_name_in_owner = true
